@@ -12,8 +12,6 @@ case class Vol private(matrix: INDArray) {
 object Vol {
   def apply(data: Iterable[Float], dimension: Dimension): Vol =
     Vol(Nd4j.create(data.toArray, Array(dimension.x, dimension.y, dimension.z)))
-
-
 }
 
 case class Dimension(x: Int, y: Int, z: Int)
