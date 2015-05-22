@@ -4,10 +4,11 @@ trait Layer {
   def outDimension: Dimension
   def inputDimension: Dimension
 
-  def forward(v: Vol, isTraining: Boolean): Vol
 
-  def backward
 
-  def gradients: Seq[Gradient]
+  def forward(input: Input, isTraining: Boolean): Output
+
+  def backward(outGradient: OutGradient): (InGradient, Seq[ParameterGradient])
+
 
 }
