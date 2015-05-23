@@ -7,11 +7,14 @@ trait Layer {
 }
 
 trait HiddenLayer extends Layer {
-  def backward(outGradient: OutGradient): (InGradient, Seq[ParameterGradient])
+  def backward(outGradient: OutGradient): (InGradient, Seq[ParamGradient])
+  def updateParams(params: Seq[Param]): HiddenLayer
 }
 
 trait LossLayer extends Layer {
-  def loss(target: Output): (Loss, InGradient)
+  def loss(target: Output, actual: Output): (Loss, InGradient)
 }
 
 trait InputLayer extends Layer
+
+case class Param(id: String, value: Vol, layer: HiddenLayer )
