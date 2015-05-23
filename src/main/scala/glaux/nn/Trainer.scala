@@ -3,8 +3,8 @@ package glaux.nn
 trait Trainer {
   def net: Net
   def train(input: Input, target: Output): LossInfo = {
-    val actual = net.forward(input, true)
-    val (loss, paramsGrads) = net.backward(target, actual)
+    val dataFlow = net.forward(input)
+    val (loss, paramsGrads) = net.backward(target, dataFlow)
     val newParams = paramsGrads.map(newParam)
     newParams.groupBy(_.layer).foreach {
       case (l, ps) => l.updateParams(ps)

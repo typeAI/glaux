@@ -7,4 +7,5 @@ package object nn {
   type InGradient = Vol
   type DecayMul = Float
   type Loss = Float
+  type DataFlow = Vector[LayerData]
 }
