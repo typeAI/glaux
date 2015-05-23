@@ -16,6 +16,7 @@ object Vol {
 
 case class Dimension(x: Int, y: Int, z: Int)
 object Dimension {
+
   def of(matrix: INDArray): Dimension = {
     val shape = matrix.shape()
     Dimension(shape(0), shape(1), shape(2))

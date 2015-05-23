@@ -6,4 +6,5 @@ package object nn {
   type OutGradient = Vol
   type InGradient = Vol
   type DecayMul = Float
+  type Loss = Float
 }
