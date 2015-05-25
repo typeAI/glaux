@@ -31,4 +31,6 @@ trait Net {
     (loss, netParamGrads)
   }
 
+  def updateLayers(newLayers: Iterable[HiddenLayer]): Net
+
 }
