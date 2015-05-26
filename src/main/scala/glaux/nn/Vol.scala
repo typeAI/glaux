@@ -21,8 +21,6 @@ abstract class VolBase[DT <: Dimension: DimensionFactory](matrix: INDArray) exte
 
   val dimension: Dimensionality =
     implicitly[DimensionFactory[Dimensionality]].create(matrix.shape())
-
-
 }
 
 case class Vol3D(matrix: INDArray) extends VolBase[Dimension3D](matrix)
