@@ -5,7 +5,8 @@ version := "1.0"
 
 scalaVersion := "2.11.6"
 
-resolvers += Resolver.mavenLocal
+resolvers ++= Dependencies.resolvers
 
-libraryDependencies ++= Dependencies.math
+libraryDependencies ++= Dependencies.math ++ Dependencies.test
 
+scalacOptions in Test ++= Seq("-Yrangepos")

@@ -1,8 +1,16 @@
 package glaux.nn
 
+
 trait Layer {
-  def inputDimension: Dimension
-  def outDimension: Dimension
+  type Input <: Vol
+  type Output <: Vol
+  type InDimension = Input#Dimensionality
+  type OutDimension = Output#Dimensionality
+  type OutGradient = Output
+  type InGradient = Input
+  def inDimension: InDimension
+  def outDimension: OutDimension
+  
   def forward(input: Input, isTraining: Boolean): Output
 }
 
@@ -12,11 +20,19 @@ trait HiddenLayer extends Layer {
 }
 
 trait LossLayer extends Layer {
+  type Input = Vol1D
+  type Output = Input
   def loss(target: Output, actual: Output): (Loss, InGradient)
 }
 
-trait InputLayer extends Layer
+case class InputLayer[I <: Vol](inDimension: I#Dimensionality) extends Layer {
+  type Input = I
+  type Output = Input
+  def outDimension: OutDimension = inDimension
+  def forward(input: Input, isTraining: Boolean) = input
+}
+
 
 case class LayerParam(id: String, value: Vol, layer: HiddenLayer )
 
-case class LayerData(in: Input, out: Output, layer: Layer)
+case class LayerData[L <: Layer](in: L#Input, out: L#Output, layer: L)
