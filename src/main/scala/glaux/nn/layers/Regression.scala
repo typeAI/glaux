@@ -4,7 +4,6 @@ import org.nd4j.api.linalg.DSL._
 import glaux.nn._
 
 case class Regression private(inDimension: DimensionArray) extends LossLayer {
-
   def loss(target: Output, actual: Output): (Loss, InGradient) = {
     assert(target.dimension == outDimension && actual.dimension == outDimension)
     val gradient: Output = actual - target
@@ -14,7 +13,7 @@ case class Regression private(inDimension: DimensionArray) extends LossLayer {
 
   val outDimension: OutDimension = inDimension
 
-  def forward(input: Input, isTraining: Boolean): Output = input
+  def forward(input: Input, isTraining: Boolean = false): Output = input
 }
 
 object Regression {

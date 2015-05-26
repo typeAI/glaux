@@ -21,7 +21,7 @@ case class Vol3D(matrix: INDArray) extends Vol {
 
 case class Vol1D(matrix: INDArray) extends Vol {
   type Dimensionality = DimensionArray
-  lazy val dimension: Dimensionality = DimensionArray(matrix.size(0))
+  lazy val dimension: Dimensionality = DimensionArray(matrix.size(DimensionArray.ndDimOfData))
   def sum = matrix.sum(DimensionArray.ndDimOfData).getDouble(0)
 }
 
