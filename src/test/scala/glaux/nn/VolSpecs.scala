@@ -1,5 +1,6 @@
 package glaux.nn
 
+import glaux.nn.Dimension.Dimension3D
 import org.nd4j.linalg.factory.Nd4j
 import org.specs2.mutable.Specification
 
