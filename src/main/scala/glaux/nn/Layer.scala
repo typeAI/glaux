@@ -20,7 +20,7 @@ trait HiddenLayer extends Layer {
 }
 
 trait LossLayer extends Layer {
-  type Input = Vol1D
+  type Input = RowVector
   type Output = Input
   def loss(target: Output, actual: Output): (Loss, InGradient)
 }

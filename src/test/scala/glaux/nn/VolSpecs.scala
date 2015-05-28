@@ -1,13 +1,12 @@
 package glaux.nn
 
-import glaux.nn.Dimension.Dimension3D
-import org.nd4j.linalg.factory.Nd4j
+import glaux.nn.Dimension.{ThreeD}
 import org.specs2.mutable.Specification
 
 class VolSpecs extends Specification {
 
   "3D Vols" >> {
-    val dim = Dimension3D(1,1,3)
+    val dim = ThreeD(1,1,3)
 
     "* op keeps dimension" >> {
       val vol = Vol(dim, 2, 3, 4)
@@ -25,11 +24,11 @@ class VolSpecs extends Specification {
 
   "1D Vols" >> {
     "sum works correctly" >> {
-      Vol1D(1, 3, 4, 5).sum === 13
+      RowVector(1, 3, 4, 5).sum === 13
     }
     "* works correctly" >> {
-      val result: Vol = Vol1D(1, 3, 4, 5) * 3
-      result must_==(Vol1D(3, 9, 12, 15))
+      val result: Vol = RowVector(1, 3, 4, 5) * 3
+      result must_==(RowVector(3, 9, 12, 15))
     }
 
 

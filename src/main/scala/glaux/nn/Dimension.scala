@@ -22,30 +22,30 @@ object Dimension {
 
   def of(matrix: INDArray): Dimension = {
     val shape = matrix.shape()
-    val df3d = implicitly[DimensionFactory[Dimension3D]]
-    val df1d = implicitly[DimensionFactory[DimensionArray]]
+    val df3d = implicitly[DimensionFactory[ThreeD]]
+    val df1d = implicitly[DimensionFactory[Row]]
     df1d.tryCreate(shape).orElse(df3d.tryCreate(shape)).getOrElse(throw unsupported(shape))
   }
 
-  case class Dimension3D(x: Int, y: Int, z: Int) extends Dimension {
+  case class ThreeD(x: Int, y: Int, z: Int) extends Dimension {
     assert(x > 0 && y > 0 && z > 0)
   }
 
-  case class DimensionArray(size: Int) extends Dimension {
+  case class Row(size: Int) extends Dimension {
     assert(size > 0)
   }
 
-  implicit object DimensionArray extends DimensionFactory[DimensionArray] {
+  implicit object Row extends DimensionFactory[Row] {
     val dimIndexOfData: Int = 1
 
-    val createFunction: PartialFunction[Shape, DimensionArray] = {
-      case Array(1, size) => DimensionArray(size)
+    val createFunction: PartialFunction[Shape, Row] = {
+      case Array(1, size) => Row(size)
     }
   }
 
-  implicit object Dimension3D extends DimensionFactory[Dimension3D] {
-    val createFunction = PartialFunction[Shape, Dimension3D] {
-      case Array(x, y, z) => Dimension3D(x,y,z)
+  implicit object ThreeD extends DimensionFactory[ThreeD] {
+    val createFunction = PartialFunction[Shape, ThreeD] {
+      case Array(x, y, z) => ThreeD(x,y,z)
     }
   }
 

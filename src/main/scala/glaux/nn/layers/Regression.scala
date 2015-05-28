@@ -1,10 +1,10 @@
 package glaux.nn.layers
 
-import glaux.nn.Dimension.DimensionArray
+import glaux.nn.Dimension
 import org.nd4j.api.linalg.DSL._
 import glaux.nn._
 
-case class Regression private(inDimension: DimensionArray) extends LossLayer {
+case class Regression private(inDimension: Dimension.Row) extends LossLayer {
   def loss(target: Output, actual: Output): (Loss, InGradient) = {
     assert(target.dimension == outDimension && actual.dimension == outDimension)
     val gradient: Output = actual - target
@@ -18,5 +18,5 @@ case class Regression private(inDimension: DimensionArray) extends LossLayer {
 }
 
 object Regression {
-  def apply(numOfOutputs: Int) : Regression = Regression(DimensionArray(numOfOutputs))
+  def apply(numOfOutputs: Int) : Regression = Regression(Dimension.Row(numOfOutputs))
 }
