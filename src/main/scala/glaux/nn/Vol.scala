@@ -43,6 +43,7 @@ object Matrix {
   implicit def toVol(indArray: INDArray): Matrix = Matrix(indArray)
 
   val apply = Vol.applyBase[Matrix]
+  def apply(x: Int, y: Int, data: Seq[Double]): Matrix = apply(Dimension.TwoD(x,y), data)
 }
 
 

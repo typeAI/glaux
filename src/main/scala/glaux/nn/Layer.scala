@@ -33,6 +33,6 @@ case class InputLayer[I <: Vol](inDimension: I#Dimensionality) extends Layer {
 }
 
 
-case class LayerParam(id: String, value: Vol, layer: HiddenLayer )
+case class LayerParam(id: String, value: Vol, layer: HiddenLayer)
 
 case class LayerData[L <: Layer](in: L#Input, out: L#Output, layer: L)
