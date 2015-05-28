@@ -1,8 +1,6 @@
 package glaux.nn.layers
 
-import glaux.nn.Dimension.ThreeD
-import glaux.nn.{Dimension, Matrix, RowVector, Vol3D}
-import org.nd4j.linalg.factory.Nd4j
+import glaux.nn.{Matrix, RowVector}
 import org.specs2.mutable.Specification
 
 class FullyConnectedSpec extends Specification {
