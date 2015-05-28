@@ -1,8 +1,12 @@
 package glaux.nn
 
+import glaux.nn.Dimension.Shape
 import org.nd4j.linalg.api.ndarray.INDArray
 
-trait Dimension
+trait Dimension {
+  def totalSize: Int = this.shape.reduce(_ * _)
+  private[nn] def shape: Shape
+}
 
 object Dimension {
   type Shape = Array[Int]
@@ -13,26 +17,33 @@ object Dimension {
     def create(shape: Shape): DT = tryCreate(shape).getOrElse(throw unsupported(shape))
   }
 
-  def unsupported(shape: Shape):Exception = new UnsupportedOperationException(s"unrecognized matrix shape $shape")
+  def unsupported(shape: Shape):Exception = new UnsupportedOperationException(s"unrecognized INDArray shape $shape")
 
-  def ofSpecific[DT <: Dimension](matrix: INDArray)(implicit df: DimensionFactory[DT]): DT = {
-    val shape = matrix.shape()
+  def ofSpecific[DT <: Dimension](indArray: INDArray)(implicit df: DimensionFactory[DT]): DT = {
+    val shape = indArray.shape()
     df.tryCreate(shape).getOrElse(throw unsupported(shape))
   }
 
-  def of(matrix: INDArray): Dimension = {
-    val shape = matrix.shape()
+  def of(indArray: INDArray): Dimension = {
+    val shape = indArray.shape()
     val df3d = implicitly[DimensionFactory[ThreeD]]
+    val df2d = implicitly[DimensionFactory[TwoD]]
     val df1d = implicitly[DimensionFactory[Row]]
-    df1d.tryCreate(shape).orElse(df3d.tryCreate(shape)).getOrElse(throw unsupported(shape))
+    (Seq(df3d, df2d, df1d).foldLeft[Option[Dimension]](None) { (lr, f) => lr orElse f.tryCreate(shape) }).getOrElse(throw unsupported(shape))
   }
 
   case class ThreeD(x: Int, y: Int, z: Int) extends Dimension {
     assert(x > 0 && y > 0 && z > 0)
+    def shape: Shape = Array(x, y, z)
   }
 
+  case class TwoD(x: Int, y: Int) extends Dimension {
+    assert(x > 0 && y > 0)
+    def shape: Shape = Array(x, y)
+  }
   case class Row(size: Int) extends Dimension {
     assert(size > 0)
+    def shape: Shape = Array(1, size)
   }
 
   implicit object Row extends DimensionFactory[Row] {
@@ -44,8 +55,14 @@ object Dimension {
   }
 
   implicit object ThreeD extends DimensionFactory[ThreeD] {
-    val createFunction = PartialFunction[Shape, ThreeD] {
+    val createFunction: PartialFunction[Shape, ThreeD] = {
       case Array(x, y, z) => ThreeD(x,y,z)
+    }
+  }
+
+  implicit object TwoD extends DimensionFactory[TwoD] {
+    val createFunction: PartialFunction[Shape, TwoD] = {
+      case Array(x, y) if x > 1 => TwoD(x,y)
     }
   }
 

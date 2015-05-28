@@ -3,26 +3,27 @@ package glaux.nn
 import glaux.nn.Dimension.{ThreeD}
 import org.specs2.mutable.Specification
 
-class VolSpecs extends Specification {
+class VolSpec
+  extends Specification {
 
   "3D Vols" >> {
     val dim = ThreeD(1,1,3)
 
     "* op keeps dimension" >> {
-      val vol = Vol(dim, 2, 3, 4)
+      val vol = Vol(dim, Seq(2, 3, 4))
       val vol2: Vol = vol * vol
-      vol2 must_== Vol(dim, 4, 9, 16)
+      vol2 must_== Vol(dim, Seq(4, 9, 16))
     }
 
     "* scalar keeps dimension" >> {
-      val vol = Vol(dim, 2, 3, 4)
+      val vol = Vol(dim, Seq(2, 3, 4))
       val vol2: Vol = vol * 0.5
-      vol2 must_== Vol(dim, 1, 1.5, 2)
+      vol2 must_== Vol(dim, Seq(1, 1.5, 2))
     }
 
   }
 
-  "1D Vols" >> {
+  "RowVector Vols" >> {
     "sum works correctly" >> {
       RowVector(1, 3, 4, 5).sum === 13
     }
