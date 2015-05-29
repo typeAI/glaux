@@ -1,6 +1,6 @@
 package glaux.nn.layers
 
-import glaux.nn.{Matrix, RowVector}
+import glaux.nn.{Gradient, Matrix, RowVector}
 import org.specs2.mutable.Specification
 
 class FullyConnectedSpec extends Specification {
@@ -13,7 +13,7 @@ class FullyConnectedSpec extends Specification {
   }
 
   "backward returns correctly" >> {
-    val (inGraident, paramGradients) = fc.backward(input, RowVector(3, 4))
+    val (inGraident, paramGradients) = fc.backward(input, Gradient(RowVector(106, 215), RowVector(3, 4)))
     "the input gradient" >> {
       inGraident must_== RowVector(19, 26, 33)
     }

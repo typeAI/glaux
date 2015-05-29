@@ -21,6 +21,15 @@ class VolSpec
       vol2 must_== Vol(dim, Seq(1, 1.5, 2))
     }
 
+    "map" >> {
+      "immutability" >> {
+        val m = Matrix(2, 2, Seq(1,2,3,4))
+        Matrix.ops.map(m, _ * 2 )
+        m must_== Matrix(2, 2, Seq(1,2,3,4))
+      }
+
+    }
+
   }
 
   "RowVector Vols" >> {
@@ -34,4 +43,6 @@ class VolSpec
 
 
   }
+
+
 }

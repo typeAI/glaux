@@ -20,9 +20,10 @@ case class FullyConnected(filter: Filter, bias: Bias) extends HiddenLayer {
   type Input = RowVector
 
   def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient]) = {
-    val filterGradient: Matrix = input.T ** outGradient
-    val biasGradient: RowVector = outGradient
-    (outGradient ** filter.T, Seq[ParamGradient](
+    val og = outGradient.gradient
+    val filterGradient: Matrix = input.T ** og
+    val biasGradient: RowVector = og
+    (og ** filter.T, Seq[ParamGradient](
       ParamGradient(filterParam, filterGradient),
       ParamGradient(biasParam, biasGradient))
     )

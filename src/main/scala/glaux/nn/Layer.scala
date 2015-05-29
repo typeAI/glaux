@@ -2,17 +2,26 @@ package glaux.nn
 
 
 trait Layer {
+
+
   type Input <: Vol
   type Output <: Vol
   type InDimension = Input#Dimensionality
   type OutDimension = Output#Dimensionality
-  type OutGradient = Output
+
   type InGradient = Input
+  type OutGradient = Gradient[Output]
   def inDimension: InDimension
   def outDimension: OutDimension
   
   def forward(input: Input, isTraining: Boolean): Output
+
 }
+
+case class Gradient[T <: Vol](data: T, gradient: T) {
+  assert(data.dimension == gradient.dimension)
+}
+
 
 trait HiddenLayer extends Layer {
   def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient])

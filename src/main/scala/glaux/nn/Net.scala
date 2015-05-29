@@ -23,17 +23,17 @@ trait Net[Input <: Vol] {
   def backward(target: Output, dataFlow: DataFlow): (Loss, NetParamGradients) = {
     val (loss, lossLayerInGrad) = lossLayer.loss(target, finalOutput(dataFlow))
     val (_, netParamGrads) = layers.foldRight[(Vol, NetParamGradients)]((lossLayerInGrad, Map())) { (layer, pair) =>
-      val (outGradient, accuParamGrads) = pair
-      val layerInput = findInput[layer.type](dataFlow, layer)
-      val (inGradient, layerParamGrads) = layer.backward(layerInput, outGradient.asInstanceOf[layer.OutGradient])
+      val (outGradientValue, accuParamGrads) = pair
+      val layerData = findData[layer.type](dataFlow, layer)
+      val (inGradient, layerParamGrads) = layer.backward(layerData.in, Gradient(layerData.out, outGradientValue.asInstanceOf[layer.Output]))
       (inGradient, accuParamGrads + (layer -> layerParamGrads))
     }
     (loss, netParamGrads)
   }
 
   private def finalOutput(dataFlow: DataFlow): Output = dataFlow.last.out.asInstanceOf[Output]
-  private def findInput[L <: Layer](dataFlow: DataFlow, layer: L): L#Input =
-    dataFlow.find(_.layer == layer).get.asInstanceOf[LayerData[L]].in
+  private def findData[L <: Layer](dataFlow: DataFlow, layer: L): LayerData[L] =
+    dataFlow.find(_.layer == layer).get.asInstanceOf[LayerData[L]]
 
 }
 
