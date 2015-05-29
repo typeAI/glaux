@@ -22,12 +22,17 @@ class VolSpec
     }
 
     "map" >> {
-      "immutability" >> {
+      "with immutability" >> {
         val m = Matrix(2, 2, Seq(1,2,3,4))
         Matrix.ops.map(m, _ * 2 )
         m must_== Matrix(2, 2, Seq(1,2,3,4))
       }
 
+      "correctly" >> {
+        val m = Matrix(2, 2, Seq(1,2,3,4))
+        val result = Matrix.ops.map(m, _ * 2 )
+        result must_== Matrix(2, 2, Seq(2,4,6,8))
+      }
     }
 
   }
