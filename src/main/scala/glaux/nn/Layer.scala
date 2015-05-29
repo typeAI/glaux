@@ -33,6 +33,8 @@ case class InputLayer[I <: Vol](inDimension: I#Dimensionality) extends Layer {
 }
 
 
-case class LayerParam(id: String, value: Vol, layer: HiddenLayer)
+case class LayerParam(id: String, value: Vol, regularizationSetting: RegularizationSetting)
 
 case class LayerData[L <: Layer](in: L#Input, out: L#Output, layer: L)
+
+case class RegularizationSetting(l1DM: DecayMultiplier, l2DM: DecayMultiplier)

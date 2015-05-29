@@ -9,9 +9,10 @@ import org.nd4j.api.linalg.DSL._
 case class FullyConnected(filter: Filter, bias: Bias) extends HiddenLayer {
   val inDimension: InDimension = Dimension.Row(filter.dimension.x)
   val outDimension: OutDimension = Dimension.Row(filter.dimension.y)
-
-  lazy val filterParam: LayerParam = LayerParam("filter", filter, this)
-  lazy val biasParam: LayerParam = LayerParam("bias", bias, this)
+  private val filterRegularization = RegularizationSetting(0, 1)
+  private val biasRegularization = RegularizationSetting(0, 0)
+  lazy val filterParam: LayerParam = LayerParam("filter", filter, filterRegularization)
+  lazy val biasParam: LayerParam = LayerParam("bias", bias, biasRegularization)
 
   assert(bias.dimension == outDimension)
 
@@ -22,8 +23,8 @@ case class FullyConnected(filter: Filter, bias: Bias) extends HiddenLayer {
     val filterGradient: Matrix = input.T ** outGradient
     val biasGradient: RowVector = outGradient
     (outGradient ** filter.T, Seq[ParamGradient](
-      ParamGradient(filterParam, filterGradient, 0, 0),
-      ParamGradient(biasParam, biasGradient, 0, 0))
+      ParamGradient(filterParam, filterGradient),
+      ParamGradient(biasParam, biasGradient))
     )
   }
 

@@ -20,13 +20,13 @@ trait Net[Input <: Vol] {
 
   def predict(input: Input): Output = finalOutput(forward(input))
 
-  def backward(target: Output, dataFlow: DataFlow): (Loss, Seq[ParamGradient]) = {
+  def backward(target: Output, dataFlow: DataFlow): (Loss, NetParamGradients) = {
     val (loss, lossLayerInGrad) = lossLayer.loss(target, finalOutput(dataFlow))
-    val (_, netParamGrads) = layers.foldRight[(Vol, Seq[ParamGradient])]((lossLayerInGrad, Nil)) { (layer, pair) =>
+    val (_, netParamGrads) = layers.foldRight[(Vol, NetParamGradients)]((lossLayerInGrad, Map())) { (layer, pair) =>
       val (outGradient, accuParamGrads) = pair
       val layerInput = findInput[layer.type](dataFlow, layer)
       val (inGradient, layerParamGrads) = layer.backward(layerInput, outGradient.asInstanceOf[layer.OutGradient])
-      (inGradient, layerParamGrads ++: accuParamGrads)
+      (inGradient, accuParamGrads + (layer -> layerParamGrads))
     }
     (loss, netParamGrads)
   }

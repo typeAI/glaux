@@ -8,9 +8,7 @@ class FullyConnectedSpec extends Specification {
   val fc = FullyConnected(Matrix(3, 2, Seq(1d, 2d, 3d, 4d, 5d, 6d)), RowVector(100, 200))
   val input = RowVector(1, 1, 1)
   "forward correctly" >> {
-
     val output = fc.forward(input)
-
     output must_== RowVector(106, 215)
   }
 

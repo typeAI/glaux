@@ -5,7 +5,7 @@ trait Trainer {
   type Trainee <: Net[Input]
   type Result <: IterationResult[Trainee]
   type IterationContext = Result#MethodSpecificContext
-  
+
   implicit val updater: Updater[Trainee]
   
   def init(net: Trainee): Result
@@ -18,7 +18,7 @@ trait Trainer {
 
     val (newParams, newContext) = performUpdate(paramsGrads, lastResult)
 
-    val newLayers = newParams.groupBy(_.layer).map {
+    val newLayers = newParams.map {
       case (l, ps) => l.updateParams(ps)
     }
     createResult(loss, updater.update(net, newLayers), lastResult.iterationNum + 1, newContext)
@@ -26,7 +26,7 @@ trait Trainer {
 
   protected def createResult(loss: Loss, newNet: Trainee, iterationNum: Int, newContext: IterationContext): Result
 
-  def performUpdate(paramGrads: Seq[ParamGradient], lastIterationResult: Result): (Seq[LayerParam], IterationContext)
+  def performUpdate(paramGrads: NetParamGradients, lastIterationResult: Result): (NetParams, IterationContext)
 }
 
 
