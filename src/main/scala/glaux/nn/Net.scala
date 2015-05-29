@@ -38,11 +38,10 @@ trait Net[Input <: Vol] {
 }
 
 
-trait Updater[N <: Net[_]] {
-  def update(net: N, newLayers: Iterable[HiddenLayer]): N
-}
 
 object Net {
+  type CanBuildFrom[N <: Net[_]] = (N, Iterable[HiddenLayer]) => N
+
   case class SimpleNet[Input <: Vol](inputLayer: InputLayer[Input], layers: Seq[HiddenLayer], lossLayer: LossLayer) extends Net[Input] {
     val assertDimensionIntegrity = allLayers.reduce { (lastLayer, thisLayer) =>
         assert(lastLayer.outDimension == thisLayer.inDimension)
@@ -50,9 +49,7 @@ object Net {
       }
   }
 
-  implicit def simpleUpdater[Input <: Vol]: Updater[SimpleNet[Input]] = new Updater[SimpleNet[Input]]{
-    def update(net: SimpleNet[Input], newLayers: Iterable[HiddenLayer]): SimpleNet[Input] = net.copy(layers = newLayers.toSeq)
-  }
+  implicit def simpleUpdater[Input <: Vol]: CanBuildFrom[SimpleNet[Input]] = (net, newLayers) => net.copy(layers = newLayers.toSeq)
 
   def apply[Input <: Vol](inputDimension: Input#Dimensionality, hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer): Net[Input] = SimpleNet(
     InputLayer[Input](inputDimension), hiddenLayers, lossLayer

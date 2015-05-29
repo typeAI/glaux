@@ -1,12 +1,14 @@
 package glaux.nn
 
+import glaux.nn.Net.CanBuildFrom
+
 trait Trainer {
   type Input <: Vol
   type Trainee <: Net[Input]
   type Result <: IterationResult[Trainee]
   type IterationContext = Result#MethodSpecificContext
 
-  implicit val updater: Updater[Trainee]
+  implicit val build: CanBuildFrom[Trainee]
   
   def init(net: Trainee): Result
 
@@ -21,7 +23,7 @@ trait Trainer {
     val newLayers = newParams.map {
       case (l, ps) => l.updateParams(ps)
     }
-    createResult(loss, updater.update(net, newLayers), lastResult.iterationNum + 1, newContext)
+    createResult(loss, build(net, newLayers), lastResult.iterationNum + 1, newContext)
   }
 
   protected def createResult(loss: Loss, newNet: Trainee, iterationNum: Int, newContext: IterationContext): Result
