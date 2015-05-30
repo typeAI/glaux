@@ -21,6 +21,11 @@ class VolSpec
       vol2 must_== Vol(dim, Seq(1, 1.5, 2))
     }
 
+    "sum correctly" >> {
+      val m = Matrix(2, 2, Seq(1,2,3,4))
+      m.sumAll must_== 10
+    }
+
     "map" >> {
       "with immutability" >> {
         val m = Matrix(2, 2, Seq(1,2,3,4))
@@ -39,7 +44,7 @@ class VolSpec
 
   "RowVector Vols" >> {
     "sum works correctly" >> {
-      RowVector(1, 3, 4, 5).sum === 13
+      RowVector(1, 3, 4, 5).sumAll === 13
     }
     "* works correctly" >> {
       val result: Vol = RowVector(1, 3, 4, 5) * 3

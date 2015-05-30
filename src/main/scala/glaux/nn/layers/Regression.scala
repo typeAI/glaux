@@ -9,7 +9,7 @@ case class Regression private(inDimension: Dimension.Row) extends LossLayer {
     assert(target.dimension == outDimension && actual.dimension == outDimension)
     val gradient: Output = actual - target
     val losses: Output = (gradient * gradient) * 0.5
-    (losses.sum, gradient)
+    (losses.sumAll, gradient)
   }
 
   val outDimension: OutDimension = inDimension

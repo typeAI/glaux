@@ -20,12 +20,12 @@ class FullyConnectedSpec extends Specification {
 
     "the filter gradient" >> {
       val fg = paramGradients.find(_.param.id == "filter").get
-      fg.gradientValue must_== Matrix(3, 2, Seq(3,3,3,4,4,4))
+      fg.value must_== Matrix(3, 2, Seq(3,3,3,4,4,4))
     }
 
     "the bias gradient" >> {
       val bg = paramGradients.find(_.param.id == "bias").get
-      bg.gradientValue must_== RowVector(3, 4)
+      bg.value must_== RowVector(3, 4)
     }
   }
 

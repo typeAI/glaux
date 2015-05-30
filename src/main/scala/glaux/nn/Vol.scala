@@ -13,6 +13,7 @@ sealed trait Vol {
   def indArray: INDArray
   type Dimensionality <: Dimension
   def dimension: Dimensionality
+  def sumAll: Double = { indArray.linearView().sum(Row.dimIndexOfData).getDouble(0) }
 }
 
 class VolOps[V <: Vol: CanBuildFrom] {
@@ -62,7 +63,7 @@ case class Vol3D(indArray: INDArray) extends VolBase[ThreeD](indArray)
 case class Matrix(indArray: INDArray) extends VolBase[TwoD](indArray)
 
 case class RowVector(indArray: INDArray) extends VolBase[Row](indArray) {
-  def sum = indArray.sum(Row.dimIndexOfData).getDouble(0)
+
 }
 
 object Vol3D extends VolCompanionBase[Vol3D] {
