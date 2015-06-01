@@ -37,6 +37,8 @@ sealed abstract class VolCompanionBase[V <: Vol] {
   }
 
   def apply(dimension: Dimension, data: Seq[Double]): V = createINDArray(dimension, data)
+
+  def uniform(dimension: Dimension, value: Double): V = Nd4j.create(dimension.shape:_*).assign(value)
 }
 
 object Vol3D extends VolCompanionBase[Vol3D] {

@@ -1,6 +1,7 @@
-package glaux.nn
+package glaux.nn.trainers
 
-import glaux.nn.BatchTrainer.RegularizationContext
+import glaux.nn._
+import glaux.nn.trainers.BatchTrainer.RegularizationContext
 import org.nd4j.api.linalg.DSL._
 
 trait BatchTrainer {
@@ -114,7 +115,7 @@ object BatchTrainer {
     def updateContext(lastContext: CalculationContext): CalculationContext
   }
 
-  class VanillaSGD[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](learningRate: Double) extends SGDBase[IT, NT](learningRate) {
+  case class VanillaSGD[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](learningRate: Double) extends SGDBase[IT, NT](learningRate) {
     case class VanillaSGDIterationContext(l1Decay: Decay, l2Decay: Decay) extends RegularizationContext
 
     type CalculationContext = VanillaSGDIterationContext
@@ -125,7 +126,7 @@ object BatchTrainer {
 
   }
 
-  class MomentumSGD[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](learningRate: Double) extends SGDBase[IT, NT](learningRate) {
+  case class MomentumSGD[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](learningRate: Double) extends SGDBase[IT, NT](learningRate) {
     case class ParamGSum(layer: Layer, param: LayerParam, value: Vol)
 
     case class MomentumSGDIterationContext(l1Decay: Decay, l2Decay: Decay, gsum: Seq[ParamGSum]) extends  RegularizationContext
