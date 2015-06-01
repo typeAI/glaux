@@ -1,12 +1,13 @@
 package glaux.nn
 
+import glaux.nn.BatchTrainer.RegularizationContext
 import org.nd4j.api.linalg.DSL._
 
 trait BatchTrainer {
   type Input <: Vol
   type Trainee <: Net[Input]
 
-  type CalculationContext
+  type CalculationContext <: RegularizationContext
   
   case class BatchResult(lossInfo: LossInfo, net: Trainee, batchSize: Int, calcContext: CalculationContext)
 
@@ -60,22 +61,20 @@ case class LossInfo(l1Decay: Loss, l2Decay: Loss, cost: Loss) {
 }
 
 object BatchTrainer {
-  
-  class VanillaSGD[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](learningRate: Double) extends BatchTrainer {
-    case class ParamGSum(layer: Layer, param: LayerParam, value: Vol)
-    case class VanillaSGDIterationContext(l1Decay: Decay, l2Decay: Decay, gsum: Seq[ParamGSum])
+  trait RegularizationContext {
+    def l1Decay : Decay
+    def l2Decay : Decay
+  }
+
+  abstract class SGDBase[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](learningRate: Double) extends BatchTrainer {
     type Input = IT
     type Trainee = NT
-    type CalculationContext = VanillaSGDIterationContext
     val build: Net.CanBuildFrom[Trainee] = implicitly[Net.CanBuildFrom[Trainee]]
 
-    val initialCalculationContext: VanillaSGDIterationContext = VanillaSGDIterationContext(0, 0, Nil)
-
-    
     def calculate(netParamGradients: NetParamGradients, lastIterationResult: BatchResult, loss: Loss, batchSize: Int): (NetParams, CalculationContext, LossInfo) = {
       val lastContext = lastIterationResult.calcContext
 
-      case class NewParamResult(newParam: LayerParam, gsum: ParamGSum, l1DecayLoss: Loss, l2DecayLoss: Loss)
+      case class NewParamResult(newParam: LayerParam, l1DecayLoss: Loss, l2DecayLoss: Loss)
 
       def calcNewParam(paramGrad: ParamGradient, layer: Layer): NewParamResult = {
         val l1Decay =  lastContext.l1Decay * paramGrad.param.regularizationSetting.l1DM
@@ -94,28 +93,48 @@ object BatchTrainer {
 
         NewParamResult(
           newParam,
-          ParamGSum(layer, newParam, RowVector(0,0,0)), //todo: need to implement for momentum
           paramL1DecayLoss,
           paramL2DecayLoss
         )
       }
-      
+
       val results = (for {
         (layer, paramGrads) <- netParamGradients
         paramGrad <- paramGrads
         newParamResult = calcNewParam(paramGrad, layer)
       } yield (layer, newParamResult)).toSeq
       val newNetParams: NetParams = results.groupBy(_._1).mapValues(_.map(_._2.newParam))
-      val newContext = lastIterationResult.calcContext.copy(gsum = results.map(_._2.gsum))
+      val newContext = updateContext(lastContext)
       val l1DecayLoss = results.map(_._2.l1DecayLoss).sum
       val l2DecayLoss = results.map(_._2.l2DecayLoss).sum
       val lossInfo = LossInfo(l1DecayLoss, l2DecayLoss, loss)
       (newNetParams, newContext, lossInfo)
     }
-    
-    
+
+    def updateContext(lastContext: CalculationContext): CalculationContext
+  }
+
+  class VanillaSGD[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](learningRate: Double) extends SGDBase[IT, NT](learningRate) {
+    case class VanillaSGDIterationContext(l1Decay: Decay, l2Decay: Decay) extends RegularizationContext
+
+    type CalculationContext = VanillaSGDIterationContext
+
+    val initialCalculationContext: VanillaSGDIterationContext = VanillaSGDIterationContext(0, 0)
+
+    def updateContext(lastContext: VanillaSGDIterationContext) = lastContext
 
   }
 
+  class MomentumSGD[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](learningRate: Double) extends SGDBase[IT, NT](learningRate) {
+    case class ParamGSum(layer: Layer, param: LayerParam, value: Vol)
+
+    case class MomentumSGDIterationContext(l1Decay: Decay, l2Decay: Decay, gsum: Seq[ParamGSum]) extends  RegularizationContext
+
+    type CalculationContext = MomentumSGDIterationContext
+
+    val initialCalculationContext: MomentumSGDIterationContext = MomentumSGDIterationContext(0, 0, Nil)
+
+    def updateContext(lastContext: MomentumSGDIterationContext): MomentumSGDIterationContext = ???
+  }
 
 }
