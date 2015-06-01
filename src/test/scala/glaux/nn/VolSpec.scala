@@ -29,14 +29,24 @@ class VolSpec
     "map" >> {
       "with immutability" >> {
         val m = Matrix(2, 2, Seq(1,2,3,4))
-        Matrix.ops.map(m, _ * 2 )
+        m.map(_ * 2)
         m must_== Matrix(2, 2, Seq(1,2,3,4))
       }
 
       "correctly" >> {
         val m = Matrix(2, 2, Seq(1,2,3,4))
-        val result = Matrix.ops.map(m, _ * 2 )
+        val result = m.map( _ * 2 )
         result must_== Matrix(2, 2, Seq(2,4,6,8))
+      }
+    }
+
+    "merge" >> {
+
+      "correctly" >> {
+        val m = Vol3D(ThreeD(2, 2, 2), 1.until(9).map(_.toDouble))
+        val m2 = Vol3D(ThreeD(2, 2, 2), 9.until(1, -1).map(_.toDouble))
+        val result = m.merge(m2)(_ + _)
+        result must_== Vol3D(ThreeD(2, 2, 2), Seq.fill(8)(10d))
       }
     }
 

@@ -1,6 +1,5 @@
 package glaux.nn
 
-import glaux.nn.Net.CanBuildFrom
 import org.nd4j.api.linalg.DSL._
 
 trait BatchTrainer {
@@ -11,7 +10,7 @@ trait BatchTrainer {
   
   case class BatchResult(lossInfo: LossInfo, net: Trainee, iterationNumber: Int, calcContext: CalculationContext)
 
-  val build: CanBuildFrom[Trainee]
+  val build: Net.CanBuildFrom[Trainee]
 
   val initialCalculationContext : CalculationContext
 
@@ -61,14 +60,13 @@ case class LossInfo(l1Decay: Loss, l2Decay: Loss, cost: Loss) {
 
 object BatchTrainer {
   
-  class VanillaSGD[IT <: Vol : VolOps, NT <: Net[IT]: CanBuildFrom](batchSize: Int, learningRate: Double) extends BatchTrainer {
+  class VanillaSGD[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](batchSize: Int, learningRate: Double) extends BatchTrainer {
     case class ParamGSum(layer: Layer, param: LayerParam, value: Vol)
     case class VanillaSGDIterationContext(l1Decay: Decay, l2Decay: Decay, gsum: Seq[ParamGSum])
     type Input = IT
     type Trainee = NT
     type CalculationContext = VanillaSGDIterationContext
-    val build: CanBuildFrom[Trainee] = implicitly[CanBuildFrom[Trainee]]
-    val vOps = implicitly[VolOps[Vol]]
+    val build: Net.CanBuildFrom[Trainee] = implicitly[Net.CanBuildFrom[Trainee]]
 
     val initialCalculationContext: VanillaSGDIterationContext = VanillaSGDIterationContext(0, 0, Nil)
 
@@ -81,12 +79,12 @@ object BatchTrainer {
       def calcNewParam(paramGrad: ParamGradient, layer: Layer): NewParamResult = {
         val l1Decay =  lastContext.l1Decay * paramGrad.param.regularizationSetting.l1DM
         val l2Decay =  lastContext.l2Decay * paramGrad.param.regularizationSetting.l2DM
-        val p2DL: Vol = ((paramGrad.param.value * paramGrad.param.value) * l2Decay / 2)
-        val p1DL: Vol = (vOps.map(paramGrad.param.value, Math.abs(_)) * l1Decay)
+        val p2DL: Vol = (paramGrad.param.value * paramGrad.param.value) * l2Decay / 2
+        val p1DL: Vol = paramGrad.param.value.map(Math.abs(_)) * l1Decay
         val paramL2DecayLoss: Loss = p2DL.sumAll
         val paramL1DecayLoss: Loss = p1DL.sumAll
         val pValue = paramGrad.param.value
-        val l1grad: Vol = vOps.map(pValue,(v => if(v > 0) 1 else -1) ) * l1Decay
+        val l1grad: Vol = pValue.map(v => if(v > 0) 1 else -1) * l1Decay
         val l2grad: Vol = pValue * l2Decay
         val rawBatchGradient: Vol = (l1grad.add(l2grad).add(paramGrad.value)) / batchSize
         val newParamValue = pValue - (rawBatchGradient * learningRate)

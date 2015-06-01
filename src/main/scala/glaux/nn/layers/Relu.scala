@@ -1,18 +1,19 @@
 package glaux.nn.layers
 
 
+import glaux.nn.Vol.CanBuildFrom
+
 import scala.math.max
 import glaux.nn._
 
-case class Relu[DataType <: Vol : VolOps](dimension: DataType#Dimensionality) extends HiddenLayer {
+case class Relu[DataType <: Vol : CanBuildFrom](dimension: DataType#Dimensionality) extends HiddenLayer {
 
   type Output = DataType
   type Input = DataType
 
-  val ops = implicitly[VolOps[DataType]]
 
   def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient]) = {
-    val inGradient =ops.map2(outGradient.data, outGradient.gradient, (o, g) => if(o <= 0) 0 else g)
+    val inGradient = outGradient.data.merge(outGradient.gradient)((o, g) => if(o <= 0) 0 else g)
     (inGradient, Nil)
   }
 
@@ -23,6 +24,6 @@ case class Relu[DataType <: Vol : VolOps](dimension: DataType#Dimensionality) ex
   def inDimension: InDimension = dimension
 
   def forward(input: Input, isTraining: Boolean = false): Output =
-    ops.map(input, max(_, 0))
+    input.map(max(_, 0))
 
 }
