@@ -8,7 +8,7 @@ trait BatchTrainer {
 
   type CalculationContext
   
-  case class BatchResult(lossInfo: LossInfo, net: Trainee, iterationNumber: Int, calcContext: CalculationContext)
+  case class BatchResult(lossInfo: LossInfo, net: Trainee, batchSize: Int, calcContext: CalculationContext)
 
   val build: Net.CanBuildFrom[Trainee]
 
@@ -26,14 +26,15 @@ trait BatchTrainer {
         net.backward(target, dataFlow)
     }
     val batchLoss = pairs.last._1 //todo: confirm on this
+    val batchSize = pairs.size
     val paramsGrads = accumulate(pairs.map(_._2))
 
-    val (newParams, newContext, lossInfo) = calculate(paramsGrads, lastResult, batchLoss)
+    val (newParams, newContext, lossInfo) = calculate(paramsGrads, lastResult, batchLoss, batchSize)
 
     val newLayers = newParams.map {
       case (l, ps) => l.updateParams(ps)
     }
-    BatchResult(lossInfo, build(net, newLayers), lastResult.iterationNumber + 1, newContext)
+    BatchResult(lossInfo, build(net, newLayers), batchSize, newContext)
   }
 
   def accumulate(netParamGradients: Iterable[NetParamGradients]): NetParamGradients =
@@ -50,7 +51,7 @@ trait BatchTrainer {
     }
 
 
-  def calculate(paramGrads: NetParamGradients, lastIterationResult: BatchResult, loss: Loss ): (NetParams, CalculationContext, LossInfo)
+  def calculate(paramGrads: NetParamGradients, lastIterationResult: BatchResult, loss: Loss, batchSize: Int ): (NetParams, CalculationContext, LossInfo)
 }
 
 
@@ -60,7 +61,7 @@ case class LossInfo(l1Decay: Loss, l2Decay: Loss, cost: Loss) {
 
 object BatchTrainer {
   
-  class VanillaSGD[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](batchSize: Int, learningRate: Double) extends BatchTrainer {
+  class VanillaSGD[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](learningRate: Double) extends BatchTrainer {
     case class ParamGSum(layer: Layer, param: LayerParam, value: Vol)
     case class VanillaSGDIterationContext(l1Decay: Decay, l2Decay: Decay, gsum: Seq[ParamGSum])
     type Input = IT
@@ -70,8 +71,8 @@ object BatchTrainer {
 
     val initialCalculationContext: VanillaSGDIterationContext = VanillaSGDIterationContext(0, 0, Nil)
 
-
-    def calculate(netParamGradients: NetParamGradients, lastIterationResult: BatchResult, loss: Loss): (NetParams, CalculationContext, LossInfo) = {
+    
+    def calculate(netParamGradients: NetParamGradients, lastIterationResult: BatchResult, loss: Loss, batchSize: Int): (NetParams, CalculationContext, LossInfo) = {
       val lastContext = lastIterationResult.calcContext
 
       case class NewParamResult(newParam: LayerParam, gsum: ParamGSum, l1DecayLoss: Loss, l2DecayLoss: Loss)
@@ -87,13 +88,13 @@ object BatchTrainer {
         val l1grad: Vol = pValue.map(v => if(v > 0) 1 else -1) * l1Decay
         val l2grad: Vol = pValue * l2Decay
         val rawBatchGradient: Vol = (l1grad.add(l2grad).add(paramGrad.value)) / batchSize
-        val newParamValue = pValue - (rawBatchGradient * learningRate)
 
+        val newParamValue = pValue - (rawBatchGradient * learningRate) //todo: need to implement with momentum
         val newParam = paramGrad.param.copy(value = newParamValue)
 
         NewParamResult(
           newParam,
-          ParamGSum(layer, newParam, RowVector(0,0,0)), //todo: need to implment for momentum
+          ParamGSum(layer, newParam, RowVector(0,0,0)), //todo: need to implement for momentum
           paramL1DecayLoss,
           paramL2DecayLoss
         )
