@@ -82,8 +82,8 @@ object BatchTrainer {
         val cb = implicitly[ Vol.CanBuildFrom[Vol]]
         val p2DL: Vol = (paramGrad.param.value * paramGrad.param.value) * l2Decay / 2
         val p1DL: Vol = paramGrad.param.value.map(Math.abs(_)) * l1Decay
-        val paramL2DecayLoss: Loss = p2DL.sumAll
-        val paramL1DecayLoss: Loss = p1DL.sumAll
+        val l2DecayLoss: Loss = p2DL.sumAll
+        val l1DecayLoss: Loss = p1DL.sumAll
         val pValue = paramGrad.param.value
         val l1grad: Vol = pValue.map(v => if(v > 0) 1 else -1) * l1Decay
         val l2grad: Vol = pValue * l2Decay
@@ -94,8 +94,8 @@ object BatchTrainer {
 
         NewParamResult(
           newParam,
-          paramL1DecayLoss,
-          paramL2DecayLoss
+          l1DecayLoss,
+          l2DecayLoss
         )
       }
 
