@@ -1,5 +1,6 @@
 package glaux.nn.trainers
 
+import glaux.linalg.Vol
 import glaux.nn._
 import org.nd4j.api.linalg.DSL._
 

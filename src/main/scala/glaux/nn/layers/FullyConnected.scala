@@ -1,6 +1,6 @@
 package glaux.nn.layers
 
-import glaux.nn.Dimension
+import glaux.linalg.{RowVector, Matrix, Dimension}
 import glaux.nn._
 import glaux.nn.layers.FullyConnected.{Bias, Filter}
 import org.nd4j.api.linalg.DSL._

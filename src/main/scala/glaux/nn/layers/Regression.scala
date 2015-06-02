@@ -1,6 +1,6 @@
 package glaux.nn.layers
 
-import glaux.nn.Dimension
+import glaux.linalg.Dimension
 import org.nd4j.api.linalg.DSL._
 import glaux.nn._
 

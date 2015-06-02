@@ -1,30 +1,30 @@
-package glaux
-package nn
+package glaux.linalg
 
-import glaux.nn.Vol.CanBuildFrom
+import glaux.linalg.Dimension.DimensionFactory
+import glaux.linalg.Dimension._
 import org.nd4j.api.linalg.DSL._
 import org.nd4j.api.linalg.RichNDArray
 import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.factory.Nd4j
-import Dimension._
-
+import Vol.CanBuildFrom
 
 trait Vol {
   def indArray: INDArray
   type Dimensionality <: Dimension
   def dimension: Dimensionality
-  def sumAll: Double = { indArray.linearView().sum(Row.dimIndexOfData).getDouble(0) }
+  def sumAll: Double
 
-  def iteratable: Iterable[Double]
-  def toArray: Array[Double] = iteratable.toArray
+  def iterable: Iterable[Double]
+  def toArray: Array[Double] = iterable.toArray
 }
 
-sealed abstract class VolBase[D <: Dimension : DimensionFactory](indArray: INDArray) extends Vol {
+sealed abstract class ND4JBackedVol[D <: Dimension : DimensionFactory](indArray: INDArray) extends Vol {
   type Dimensionality = D
   val dimension: Dimensionality =
     implicitly[DimensionFactory[Dimensionality]].create(indArray.shape())
+  def sumAll: Double = { indArray.linearView().sum(Row.dimIndexOfData).getDouble(0) }
 
-  def iteratable: Iterable[Double] = {
+  def iterable: Iterable[Double] = {
     val lv = indArray.linearView()
     val myLength = lv.size(Row.dimIndexOfData)
 
@@ -42,9 +42,9 @@ sealed abstract class VolBase[D <: Dimension : DimensionFactory](indArray: INDAr
 
 }
 
-case class Vol3D(indArray: INDArray)      extends VolBase[ThreeD](indArray)
-case class Matrix(indArray: INDArray)     extends VolBase[TwoD](indArray)
-case class RowVector(indArray: INDArray)  extends VolBase[Row](indArray) {
+case class Vol3D(indArray: INDArray)      extends ND4JBackedVol[ThreeD](indArray)
+case class Matrix(indArray: INDArray)     extends ND4JBackedVol[TwoD](indArray)
+case class RowVector(indArray: INDArray)  extends ND4JBackedVol[Row](indArray) {
   def apply(index: Int) : Double = indArray.getDouble(index)
 }
 
@@ -113,6 +113,10 @@ object Vol extends VolCompanion[Vol]{
       val linear2 = v2.indArray.linearView
       mapWithIndex((value, i) => f(value, linear2.getDouble(i) ))
     }
+
   }
+
+
+
 
 }

@@ -1,6 +1,7 @@
 package glaux.nn.layers
 
-import glaux.nn.{Gradient, ParamGradient, Dimension, RowVector}
+import glaux.linalg.{RowVector, Dimension}
+import glaux.nn.{Gradient, ParamGradient}
 import org.specs2.mutable.Specification
 
 class ReluSpec extends Specification {

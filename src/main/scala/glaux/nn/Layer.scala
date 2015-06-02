@@ -1,5 +1,7 @@
 package glaux.nn
 
+import glaux.linalg.{RowVector, Vol}
+
 
 trait Layer {
 

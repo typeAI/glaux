@@ -1,6 +1,6 @@
 package glaux.nn.layers
 
-import glaux.nn.{Dimension, RowVector}
+import glaux.linalg.{RowVector, Dimension}
 import org.specs2.mutable.Specification
 
 class RegressSpec extends Specification {

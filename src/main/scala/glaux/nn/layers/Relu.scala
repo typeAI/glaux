@@ -1,7 +1,8 @@
 package glaux.nn.layers
 
-
-import glaux.nn.Vol.CanBuildFrom
+import glaux.linalg.Vol
+import Vol.CanBuildFrom
+import glaux.linalg.Vol
 
 import scala.math.max
 import glaux.nn._

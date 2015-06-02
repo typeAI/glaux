@@ -1,10 +1,11 @@
 package glaux.nn.trainers
 
-import glaux.nn.Dimension.{TwoD, Row}
+import glaux.linalg.{Matrix, RowVector, Dimension}
+import Dimension.{TwoD, Row}
 import glaux.nn.Net.SimpleNet
 import glaux.nn.layers.{Regression, FullyConnected}
 import glaux.nn.trainers.BatchTrainer.{SGDOptions, VanillaSGD}
-import glaux.nn.{Matrix, InputLayer, RowVector, Net}
+import glaux.nn.{InputLayer, Net}
 import org.specs2.mutable.Specification
 
 

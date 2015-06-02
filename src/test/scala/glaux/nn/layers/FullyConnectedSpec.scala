@@ -1,6 +1,7 @@
 package glaux.nn.layers
 
-import glaux.nn.{Gradient, Matrix, RowVector}
+import glaux.linalg.{Matrix, RowVector}
+import glaux.nn.Gradient
 import org.specs2.mutable.Specification
 
 class FullyConnectedSpec extends Specification {

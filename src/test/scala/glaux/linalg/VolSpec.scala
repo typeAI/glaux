@@ -1,6 +1,6 @@
-package glaux.nn
+package glaux.linalg
 
-import glaux.nn.Dimension.{Row, TwoD, ThreeD}
+import glaux.linalg.Dimension.{Row, ThreeD, TwoD}
 import org.specs2.mutable.Specification
 
 class VolSpec

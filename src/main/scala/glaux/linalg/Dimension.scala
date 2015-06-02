@@ -1,11 +1,11 @@
-package glaux.nn
+package glaux.linalg
 
-import glaux.nn.Dimension.Shape
 import org.nd4j.linalg.api.ndarray.INDArray
+import Dimension.Shape
 
 trait Dimension {
   def totalSize: Int = this.shape.reduce(_ * _)
-  private[nn] def shape: Shape
+  def shape: Shape
 }
 
 object Dimension {
@@ -41,6 +41,7 @@ object Dimension {
     assert(x > 0 && y > 0)
     def shape: Shape = Array(x, y)
   }
+
   case class Row(size: Int) extends Dimension {
     assert(size > 0)
     def shape: Shape = Array(1, size)

@@ -1,5 +1,7 @@
 package glaux.nn
 
+import glaux.linalg.Vol
+
 trait Net {
   type Input <: Vol
   type Output = LossLayer#Output
