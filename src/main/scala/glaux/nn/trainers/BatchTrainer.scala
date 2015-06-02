@@ -1,14 +1,13 @@
 package glaux.nn.trainers
 
 import glaux.nn._
-import glaux.nn.trainers.BatchTrainer.RegularizationContext
 import org.nd4j.api.linalg.DSL._
 
 trait BatchTrainer[Trainee <: Net] {
   type Input = Trainee#Input
   type Output = Trainee#Output
 
-  type CalculationContext <: RegularizationContext
+  type CalculationContext
   
   case class BatchResult(lossInfo: LossInfo, net: Trainee, batchSize: Int, calcContext: CalculationContext)
 
@@ -62,12 +61,10 @@ case class LossInfo(l1Decay: Loss, l2Decay: Loss, cost: Loss) {
 }
 
 object BatchTrainer {
-  trait RegularizationContext {
-    def l1Decay : Decay
-    def l2Decay : Decay
-  }
 
-  abstract class SGDBase[NT <: Net: Net.CanBuildFrom](learningRate: Double) extends BatchTrainer[NT] {
+  case class SGDOptions(learningRate: Double = 0.01, l1Decay: Decay = 0, l2Decay: Decay = 0)
+
+  abstract class SGDBase[NT <: Net: Net.CanBuildFrom](options: SGDOptions) extends BatchTrainer[NT] {
     type Trainee = NT
     val build: Net.CanBuildFrom[Trainee] = implicitly[Net.CanBuildFrom[Trainee]]
 
@@ -77,8 +74,8 @@ object BatchTrainer {
       case class NewParamResult(newParam: LayerParam, l1DecayLoss: Loss, l2DecayLoss: Loss)
 
       def calcNewParam(paramGrad: ParamGradient, layer: Layer): NewParamResult = {
-        val l1Decay =  lastContext.l1Decay * paramGrad.param.regularizationSetting.l1DM
-        val l2Decay =  lastContext.l2Decay * paramGrad.param.regularizationSetting.l2DM
+        val l1Decay =  options.l1Decay * paramGrad.param.regularizationSetting.l1DM
+        val l2Decay =  options.l2Decay * paramGrad.param.regularizationSetting.l2DM
         val cb = implicitly[ Vol.CanBuildFrom[Vol]]
         val p2DL: Vol = (paramGrad.param.value * paramGrad.param.value) * l2Decay / 2
         val p1DL: Vol = paramGrad.param.value.map(Math.abs(_)) * l1Decay
@@ -89,7 +86,7 @@ object BatchTrainer {
         val l2grad: Vol = pValue * l2Decay
         val rawBatchGradient: Vol = (l1grad.add(l2grad).add(paramGrad.value)) / batchSize
 
-        val newParamValue = pValue - (rawBatchGradient * learningRate) //todo: need to implement with momentum
+        val newParamValue = pValue - (rawBatchGradient * options.learningRate) //todo: need to implement with momentum
         val newParam = paramGrad.param.copy(value = newParamValue)
 
         NewParamResult(
@@ -115,25 +112,25 @@ object BatchTrainer {
     def updateContext(lastContext: CalculationContext): CalculationContext
   }
 
-  case class VanillaSGD[NT <: Net: Net.CanBuildFrom](learningRate: Double) extends SGDBase[NT](learningRate) {
-    case class VanillaSGDIterationContext(l1Decay: Decay, l2Decay: Decay) extends RegularizationContext
+  case class VanillaSGD[NT <: Net: Net.CanBuildFrom](options: SGDOptions) extends SGDBase[NT](options) {
 
-    type CalculationContext = VanillaSGDIterationContext
+    type CalculationContext = Unit
 
-    val initialCalculationContext: VanillaSGDIterationContext = VanillaSGDIterationContext(0, 0)
+    val initialCalculationContext: Unit = ()
 
-    def updateContext(lastContext: VanillaSGDIterationContext) = lastContext
+    def updateContext(lastContext: Unit) = ()
 
   }
 
-  case class MomentumSGD[ NT <: Net: Net.CanBuildFrom](learningRate: Double) extends SGDBase[NT](learningRate) {
+  case class MomentumSGDOptions(sgdOptions: SGDOptions, momentum: Double)
+  case class MomentumSGD[ NT <: Net: Net.CanBuildFrom](mOptions: MomentumSGDOptions) extends SGDBase[NT](mOptions.sgdOptions) {
     case class ParamGSum(layer: Layer, param: LayerParam, value: Vol)
 
-    case class MomentumSGDIterationContext(l1Decay: Decay, l2Decay: Decay, gsum: Seq[ParamGSum]) extends  RegularizationContext
+    case class MomentumSGDIterationContext(gsum: Seq[ParamGSum])
 
     type CalculationContext = MomentumSGDIterationContext
 
-    val initialCalculationContext: MomentumSGDIterationContext = MomentumSGDIterationContext(0, 0, Nil)
+    val initialCalculationContext: MomentumSGDIterationContext = MomentumSGDIterationContext(Nil)
 
     def updateContext(lastContext: MomentumSGDIterationContext): MomentumSGDIterationContext = ???
   }
