@@ -30,7 +30,7 @@ case class RowVector(indArray: INDArray)  extends VolBase[Row](indArray) {
 }
 
 
-abstract class VolCompanionBase[V <: Vol] {
+trait VolCompanion[V <: Vol] {
   implicit val cb : CanBuildFrom[V]
 
   private def createINDArray(dimension: Dimension, data: Seq[Double]): INDArray = {
@@ -43,23 +43,23 @@ abstract class VolCompanionBase[V <: Vol] {
   def uniform(dimension: Dimension, value: Double): V = Nd4j.create(dimension.shape:_*).assign(value)
 }
 
-object RowVector extends VolCompanionBase[RowVector]{
+object RowVector extends VolCompanion[RowVector]{
   implicit val cb : CanBuildFrom[RowVector] = RowVector.apply
   def apply(values: Double*): RowVector = RowVector(Dimension.Row(values.length), values)
 }
 
-object Vol3D extends VolCompanionBase[Vol3D] {
+object Vol3D extends VolCompanion[Vol3D] {
   implicit val cb : CanBuildFrom[Vol3D] = Vol3D.apply
   def apply(x: Int, y: Int, z: Int, data: Seq[Double]): Vol3D = apply(Dimension.ThreeD(x,y,z), data)
 }
 
-object Matrix extends VolCompanionBase[Matrix]{
+object Matrix extends VolCompanion[Matrix]{
   implicit val cb : CanBuildFrom[Matrix] = Matrix.apply
   def apply(x: Int, y: Int, data: Seq[Double]): Matrix = apply(Dimension.TwoD(x,y), data)
 }
 
 
-object Vol extends VolCompanionBase[Vol]{
+object Vol extends VolCompanion[Vol]{
 
   implicit val cb : CanBuildFrom[Vol] = indArray => Dimension.of(indArray) match {
     case d @ ThreeD(_,_,_) => Vol3D(indArray)

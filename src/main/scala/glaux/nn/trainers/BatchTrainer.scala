@@ -100,7 +100,7 @@ object BatchTrainer {
         (layer, paramGrads) <- netParamGradients.toSeq
         paramGrad <- paramGrads
         newParamResult = calcNewParam(paramGrad, layer)
-      } yield (layer, newParamResult)).toSeq
+      } yield (layer, newParamResult))
       val newNetParams: NetParams = results.groupBy(_._1).mapValues(_.map(_._2.newParam))
       val newContext = updateContext(lastContext)
       val l1DecayLoss = results.map(_._2.l1DecayLoss).sum
