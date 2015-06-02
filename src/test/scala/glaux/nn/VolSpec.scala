@@ -1,6 +1,6 @@
 package glaux.nn
 
-import glaux.nn.Dimension.{TwoD, ThreeD}
+import glaux.nn.Dimension.{Row, TwoD, ThreeD}
 import org.specs2.mutable.Specification
 
 class VolSpec
@@ -58,6 +58,17 @@ class VolSpec
 
     }
 
+    "normal" >> {
+      val data = 1.until(100).flatMap { _ =>
+        RowVector.normal(Row(3), 10, 3).toArray.toSeq
+      }
+      val avg = data.sum / data.size
+      val devs = data.map(value => (value - avg) * (value - avg))
+      val std =  Math.sqrt(devs.sum / data.size)
+      avg must beCloseTo(10.0 within 2.significantFigures)
+      std must beCloseTo(3.0 within 1.significantFigures)
+    }
+
   }
 
   "Generic " >> {
@@ -67,7 +78,6 @@ class VolSpec
       val result = m.map(_ * 2)
       result must_== Matrix.uniform(d, 1)
     }
-
   }
 
   "RowVector Vols" >> {

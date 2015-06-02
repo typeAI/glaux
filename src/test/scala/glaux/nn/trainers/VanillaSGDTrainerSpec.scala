@@ -7,6 +7,7 @@ import glaux.nn.trainers.BatchTrainer.{SGDOptions, VanillaSGD}
 import glaux.nn.{Matrix, InputLayer, RowVector, Net}
 import org.specs2.mutable.Specification
 
+
 class VanillaSGDTrainerSpec extends Specification {
 
   val inputLayer = InputLayer[RowVector](Row(3))
@@ -33,3 +34,19 @@ class VanillaSGDTrainerSpec extends Specification {
   }
 
 }
+
+/** convnetjs test code
+  *
+  * var layer_defs = [];
+  * layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:3});
+  * layer_defs.push({type:'fc', in_sx:1, in_sy:1, in_depth:3, num_neurons: 1});
+  * layer_defs.push({type:'regression', num_neurons: 1});
+  *
+  * var net = new convnetjs.Net();
+  * net.makeLayers(layer_defs);
+  * var trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.05,
+                                    l2_decay: 0, momentum: 0, batch_size: 3,
+                                    l1_decay: 0});
+
+  *
+  */

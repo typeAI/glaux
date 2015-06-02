@@ -14,12 +14,31 @@ trait Vol {
   type Dimensionality <: Dimension
   def dimension: Dimensionality
   def sumAll: Double = { indArray.linearView().sum(Row.dimIndexOfData).getDouble(0) }
+
+  def iteratable: Iterable[Double]
+  def toArray: Array[Double] = iteratable.toArray
 }
 
 sealed abstract class VolBase[D <: Dimension : DimensionFactory](indArray: INDArray) extends Vol {
   type Dimensionality = D
   val dimension: Dimensionality =
     implicitly[DimensionFactory[Dimensionality]].create(indArray.shape())
+
+  def iteratable: Iterable[Double] = {
+    val lv = indArray.linearView()
+    val myLength = lv.size(Row.dimIndexOfData)
+
+    new Iterable[Double] {
+      def iterator = new Iterator[Double] {
+        var index: Int = 0
+        override def hasNext: Boolean = index < myLength
+        override def next(): Double = {
+          index += 1
+          lv.getDouble(index - 1)
+        }
+      }
+    }
+  }
 
 }
 
@@ -41,6 +60,9 @@ trait VolCompanion[V <: Vol] {
   def apply(dimension: Dimension, data: Seq[Double]): V = createINDArray(dimension, data)
 
   def uniform(dimension: Dimension, value: Double): V = Nd4j.create(dimension.shape:_*).assign(value)
+
+  def normal(dimension: Dimension, mean: Double, std: Double): V =
+    Nd4j.getDistributions.createNormal(mean, std).sample(dimension.shape)
 }
 
 object RowVector extends VolCompanion[RowVector]{
