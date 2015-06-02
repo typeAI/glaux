@@ -1,10 +1,12 @@
 package glaux.nn
 
-import glaux.nn.Dimension.{ThreeD}
+import glaux.nn.Dimension.{TwoD, ThreeD}
 import org.specs2.mutable.Specification
 
 class VolSpec
   extends Specification {
+
+
 
   "3D Vols" >> {
     val dim = ThreeD(1,1,3)
@@ -54,6 +56,16 @@ class VolSpec
       val m = Vol3D.uniform(ThreeD(2, 2, 2), 10)
       m must_== Vol3D(2, 2, 2, Seq.fill(8)(10d))
 
+    }
+
+  }
+
+  "Generic " >> {
+    "map correctly" >> {
+      val d: TwoD = TwoD(3, 1)
+      val m: Vol = Matrix.uniform(d, 0.5)
+      val result = m.map(_ * 2)
+      result must_== Matrix.uniform(d, 1)
     }
 
   }

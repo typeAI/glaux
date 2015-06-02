@@ -9,7 +9,7 @@ import org.nd4j.linalg.factory.Nd4j
 import Dimension._
 
 
-sealed trait Vol {
+trait Vol {
   def indArray: INDArray
   type Dimensionality <: Dimension
   def dimension: Dimensionality
@@ -25,10 +25,12 @@ sealed abstract class VolBase[D <: Dimension : DimensionFactory](indArray: INDAr
 
 case class Vol3D(indArray: INDArray)      extends VolBase[ThreeD](indArray)
 case class Matrix(indArray: INDArray)     extends VolBase[TwoD](indArray)
-case class RowVector(indArray: INDArray)  extends VolBase[Row](indArray)
+case class RowVector(indArray: INDArray)  extends VolBase[Row](indArray) {
+  def apply(index: Int) : Double = indArray.getDouble(index)
+}
 
 
-sealed abstract class VolCompanionBase[V <: Vol] {
+abstract class VolCompanionBase[V <: Vol] {
   implicit val cb : CanBuildFrom[V]
 
   private def createINDArray(dimension: Dimension, data: Seq[Double]): INDArray = {
@@ -41,6 +43,11 @@ sealed abstract class VolCompanionBase[V <: Vol] {
   def uniform(dimension: Dimension, value: Double): V = Nd4j.create(dimension.shape:_*).assign(value)
 }
 
+object RowVector extends VolCompanionBase[RowVector]{
+  implicit val cb : CanBuildFrom[RowVector] = RowVector.apply
+  def apply(values: Double*): RowVector = RowVector(Dimension.Row(values.length), values)
+}
+
 object Vol3D extends VolCompanionBase[Vol3D] {
   implicit val cb : CanBuildFrom[Vol3D] = Vol3D.apply
   def apply(x: Int, y: Int, z: Int, data: Seq[Double]): Vol3D = apply(Dimension.ThreeD(x,y,z), data)
@@ -51,12 +58,9 @@ object Matrix extends VolCompanionBase[Matrix]{
   def apply(x: Int, y: Int, data: Seq[Double]): Matrix = apply(Dimension.TwoD(x,y), data)
 }
 
-object RowVector extends VolCompanionBase[RowVector]{
-  implicit val cb : CanBuildFrom[RowVector] = RowVector.apply
-  def apply(values: Double*): RowVector = RowVector(Dimension.Row(values.length), values)
-}
 
 object Vol extends VolCompanionBase[Vol]{
+
   implicit val cb : CanBuildFrom[Vol] = indArray => Dimension.of(indArray) match {
     case d @ ThreeD(_,_,_) => Vol3D(indArray)
     case d @ TwoD(_,_) => Matrix(indArray)
@@ -70,6 +74,7 @@ object Vol extends VolCompanionBase[Vol]{
 
 
   implicit class VolOps[V <: Vol: CanBuildFrom](v: V) {
+
     def map(f: Double => Double): V = mapWithIndex((value, i) => f(value))
 
     def mapWithIndex(f: (Double, Int) => Double): V = {

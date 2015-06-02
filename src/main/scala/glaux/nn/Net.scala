@@ -1,6 +1,7 @@
 package glaux.nn
 
-trait Net[Input <: Vol] {
+trait Net {
+  type Input <: Vol
   type Output = LossLayer#Output
   def inputLayer: InputLayer[Input]
   def layers: Seq[HiddenLayer]
@@ -40,9 +41,10 @@ trait Net[Input <: Vol] {
 
 
 object Net {
-  type CanBuildFrom[N <: Net[_]] = (N, Iterable[HiddenLayer]) => N
+  type CanBuildFrom[N <: Net] = (N, Iterable[HiddenLayer]) => N
 
-  case class SimpleNet[Input <: Vol](inputLayer: InputLayer[Input], layers: Seq[HiddenLayer], lossLayer: LossLayer) extends Net[Input] {
+  case class SimpleNet[InputT <: Vol](inputLayer: InputLayer[InputT], layers: Seq[HiddenLayer], lossLayer: LossLayer) extends Net {
+    type Input = InputT
     val assertDimensionIntegrity = allLayers.reduce { (lastLayer, thisLayer) =>
         assert(lastLayer.outDimension == thisLayer.inDimension)
         thisLayer
@@ -51,7 +53,7 @@ object Net {
 
   implicit def simpleUpdater[Input <: Vol]: CanBuildFrom[SimpleNet[Input]] = (net, newLayers) => net.copy(layers = newLayers.toSeq)
 
-  def apply[Input <: Vol](inputDimension: Input#Dimensionality, hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer): Net[Input] = SimpleNet(
+  def apply[Input <: Vol](inputDimension: Input#Dimensionality, hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer): Net = SimpleNet(
     InputLayer[Input](inputDimension), hiddenLayers, lossLayer
   )
 }

@@ -29,7 +29,11 @@ case class FullyConnected(filter: Filter, bias: Bias) extends HiddenLayer {
     )
   }
 
-  def updateParams(params: Iterable[LayerParam]): HiddenLayer = ???
+  def updateParams(params: Iterable[LayerParam]): HiddenLayer = {
+    val f = params.find(_.id == "filter").get.value.asInstanceOf[Matrix]
+    val b = params.find(_.id == "bias").get.value.asInstanceOf[RowVector]
+    FullyConnected(f, b)
+  }
 
   def forward(input: Input, isTraining: Boolean = false): Output = {
     (input ** filter).add(bias)

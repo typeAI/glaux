@@ -17,7 +17,7 @@ object Dimension {
     def create(shape: Shape): DT = tryCreate(shape).getOrElse(throw unsupported(shape))
   }
 
-  def unsupported(shape: Shape):Exception = new UnsupportedOperationException(s"unrecognized INDArray shape $shape")
+  def unsupported(shape: Shape):Exception = new UnsupportedOperationException(s"unrecognized INDArray shape (${shape.mkString(",")})")
 
   def ofSpecific[DT <: Dimension](indArray: INDArray)(implicit df: DimensionFactory[DT]): DT = {
     val shape = indArray.shape()

@@ -4,9 +4,9 @@ import glaux.nn._
 import glaux.nn.trainers.BatchTrainer.RegularizationContext
 import org.nd4j.api.linalg.DSL._
 
-trait BatchTrainer {
-  type Input <: Vol
-  type Trainee <: Net[Input]
+trait BatchTrainer[Trainee <: Net] {
+  type Input = Trainee#Input
+  type Output = Trainee#Output
 
   type CalculationContext <: RegularizationContext
   
@@ -20,11 +20,11 @@ trait BatchTrainer {
   def init(net: Trainee) = BatchResult(initialLossInfo, net, 0, initialCalculationContext)
 
 
-  def trainBatch(batch: Iterable[(Input, Trainee#Output)], lastResult: BatchResult): BatchResult = {
+  def trainBatch(batch: Iterable[(Input, Output)], lastResult: BatchResult): BatchResult = {
     val net: Trainee = lastResult.net
     val pairs = batch.map {
       case (input, target) =>
-        val dataFlow = net.forward(input)
+        val dataFlow = net.forward(input.asInstanceOf[net.Input]) //unforutnately this is the cleanest way to encode Type
         net.backward(target, dataFlow)
     }
     val batchLoss = pairs.last._1 //todo: confirm on this
@@ -67,8 +67,7 @@ object BatchTrainer {
     def l2Decay : Decay
   }
 
-  abstract class SGDBase[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](learningRate: Double) extends BatchTrainer {
-    type Input = IT
+  abstract class SGDBase[NT <: Net: Net.CanBuildFrom](learningRate: Double) extends BatchTrainer[NT] {
     type Trainee = NT
     val build: Net.CanBuildFrom[Trainee] = implicitly[Net.CanBuildFrom[Trainee]]
 
@@ -80,6 +79,7 @@ object BatchTrainer {
       def calcNewParam(paramGrad: ParamGradient, layer: Layer): NewParamResult = {
         val l1Decay =  lastContext.l1Decay * paramGrad.param.regularizationSetting.l1DM
         val l2Decay =  lastContext.l2Decay * paramGrad.param.regularizationSetting.l2DM
+        val cb = implicitly[ Vol.CanBuildFrom[Vol]]
         val p2DL: Vol = (paramGrad.param.value * paramGrad.param.value) * l2Decay / 2
         val p1DL: Vol = paramGrad.param.value.map(Math.abs(_)) * l1Decay
         val paramL2DecayLoss: Loss = p2DL.sumAll
@@ -100,7 +100,7 @@ object BatchTrainer {
       }
 
       val results = (for {
-        (layer, paramGrads) <- netParamGradients
+        (layer, paramGrads) <- netParamGradients.toSeq
         paramGrad <- paramGrads
         newParamResult = calcNewParam(paramGrad, layer)
       } yield (layer, newParamResult)).toSeq
@@ -115,7 +115,7 @@ object BatchTrainer {
     def updateContext(lastContext: CalculationContext): CalculationContext
   }
 
-  case class VanillaSGD[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](learningRate: Double) extends SGDBase[IT, NT](learningRate) {
+  case class VanillaSGD[NT <: Net: Net.CanBuildFrom](learningRate: Double) extends SGDBase[NT](learningRate) {
     case class VanillaSGDIterationContext(l1Decay: Decay, l2Decay: Decay) extends RegularizationContext
 
     type CalculationContext = VanillaSGDIterationContext
@@ -126,7 +126,7 @@ object BatchTrainer {
 
   }
 
-  case class MomentumSGD[IT <: Vol : Vol.CanBuildFrom, NT <: Net[IT]: Net.CanBuildFrom](learningRate: Double) extends SGDBase[IT, NT](learningRate) {
+  case class MomentumSGD[ NT <: Net: Net.CanBuildFrom](learningRate: Double) extends SGDBase[NT](learningRate) {
     case class ParamGSum(layer: Layer, param: LayerParam, value: Vol)
 
     case class MomentumSGDIterationContext(l1Decay: Decay, l2Decay: Decay, gsum: Seq[ParamGSum]) extends  RegularizationContext
