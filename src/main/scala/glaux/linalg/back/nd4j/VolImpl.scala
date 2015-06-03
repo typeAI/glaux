@@ -5,7 +5,7 @@ import glaux.linalg._
 import org.nd4j.linalg.api.ndarray.INDArray
 
 
-trait VolBackedND4J extends Vol with VolOperationsImpl with WithIndArray
+trait VolImpl extends Vol with VolOperationsImpl with WithIndArray
 
 trait WithIndArray {
   val indArray: INDArray
@@ -46,7 +46,7 @@ trait VolOperationsImpl extends VolOperations {
 }
 
 
-protected sealed abstract class ND4JBackedVol(val indArray: INDArray) extends VolBackedND4J {
+protected sealed abstract class ND4JBackedVol(val indArray: INDArray) extends VolImpl {
   val dimensionFactory: DimensionFactory[Dimensionality]
 
   lazy val dimension: Dimensionality = dimensionFactory.create(indArray.shape())
