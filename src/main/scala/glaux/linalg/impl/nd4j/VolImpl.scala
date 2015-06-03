@@ -1,4 +1,4 @@
-package glaux.linalg.back.nd4j
+package glaux.linalg.impl.nd4j
 
 import glaux.linalg.Dimension.{TwoD, ThreeD, Row, DimensionFactory}
 import glaux.linalg._

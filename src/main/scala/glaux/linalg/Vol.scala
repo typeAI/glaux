@@ -2,6 +2,7 @@ package glaux.linalg
 
 import Dimension._
 import Vol._
+import glaux.statistics.{RealDistribution, Distribution}
 
 trait Vol extends VolOperations {
 
@@ -94,9 +95,13 @@ trait VolFactory[V <: Vol] {
   def apply(dimension: V#Dimensionality, data: Seq[Double])(implicit b: VolBuilder[V]) : V = b((dimension, data))
 
   def fill(dimension: V#Dimensionality, value: Double)(implicit b: VolBuilder[V]): V = apply(dimension, Array.fill(dimension.totalSize)(value))
-//
-//  def normal(dimension: Dimension, mean: Double, std: Double): V =
-//    Nd4j.getDistributions.createNormal(mean, std).sample(dimension.shape)
+
+  def sampleOf(dimension: V#Dimensionality, dist: RealDistribution, size: Int)(implicit b: VolBuilder[V]): Iterable[V] =
+    1.until(size).map(_ => sampleOf(dimension, dist))
+
+  def sampleOf(dimension: V#Dimensionality, dist: RealDistribution)(implicit b: VolBuilder[V]): V =
+    apply(dimension, dist.sample(dimension.totalSize).toSeq)
+
 }
 
 object RowVector extends VolFactory[RowVector]{
