@@ -62,10 +62,11 @@ object Vol {
   implicit val toMatrix: CanBuildFrom[Vol, Matrix] = v => v.asInstanceOf[Matrix]
 
   implicit def toGen[V <: Vol](implicit gb: GenVolBuilder[V]): VolBuilder[V] = gb
-
   implicit class VolOps[V <: Vol : VolBuilder](self: V) {
 
     def map(f: Double => Double): V = (self.dimension, self.seqView.map(f))
+
+    def fill(value: Double): V = map(_ => 0)
 
     def merge(v2: V)(f: (Double, Double) => Double) : V = {
       assert(self.dimension == v2.dimension)

@@ -24,10 +24,10 @@ case class Gradient[T <: Vol](data: T, gradient: T) {
   assert(data.dimension == gradient.dimension)
 }
 
-
 trait HiddenLayer extends Layer {
   def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient])
   def updateParams(params: Iterable[LayerParam]): HiddenLayer
+  def params: Seq[LayerParam]
 }
 
 trait LossLayer extends Layer {

@@ -13,11 +13,12 @@ case class FullyConnected(filter: Filter, bias: Bias) extends HiddenLayer {
   private val biasRegularization = RegularizationSetting(0, 0)
   lazy val filterParam: LayerParam = LayerParam("filter", filter, filterRegularization)
   lazy val biasParam: LayerParam = LayerParam("bias", bias, biasRegularization)
-
   assert(bias.dimension == outDimension)
 
   type Output = RowVector
   type Input = RowVector
+
+  def params = Seq(filterParam, biasParam)
 
   def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient]) = {
     val og = outGradient.gradient

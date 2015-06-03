@@ -20,6 +20,8 @@ case class Relu[DataType <: Vol : VolBuilder](dimension: DataType#Dimensionality
 
   def updateParams(params: Iterable[LayerParam]): HiddenLayer = this
 
+  def params: Seq[LayerParam] = Nil
+
   def outDimension: OutDimension = dimension
 
   def inDimension: InDimension = dimension

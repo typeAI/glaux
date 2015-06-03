@@ -13,10 +13,10 @@ trait BatchTrainer[Trainee <: Net] {
 
   val build: Net.CanBuildFrom[Trainee]
 
-  val initialCalculationContext : CalculationContext
+  def initialCalculationContext(net: Trainee) : CalculationContext
 
   val initialLossInfo = LossInfo(0,0,0)
-  def init(net: Trainee) = BatchResult(initialLossInfo, net, 0, initialCalculationContext)
+  def init(net: Trainee) = BatchResult(initialLossInfo, net, 0, initialCalculationContext(net))
 
 
   def trainBatch(batch: Iterable[(Input, Output)], lastResult: BatchResult): BatchResult = {
@@ -114,7 +114,7 @@ object BatchTrainer {
 
     type CalculationContext = Unit
 
-    val initialCalculationContext: Unit = ()
+    def initialCalculationContext(net: Trainee): Unit = ()
 
     def updateContext(lastContext: Unit) = ()
 
@@ -128,7 +128,13 @@ object BatchTrainer {
 
     type CalculationContext = MomentumSGDIterationContext
 
-    val initialCalculationContext: MomentumSGDIterationContext = MomentumSGDIterationContext(Nil)
+    def initialCalculationContext(net: Trainee): MomentumSGDIterationContext = {
+      val paramGSums = net.hiddenLayers.flatMap { layer =>
+        layer.params.map { p => ParamGSum(layer, p, p.value.fill(0))
+        }
+      }
+      MomentumSGDIterationContext(paramGSums)
+    }
 
     def updateContext(lastContext: MomentumSGDIterationContext): MomentumSGDIterationContext = ???
   }
