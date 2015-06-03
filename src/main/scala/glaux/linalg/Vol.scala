@@ -93,7 +93,7 @@ trait Vol3D extends Vol {
 trait VolFactory[V <: Vol] {
   def apply(dimension: V#Dimensionality, data: Seq[Double])(implicit b: VolBuilder[V]) : V = b((dimension, data))
 
-  def uniform(dimension: V#Dimensionality, value: Double)(implicit b: VolBuilder[V]): V = apply(dimension, Array.fill(dimension.totalSize)(value))
+  def fill(dimension: V#Dimensionality, value: Double)(implicit b: VolBuilder[V]): V = apply(dimension, Array.fill(dimension.totalSize)(value))
 //
 //  def normal(dimension: Dimension, mean: Double, std: Double): V =
 //    Nd4j.getDistributions.createNormal(mean, std).sample(dimension.shape)

@@ -53,7 +53,7 @@ class VolSpec
     }
 
     "uniform" >> {
-      val m = Vol3D.uniform(ThreeD(2, 2, 2), 10)
+      val m = Vol3D.fill(ThreeD(2, 2, 2), 10)
       m must_== Vol3D(2, 2, 2, Seq.fill(8)(10d))
 
     }
@@ -74,9 +74,9 @@ class VolSpec
   "Generic " >> {
     "map correctly" >> {
       val d: TwoD = TwoD(3, 1)
-      val m: Vol = Matrix.uniform(d, 0.5)
+      val m: Vol = Matrix.fill(d, 0.5)
       val result = m.map(_ * 2)
-      result must_== Matrix.uniform(d, 1)
+      result must_== Matrix.fill(d, 1)
     }
   }
 
