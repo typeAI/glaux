@@ -1,6 +1,5 @@
 package glaux.linalg
 
-import org.nd4j.linalg.api.ndarray.INDArray
 import Dimension.Shape
 
 trait Dimension {
@@ -19,13 +18,11 @@ object Dimension {
 
   def unsupported(shape: Shape):Exception = new UnsupportedOperationException(s"unrecognized INDArray shape (${shape.mkString(",")})")
 
-  def ofSpecific[DT <: Dimension](indArray: INDArray)(implicit df: DimensionFactory[DT]): DT = {
-    val shape = indArray.shape()
+  def ofSpecific[DT <: Dimension](shape: Shape)(implicit df: DimensionFactory[DT]): DT = {
     df.tryCreate(shape).getOrElse(throw unsupported(shape))
   }
 
-  def of(indArray: INDArray): Dimension = {
-    val shape = indArray.shape()
+  def of(shape: Shape): Dimension = {
     val df3d = implicitly[DimensionFactory[ThreeD]]
     val df2d = implicitly[DimensionFactory[TwoD]]
     val df1d = implicitly[DimensionFactory[Row]]

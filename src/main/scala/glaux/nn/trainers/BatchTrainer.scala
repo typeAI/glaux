@@ -2,7 +2,6 @@ package glaux.nn.trainers
 
 import glaux.linalg.Vol
 import glaux.nn._
-import org.nd4j.api.linalg.DSL._
 
 trait BatchTrainer[Trainee <: Net] {
   type Input = Trainee#Input
@@ -46,7 +45,7 @@ trait BatchTrainer[Trainee <: Net] {
           assert(layer1 == layer2)//assume sequence of the two NetParamGradients are the same, but assert the match here
           val newParamGradient = (paramGradients1, paramGradients2).zipped.map { (paramGradient1, paramGradient2) =>
             assert(paramGradient1.param == paramGradient2.param) //assume the sequence remain the same, but assert the match here
-            paramGradient1.copy(value = paramGradient1.value.add(paramGradient2.value))
+            paramGradient1.copy(value = paramGradient1.value + paramGradient2.value)
           }
           (layer1, newParamGradient)
       }
@@ -71,21 +70,19 @@ object BatchTrainer {
 
     def calculate(netParamGradients: NetParamGradients, lastIterationResult: BatchResult, loss: Loss, batchSize: Int): (NetParams, CalculationContext, LossInfo) = {
       val lastContext = lastIterationResult.calcContext
-
+      import glaux.linalg.back.nd4j.Implicits.genBuilder
       case class NewParamResult(newParam: LayerParam, l1DecayLoss: Loss, l2DecayLoss: Loss)
-
       def calcNewParam(paramGrad: ParamGradient, layer: Layer): NewParamResult = {
         val l1Decay =  options.l1Decay * paramGrad.param.regularizationSetting.l1DM
         val l2Decay =  options.l2Decay * paramGrad.param.regularizationSetting.l2DM
-        val cb = implicitly[ Vol.CanBuildFrom[Vol]]
         val p2DL: Vol = (paramGrad.param.value * paramGrad.param.value) * l2Decay / 2
         val p1DL: Vol = paramGrad.param.value.map(Math.abs(_)) * l1Decay
         val l2DecayLoss: Loss = p2DL.sumAll
         val l1DecayLoss: Loss = p1DL.sumAll
         val pValue = paramGrad.param.value
-        val l1grad: Vol = pValue.map(v => if(v > 0) 1 else -1) * l1Decay
+        val l1grad: Vol = pValue.map((v: Double) => if(v > 0) 1 else -1) * l1Decay
         val l2grad: Vol = pValue * l2Decay
-        val rawBatchGradient: Vol = (l1grad.add(l2grad).add(paramGrad.value)) / batchSize
+        val rawBatchGradient: Vol = (l1grad + l2grad + paramGrad.value) / batchSize
 
         val newParamValue = pValue - (rawBatchGradient * options.learningRate) //todo: need to implement with momentum
         val newParam = paramGrad.param.copy(value = newParamValue)

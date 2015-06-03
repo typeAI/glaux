@@ -1,6 +1,6 @@
 package glaux.nn.layers
 
-import glaux.linalg.{RowVector, Matrix, Dimension}
+import glaux.linalg.{Vol, RowVector, Matrix, Dimension}
 import glaux.nn._
 import glaux.nn.layers.FullyConnected.{Bias, Filter}
 import org.nd4j.api.linalg.DSL._
@@ -36,7 +36,7 @@ case class FullyConnected(filter: Filter, bias: Bias) extends HiddenLayer {
   }
 
   def forward(input: Input, isTraining: Boolean = false): Output = {
-    (input ** filter).add(bias)
+    (input ** filter) + bias
   }
 
 }

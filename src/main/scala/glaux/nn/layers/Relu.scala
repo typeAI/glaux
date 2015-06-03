@@ -1,20 +1,20 @@
 package glaux.nn.layers
 
 import glaux.linalg.Vol
-import Vol.CanBuildFrom
-import glaux.linalg.Vol
+import Vol.VolBuilder
+import Vol.VolOps
 
 import scala.math.max
 import glaux.nn._
 
-case class Relu[DataType <: Vol : CanBuildFrom](dimension: DataType#Dimensionality) extends HiddenLayer {
+case class Relu[DataType <: Vol : VolBuilder](dimension: DataType#Dimensionality) extends HiddenLayer {
 
   type Output = DataType
   type Input = DataType
 
 
   def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient]) = {
-    val inGradient = outGradient.data.merge(outGradient.gradient)((o, g) => if(o <= 0) 0 else g)
+    val inGradient = VolOps(outGradient.data).merge(outGradient.gradient)((o, g) => if(o <= 0) 0 else g)
     (inGradient, Nil)
   }
 
