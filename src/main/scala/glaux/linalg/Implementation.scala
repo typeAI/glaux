@@ -2,6 +2,7 @@ package glaux.linalg
 
 import glaux.linalg.Vol._
 
+// Implement this trait to provide an implementation of the linarg interfaces.
 trait Implementation {
   implicit val rBuilder: RowBuilder
   implicit val mBuilder: MatrixBuilder
