@@ -29,11 +29,18 @@ object Implicits {
 
   implicit def toWithIndArray(v: Vol): WithIndArray = new WithIndArray{ val indArray = v.asInstanceOf[ND4JBackedVol].indArray }
 
-  private def createINDArray(dimension: Dimension, data: Iterable[Double]): INDArray = {
-    assert(dimension.totalSize == data.size, s"data length ${data.size} does not conform to $dimension" )
+  private def createINDArray(dimension: Dimension, data: Seq[Double]): INDArray = {
+    assert(dimension.totalSize == data.length, s"data length ${data.length} does not conform to $dimension" )
     Nd4j.create(data.toArray, dimension.shape)
   }
 
+}
+
+class ND4JImplementation extends Implementation {
+  implicit val rBuilder = Implicits.rBuilder
+  implicit val mBuilder = Implicits.mBuilder
+  implicit val vBuilder = Implicits.vBuilder
+  implicit val genBuilder = Implicits.genBuilder
 }
 
 

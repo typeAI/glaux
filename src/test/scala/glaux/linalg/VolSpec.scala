@@ -57,17 +57,17 @@ class VolSpec
       m must_== Vol3D(2, 2, 2, Seq.fill(8)(10d))
 
     }
-
-    "normal" >> {
-      val data = 1.until(100).flatMap { _ =>
-        RowVector.normal(Row(3), 10, 3).toArray.toSeq
-      }
-      val avg = data.sum / data.size
-      val devs = data.map(value => (value - avg) * (value - avg))
-      val std =  Math.sqrt(devs.sum / data.size)
-      avg must beCloseTo(10.0 within 2.significantFigures)
-      std must beCloseTo(3.0 within 1.significantFigures)
-    }
+//
+//    "normal" >> {
+//      val data = 1.until(100).flatMap { _ =>
+//        RowVector.normal(Row(3), 10, 3).toArray.toSeq
+//      }
+//      val avg = data.sum / data.size
+//      val devs = data.map(value => (value - avg) * (value - avg))
+//      val std =  Math.sqrt(devs.sum / data.size)
+//      avg must beCloseTo(10.0 within 2.significantFigures)
+//      std must beCloseTo(3.0 within 1.significantFigures)
+//    }
 
   }
 

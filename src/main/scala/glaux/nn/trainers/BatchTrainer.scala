@@ -1,6 +1,6 @@
 package glaux.nn.trainers
 
-import glaux.linalg.Vol
+import glaux.linalg._
 import glaux.nn._
 
 trait BatchTrainer[Trainee <: Net] {
@@ -70,7 +70,7 @@ object BatchTrainer {
 
     def calculate(netParamGradients: NetParamGradients, lastIterationResult: BatchResult, loss: Loss, batchSize: Int): (NetParams, CalculationContext, LossInfo) = {
       val lastContext = lastIterationResult.calcContext
-      import glaux.linalg.back.nd4j.Implicits.genBuilder
+
       case class NewParamResult(newParam: LayerParam, l1DecayLoss: Loss, l2DecayLoss: Loss)
       def calcNewParam(paramGrad: ParamGradient, layer: Layer): NewParamResult = {
         val l1Decay =  options.l1Decay * paramGrad.param.regularizationSetting.l1DM

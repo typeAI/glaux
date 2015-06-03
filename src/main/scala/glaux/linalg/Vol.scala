@@ -1,16 +1,15 @@
 package glaux.linalg
 
-import glaux.linalg.Dimension._
-import glaux.linalg.Vol._
+import Dimension._
+import Vol._
 
 trait Vol extends VolOperations {
 
   type Dimensionality <: Dimension
   def dimension: Dimensionality
-  def sumAll: Double = iterable.sum
-
-  def iterable: Iterable[Double]
-  def toArray: Array[Double] = iterable.toArray
+  def sumAll: Double = seqView.sum
+  def seqView: Seq[Double]
+  def toArray: Array[Double] = seqView.toArray
 }
 
 
@@ -51,8 +50,8 @@ trait VolOperations {
 object Vol {
   
   type CanBuildFrom[From, V <: Vol] = From => V
-  type VolBuilder[V <: Vol] = CanBuildFrom[(V#Dimensionality, Iterable[Double]), V]
-  type GenVolBuilder[V <: Vol] = CanBuildFrom[(Dimension, Iterable[Double]), V]
+  type VolBuilder[V <: Vol] = CanBuildFrom[(V#Dimensionality, Seq[Double]), V] //Seq instead of Iterable for performance concerns
+  type GenVolBuilder[V <: Vol] = CanBuildFrom[(Dimension, Seq[Double]), V]
   type RowBuilder = VolBuilder[RowVector]
   type MatrixBuilder = VolBuilder[Matrix]
   type Vol3DBuilder = VolBuilder[Vol3D]
@@ -63,17 +62,17 @@ object Vol {
 
   implicit def toGen[V <: Vol](implicit gb: GenVolBuilder[V]): VolBuilder[V] = gb
 
-  implicit class VolOps[V <: Vol : VolBuilder](v: V) {
+  implicit class VolOps[V <: Vol : VolBuilder](self: V) {
 
-    def map(f: Double => Double): V = (v.dimension, v.iterable.map(f))
+    def map(f: Double => Double): V = (self.dimension, self.seqView.map(f))
 
     def merge(v2: V)(f: (Double, Double) => Double) : V = {
-      assert(v.dimension == v2.dimension)
-      (v.dimension, v.iterable.zip(v2.iterable).map(f.tupled))
+      assert(self.dimension == v2.dimension)
+      (self.dimension, self.seqView.zip(v2.seqView).map(f.tupled))
     }
   }
 
-
+  def apply(dimension: Dimension, data: Seq[Double]) : Vol = (dimension, data)
 
 }
 
@@ -92,7 +91,7 @@ trait Vol3D extends Vol {
 
 
 trait VolFactory[V <: Vol] {
-  def apply(dimension: V#Dimensionality, data: Iterable[Double])(implicit b: VolBuilder[V]) : V = b((dimension, data))
+  def apply(dimension: V#Dimensionality, data: Seq[Double])(implicit b: VolBuilder[V]) : V = b((dimension, data))
 
   def uniform(dimension: V#Dimensionality, value: Double)(implicit b: VolBuilder[V]): V = apply(dimension, Array.fill(dimension.totalSize)(value))
 //
@@ -101,13 +100,13 @@ trait VolFactory[V <: Vol] {
 }
 
 object RowVector extends VolFactory[RowVector]{
-  def apply(values: Double*)(implicit b: RowBuilder): RowVector = apply(Dimension.Row(values.length), values)
+  def apply(values: Double*): RowVector = apply(Dimension.Row(values.length), values)
 }
 
 object Vol3D extends VolFactory[Vol3D] {
-  def apply(x: Int, y: Int, z: Int, data: Seq[Double])(implicit b: Vol3DBuilder): Vol3D = apply(Dimension.ThreeD(x,y,z), data)
+  def apply(x: Int, y: Int, z: Int, data: Seq[Double]): Vol3D = apply(Dimension.ThreeD(x,y,z), data)
 }
 
 object Matrix extends VolFactory[Matrix]{
-  def apply(x: Int, y: Int, data: Seq[Double])(implicit b: MatrixBuilder): Matrix = apply(Dimension.TwoD(x,y), data)
+  def apply(x: Int, y: Int, data: Seq[Double]): Matrix = apply(Dimension.TwoD(x,y), data)
 }

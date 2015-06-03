@@ -47,19 +47,22 @@ trait VolOperationsImpl extends VolOperations {
 
 
 protected sealed abstract class ND4JBackedVol(val indArray: INDArray) extends VolBackedND4J {
-  val dimension: Dimensionality = dimensionFactory.create(indArray.shape())
   val dimensionFactory: DimensionFactory[Dimensionality]
-  def iterable: Iterable[Double] = {
-    val lv = indArray.linearView()
-    val myLength = lv.size(Row.dimIndexOfData)
 
-    new Iterable[Double] {
+  lazy val dimension: Dimensionality = dimensionFactory.create(indArray.shape())
+  def seqView: Seq[Double] = {
+
+    new Seq[Double] {
+      outer =>
+      def length = dimension.totalSize
+      def apply(idx: Int) = indArray.getDouble(idx)
+      //todo: although it's trivial to implement, I think there should be an existing iterator for seq somewhere.
       def iterator = new Iterator[Double] {
         var index: Int = 0
-        override def hasNext: Boolean = index < myLength
+        override def hasNext: Boolean = index < outer.length
         override def next(): Double = {
           index += 1
-          lv.getDouble(index - 1)
+          apply(index - 1)
         }
       }
     }
