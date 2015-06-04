@@ -8,7 +8,7 @@ class VolSpec
 
 
 
-  "3D Vols" >> {
+  "Normal Vols" >> {
     val dim = ThreeD(1,1,3)
 
     "* op keeps dimension" >> {
@@ -42,6 +42,19 @@ class VolSpec
       }
     }
 
+    "toRow" >> {
+      "matrix" >> {
+        val m = Matrix(2, 2, Seq(1,2,3,4))
+        m.toRowVector must_== RowVector(1,2,3,4)
+      }
+      "row vector" >> {
+        val r = RowVector(1,2,3,4)
+        r.toRowVector must_== RowVector(1,2,3,4)
+      }
+
+    }
+
+
     "merge" >> {
 
       "correctly" >> {
@@ -70,7 +83,7 @@ class VolSpec
 
   }
 
-  "Generic " >> {
+  "Generic VolOps " >> {
     "map correctly" >> {
       val d: TwoD = TwoD(3, 1)
       val m: Vol = Matrix.fill(d, 0.5)

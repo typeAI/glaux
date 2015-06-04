@@ -33,7 +33,7 @@ class MomentumSGDTrainerSpec extends Specification {
     val output = RowVector(input.sumAll + 1 + noise.sample)
     (input, output)
   }
-  
+
   "train summation" >> {
     val batches = 0.until(100).map(_ => 1.until(3).map(_ => randomSample() ))
     val finalResult = batches.foldLeft(initResult){ (lastResult, batch) =>

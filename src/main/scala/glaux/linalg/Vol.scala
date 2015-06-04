@@ -11,7 +11,10 @@ trait Vol extends VolOperations {
   def sumAll: Double = seqView.sum
   def seqView: Seq[Double]
   def toArray: Array[Double] = seqView.toArray
+  def toRowVector: RowVector =
+    if(isInstanceOf[RowVector]) this.asInstanceOf[RowVector] else (Row(dimension.totalSize), seqView)
 }
+
 
 
 trait VolOperations {
