@@ -7,7 +7,7 @@ import Vol.VolOps
 import scala.math.max
 import glaux.nn._
 
-case class Relu[DataType <: Vol : VolBuilder](dimension: DataType#Dimensionality, uuid: String = java.util.UUID.randomUUID.toString) extends HiddenLayer {
+case class Relu[DataType <: Vol : VolBuilder](dimension: DataType#Dimensionality, id: String = HiddenLayer.newId()) extends HiddenLayer {
 
   type Output = DataType
   type Input = DataType

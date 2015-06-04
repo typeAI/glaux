@@ -11,6 +11,15 @@ trait Net {
 
   def allLayers: Seq[Layer] = inputLayer +: hiddenLayers :+ lossLayer
 
+  //throws assertion exceptions
+  def validate(): Unit = {
+    allLayers.reduce { (lastLayer, thisLayer) =>
+      assert(lastLayer.outDimension == thisLayer.inDimension, "Some of the layers' dimensions do not match")
+      thisLayer
+    }
+    assert(hiddenLayers.map(_.id).toSet.size == hiddenLayers.size, "Some hidden layers share the same id")
+  }
+
   def forward(input: Input): DataFlow = {
     val (_, dataFlow) = allLayers.foldLeft[(Vol, DataFlow)]((input, Vector[LayerData[_]]())) { (pair, layer) =>
       val (lastOutput, dataFlow) = pair
@@ -47,10 +56,7 @@ object Net {
 
   case class SimpleNet[InputT <: Vol](inputLayer: InputLayer[InputT], hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer) extends Net {
     final type Input = InputT
-    val assertDimensionIntegrity = allLayers.reduce { (lastLayer, thisLayer) =>
-        assert(lastLayer.outDimension == thisLayer.inDimension)
-        thisLayer
-      }
+    validate()
   }
 
   implicit def simpleUpdater[Input <: Vol]: CanBuildFrom[SimpleNet[Input]] = (net, newLayers) => net.copy(hiddenLayers = newLayers.toSeq)

@@ -157,7 +157,7 @@ object BatchTrainer {
 
 
     def calculateParamAdjustment(layer: HiddenLayer, param: LayerParam, rawBatchGradient: Vol, lastContext: MomentumSGDIterationContext): Vol = {
-      val lastGsum = lastContext.gSums.find(gs => gs.param.id == param.id && gs.layer.uuid == layer.uuid).get
+      val lastGsum = lastContext.gSums.find(gs => gs.param.id == param.id && gs.layer.id == layer.id).get
       (lastGsum.value * options.momentum) - (rawBatchGradient * options.sgdOptions.learningRate)
     }
       

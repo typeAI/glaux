@@ -5,7 +5,6 @@ import glaux.linalg.{RowVector, Vol}
 
 trait Layer {
 
-
   type Input <: Vol
   type Output <: Vol
   type InDimension = Input#Dimensionality
@@ -25,10 +24,14 @@ case class Gradient[T <: Vol](data: T, gradient: T) {
 }
 
 trait HiddenLayer extends Layer {
-  def uuid: String //unique Id
+  def id: String //unique Id
   def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient])
   def updateParams(params: Iterable[LayerParam]): HiddenLayer
   def params: Seq[LayerParam]
+}
+
+object HiddenLayer {
+  def newId(): String = java.util.UUID.randomUUID.toString 
 }
 
 trait LossLayer extends Layer {
