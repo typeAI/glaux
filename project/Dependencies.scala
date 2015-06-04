@@ -25,8 +25,7 @@ object Dependencies {
 
   val math = Seq (
     "org.nd4j" % "nd4j-jblas" % Versions.nd4j,
-    "org.nd4j" % "nd4j-api" % Versions.nd4j,
-    "org.nd4j" % "nd4j-scala-api" % Versions.nd4j
+    "org.nd4j" % "nd4j-api" % Versions.nd4j
   )
 
 }

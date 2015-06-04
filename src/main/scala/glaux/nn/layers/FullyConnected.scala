@@ -3,7 +3,6 @@ package glaux.nn.layers
 import glaux.linalg.{Vol, RowVector, Matrix, Dimension}
 import glaux.nn._
 import glaux.nn.layers.FullyConnected.{Bias, Filter}
-import org.nd4j.api.linalg.DSL._
 
 
 case class FullyConnected(filter: Filter, bias: Bias, id: String = HiddenLayer.newId()) extends HiddenLayer {

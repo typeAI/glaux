@@ -1,7 +1,6 @@
 package glaux.nn.layers
 
 import glaux.linalg.Dimension
-import org.nd4j.api.linalg.DSL._
 import glaux.nn._
 
 case class Regression private(inDimension: Dimension.Row) extends LossLayer {
