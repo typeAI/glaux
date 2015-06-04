@@ -5,11 +5,10 @@ import sbt._
 object Dependencies {
 
   object Versions {
-    val nd4j = "0.0.3.5.5.4-SNAPSHOT"
+    val nd4j = "0.0.3.5.5.4"
   }
 
   val resolvers = Seq(
-    Resolver.mavenLocal,
     "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
   )
 
