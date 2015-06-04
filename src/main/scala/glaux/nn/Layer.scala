@@ -24,9 +24,9 @@ case class Gradient[T <: Vol](data: T, gradient: T) {
 }
 
 trait HiddenLayer extends Layer {
-  def id: String //unique Id
+  def id: String //should be unique within a network
   def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient])
-  def updateParams(params: Iterable[LayerParam]): HiddenLayer
+  def updateParams(params: Iterable[LayerParam]): HiddenLayer //This should not change the unique id of the layer
   def params: Seq[LayerParam]
 }
 
