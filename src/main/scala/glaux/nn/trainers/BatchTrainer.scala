@@ -37,7 +37,9 @@ trait BatchTrainer[Trainee <: Net] {
     val newLayers = newParams.map {
       case (l, ps) => l.updateParams(ps)
     }
-    BatchResult(lossInfo, build(net, newLayers), batchSize, newContext)
+    val newNet: Trainee = build(net, newLayers)
+    newNet.validate()
+    BatchResult(lossInfo, newNet, batchSize, newContext)
   }
 
   def accumulate(netParamGradients: Iterable[NetParamGradients]): NetParamGradients =

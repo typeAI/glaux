@@ -13,11 +13,15 @@ trait Net {
 
   //throws assertion exceptions
   def validate(): Unit = {
+    def assertUniqueness[T](seq: Seq[T], message: String): Unit = assert(seq.distinct.size == seq.size, message)
     allLayers.reduce { (lastLayer, thisLayer) =>
       assert(lastLayer.outDimension == thisLayer.inDimension, "Some of the layers' dimensions do not match")
       thisLayer
     }
-    assert(hiddenLayers.map(_.id).toSet.size == hiddenLayers.size, "Some hidden layers share the same id")
+    assertUniqueness(hiddenLayers.map(_.id), "Some hidden layers share the same id")
+    hiddenLayers.foreach { l =>
+      assertUniqueness(l.params.map(_.id), "Some layers have params that share the same id")
+    }
   }
 
   def forward(input: Input): DataFlow = {
