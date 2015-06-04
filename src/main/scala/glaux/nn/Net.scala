@@ -4,7 +4,7 @@ import glaux.linalg.Vol
 
 trait Net {
   type Input <: Vol
-  type Output = LossLayer#Output
+  final type Output = LossLayer#Output
   def inputLayer: InputLayer[Input]
   def hiddenLayers: Seq[HiddenLayer]
   def lossLayer: LossLayer
@@ -46,7 +46,7 @@ object Net {
   type CanBuildFrom[N <: Net] = (N, Iterable[HiddenLayer]) => N
 
   case class SimpleNet[InputT <: Vol](inputLayer: InputLayer[InputT], hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer) extends Net {
-    type Input = InputT
+    final type Input = InputT
     val assertDimensionIntegrity = allLayers.reduce { (lastLayer, thisLayer) =>
         assert(lastLayer.outDimension == thisLayer.inDimension)
         thisLayer

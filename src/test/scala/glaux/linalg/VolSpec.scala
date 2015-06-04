@@ -59,7 +59,7 @@ class VolSpec
     }
 
     "normal" >> {
-      import glaux.statistics.factory.normal
+      import glaux.statistics.distributions.normal
       val data = RowVector.sampleOf(Row(3), normal(10, 3), 100).toSeq.flatMap(_.seqView)
       val avg = data.sum / data.size
       val devs = data.map(value => (value - avg) * (value - avg))

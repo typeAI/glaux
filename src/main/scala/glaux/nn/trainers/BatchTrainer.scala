@@ -3,6 +3,8 @@ package glaux.nn.trainers
 import glaux.linalg._
 import glaux.nn._
 
+import scala.concurrent.Future
+
 trait BatchTrainer[Trainee <: Net] {
   type Input = Trainee#Input
   type Output = Trainee#Output
@@ -66,48 +68,54 @@ object BatchTrainer {
 
   abstract class SGDBase[NT <: Net: Net.CanBuildFrom](options: SGDOptions) extends BatchTrainer[NT] {
     type Trainee = NT
+
+
+    case class NewParamResult(newParam: LayerParam, l1DecayLoss: Loss, l2DecayLoss: Loss, adjustment: Vol)
+    type Results =  Map[HiddenLayer, Seq[NewParamResult]]
+
     val build: Net.CanBuildFrom[Trainee] = implicitly[Net.CanBuildFrom[Trainee]]
+
+    def calculateParamAdjustment(layer: HiddenLayer, param: LayerParam, rawBatchGradient: Vol, lastContext: CalculationContext) : Vol
 
     def calculate(netParamGradients: NetParamGradients, lastIterationResult: BatchResult, loss: Loss, batchSize: Int): (NetParams, CalculationContext, LossInfo) = {
       val lastContext = lastIterationResult.calcContext
 
-      case class NewParamResult(newParam: LayerParam, l1DecayLoss: Loss, l2DecayLoss: Loss)
-      def calcNewParam(paramGrad: ParamGradient, layer: Layer): NewParamResult = {
+
+      def calcNewParam(paramGrad: ParamGradient, layer: HiddenLayer): NewParamResult = {
         val l1Decay =  options.l1Decay * paramGrad.param.regularizationSetting.l1DM
         val l2Decay =  options.l2Decay * paramGrad.param.regularizationSetting.l2DM
         val p2DL: Vol = (paramGrad.param.value * paramGrad.param.value) * l2Decay / 2
         val p1DL: Vol = paramGrad.param.value.map(Math.abs(_)) * l1Decay
         val l2DecayLoss: Loss = p2DL.sumAll
         val l1DecayLoss: Loss = p1DL.sumAll
-        val pValue = paramGrad.param.value
+        val param = paramGrad.param
+        val pValue = param.value
         val l1grad: Vol = pValue.map((v: Double) => if(v > 0) 1 else -1) * l1Decay
         val l2grad: Vol = pValue * l2Decay
         val rawBatchGradient: Vol = (l1grad + l2grad + paramGrad.value) / batchSize
 
-        val newParamValue = pValue - (rawBatchGradient * options.learningRate) //todo: need to implement with momentum
-        val newParam = paramGrad.param.copy(value = newParamValue)
+        val paramAdjustment = calculateParamAdjustment(layer, param, rawBatchGradient, lastContext)
+        val newParam = param.copy(value = pValue + paramAdjustment)
 
-        NewParamResult(
-          newParam,
-          l1DecayLoss,
-          l2DecayLoss
-        )
+        NewParamResult(newParam, l1DecayLoss, l2DecayLoss, paramAdjustment)
       }
 
-      val results = (for {
+      val results: Results = (for {
         (layer, paramGrads) <- netParamGradients.toSeq
         paramGrad <- paramGrads
         newParamResult = calcNewParam(paramGrad, layer)
-      } yield (layer, newParamResult))
-      val newNetParams: NetParams = results.groupBy(_._1).mapValues(_.map(_._2.newParam))
-      val newContext = updateContext(lastContext)
-      val l1DecayLoss = results.map(_._2.l1DecayLoss).sum
-      val l2DecayLoss = results.map(_._2.l2DecayLoss).sum
+      } yield (layer, newParamResult)).groupBy(_._1).mapValues(_.map(_._2))
+
+      val newNetParams: NetParams = results.mapValues(_.map(_.newParam))
+      
+      val newContext = updateContext(lastContext, results)
+      val l1DecayLoss = results.values.flatten.map(_.l1DecayLoss).sum
+      val l2DecayLoss = results.values.flatten.map(_.l2DecayLoss).sum
       val lossInfo = LossInfo(l1DecayLoss, l2DecayLoss, loss)
       (newNetParams, newContext, lossInfo)
     }
 
-    def updateContext(lastContext: CalculationContext): CalculationContext
+    def updateContext(lastContext: CalculationContext, results: Results): CalculationContext
   }
 
   case class VanillaSGD[NT <: Net: Net.CanBuildFrom](options: SGDOptions) extends SGDBase[NT](options) {
@@ -116,15 +124,19 @@ object BatchTrainer {
 
     def initialCalculationContext(net: Trainee): Unit = ()
 
-    def updateContext(lastContext: Unit) = ()
+    def updateContext(lastContext: Unit, results: Results) = ()
+
+    def calculateParamAdjustment(layer: HiddenLayer, param: LayerParam, rawBatchGradient: Vol, lastContext: Unit): Vol =
+      rawBatchGradient *  (- options.learningRate)
 
   }
 
   case class MomentumSGDOptions(sgdOptions: SGDOptions, momentum: Double)
-  case class MomentumSGD[ NT <: Net: Net.CanBuildFrom](mOptions: MomentumSGDOptions) extends SGDBase[NT](mOptions.sgdOptions) {
-    case class ParamGSum(layer: Layer, param: LayerParam, value: Vol)
+  case class MomentumSGD[ NT <: Net: Net.CanBuildFrom](options: MomentumSGDOptions) extends SGDBase[NT](options.sgdOptions) {
 
-    case class MomentumSGDIterationContext(gsum: Seq[ParamGSum])
+    case class ParamGSum(layer: HiddenLayer, param: LayerParam, value: Vol)
+
+    case class MomentumSGDIterationContext(gSums: Seq[ParamGSum])
 
     type CalculationContext = MomentumSGDIterationContext
 
@@ -136,7 +148,19 @@ object BatchTrainer {
       MomentumSGDIterationContext(paramGSums)
     }
 
-    def updateContext(lastContext: MomentumSGDIterationContext): MomentumSGDIterationContext = ???
+    def updateContext(lastContext: MomentumSGDIterationContext, results: Results): MomentumSGDIterationContext = {
+      val gsums = results.flatMap {
+        case (layer, paramResults) => paramResults.map( pr => ParamGSum(layer, pr.newParam, pr.adjustment) )
+      }.toSeq
+      lastContext.copy(gSums = gsums)
+    }
+
+
+    def calculateParamAdjustment(layer: HiddenLayer, param: LayerParam, rawBatchGradient: Vol, lastContext: MomentumSGDIterationContext): Vol = {
+      val lastGsum = lastContext.gSums.find(gs => gs.param.id == param.id && gs.layer.uuid == layer.uuid).get
+      (lastGsum.value * options.momentum) - (rawBatchGradient * options.sgdOptions.learningRate)
+    }
+      
   }
 
 }

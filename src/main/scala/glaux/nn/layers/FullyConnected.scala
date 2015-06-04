@@ -6,7 +6,7 @@ import glaux.nn.layers.FullyConnected.{Bias, Filter}
 import org.nd4j.api.linalg.DSL._
 
 
-case class FullyConnected(filter: Filter, bias: Bias) extends HiddenLayer {
+case class FullyConnected(filter: Filter, bias: Bias, uuid: String = java.util.UUID.randomUUID.toString) extends HiddenLayer {
   val inDimension: InDimension = Dimension.Row(filter.dimension.x)
   val outDimension: OutDimension = Dimension.Row(filter.dimension.y)
   private val filterRegularization = RegularizationSetting(0, 1)
@@ -33,7 +33,7 @@ case class FullyConnected(filter: Filter, bias: Bias) extends HiddenLayer {
   def updateParams(params: Iterable[LayerParam]): HiddenLayer = {
     val f = params.find(_.id == "filter").get.value.asInstanceOf[Matrix]
     val b = params.find(_.id == "bias").get.value.asInstanceOf[RowVector]
-    FullyConnected(f, b)
+    copy(f, b)
   }
 
   def forward(input: Input, isTraining: Boolean = false): Output = {
