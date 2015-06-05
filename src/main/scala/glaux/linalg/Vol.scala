@@ -10,6 +10,7 @@ trait Vol extends VolOperations {
   def dimension: Dimensionality
   def sumAll: Double = seqView.sum
   def seqView: Seq[Double]
+  def head: Double = seqView.head
   def toArray: Array[Double] = seqView.toArray
   def toRowVector: RowVector =
     if(isInstanceOf[RowVector]) this.asInstanceOf[RowVector] else (Row(dimension.totalSize), seqView)
@@ -28,9 +29,6 @@ trait VolOperations {
 
   /** matrix multiplication */
   def **(that: Vol): Vol
-
-  /** matrix multiplication using Numpy syntax for arrays */
-  def dot(that: Vol): Vol
 
   def /(that: Vol): Vol
 
@@ -86,6 +84,10 @@ object Vol {
 trait RowVector extends Vol {
   type Dimensionality = Row
   def apply(index: Int) : Double
+  def dot(that: RowVector): Double = {
+    assert(dimension == that.dimension, "can only dot vector with the same dimension")
+    (this ** that.T).head
+  }
 }
 
 trait Matrix extends Vol {

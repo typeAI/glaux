@@ -27,9 +27,6 @@ trait VolOperationsImpl extends VolOperations {
   /** matrix multiplication */
   def **(that: Vol): Vol = indArray.mmul(that.indArray)
 
-  /** matrix multiplication using Numpy syntax for arrays */
-  def dot(that: Vol): Vol = indArray.dot(that.indArray)
-
   def /(that: Vol): Vol = indArray.div(that.indArray)
 
   /** right division ... is this the correct symbol? */

@@ -69,6 +69,16 @@ class VolSpec
       }
     }
 
+    "transpose" >> {
+      RowVector(0, 1, 0, 0).T must_== Matrix(4, 1, Seq(0, 1, 0, 0))
+    }
+
+    "dot" >> {
+      val r1 = RowVector(3, 3, 1, 2)
+      val r2 = RowVector(0, 1, 0, 2)
+      (r1 dot r2) ===  7
+    }
+
     "uniform" >> {
       val m = Vol3D.fill(ThreeD(2, 2, 2), 10)
       m must_== Vol3D(2, 2, 2, Seq.fill(8)(10d))
