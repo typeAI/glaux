@@ -19,7 +19,7 @@ object Dependencies {
   )
 
   val test = Seq (
-    "org.specs2" %% "specs2-core" % "3.6" % "test"
+    "org.specs2" %% "specs2-core" % "3.6.1" % "test"
   )
 
   val math = Seq (
