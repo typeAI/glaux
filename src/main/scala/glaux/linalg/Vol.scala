@@ -75,6 +75,8 @@ object Vol {
       assert(self.dimension == v2.dimension)
       (self.dimension, self.seqView.zip(v2.seqView).map(f.tupled))
     }
+
+    def normalize: V = map(_ / self.sumAll)
   }
 
   def apply(dimension: Dimension, data: Seq[Double]) : Vol = (dimension, data)

@@ -54,6 +54,10 @@ class VolSpec
 
     }
 
+    "normalize" >> {
+      val m = Matrix(2,2, Seq(2,3,0,5))
+      m.normalize must_== Matrix(2,2, Seq(0.2,0.3,0,0.5))
+    }
 
     "merge" >> {
 
