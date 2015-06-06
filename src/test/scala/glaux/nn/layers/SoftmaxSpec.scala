@@ -2,7 +2,6 @@ package glaux.nn.layers
 
 import glaux.linalg.Dimension.Row
 import glaux.linalg.{RowVector, Matrix}
-import glaux.nn.Gradient
 import org.specs2.mutable.Specification
 
 class SoftmaxSpec extends Specification {
@@ -23,7 +22,7 @@ class SoftmaxSpec extends Specification {
   "loss returns correctly for incorrect guess" >> {
     val (loss, inGradient) = layer.loss(RowVector(0, 1, 0), expectedOutput)
     loss must beCloseTo(0.40760596 within 6.significantFigures)
-    inGradient must_== RowVector(0.09003057317038046, -0.3347590442251782, 0.24472847105479767)
+    inGradient must_== RowVector(0.09003057, -0.33475904, 0.24472847)
   }
 }
 
