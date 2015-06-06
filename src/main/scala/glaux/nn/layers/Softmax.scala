@@ -19,7 +19,7 @@ case class Softmax(inDimension: Dimension.Row) extends LossLayer {
 
   val outDimension: OutDimension = inDimension
 
-  def forward(input: RowVector, isTraining: Boolean): RowVector = {
+  def forward(input: RowVector, isTraining: Boolean = false): RowVector = {
     val maxV = input.seqView.max
     val exp = input.map( v => Math.exp(v - maxV))
     exp.normalize

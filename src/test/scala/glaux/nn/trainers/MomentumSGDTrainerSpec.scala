@@ -18,7 +18,7 @@ class MomentumSGDTrainerSpec extends Specification {
   val lossLayer = Regression(1)
   val initNet: SimpleNet[RowVector] = SimpleNet(inputLayer, Seq(hiddenLayer), lossLayer)
 
-  val trainer = MomentumSGD[SimpleNet[RowVector]](MomentumSGDOptions(SGDOptions(learningRate = 0.01), 0.5))
+  val trainer = MomentumSGD[SimpleNet[RowVector]](MomentumSGDOptions(SGDOptions(learningRate = 0.01), 0.8))
   val initResult = trainer.init(initNet)
 
   "init context" >> {
@@ -35,7 +35,7 @@ class MomentumSGDTrainerSpec extends Specification {
   }
 
   "train summation" >> {
-    val batches = 0.until(100).map(_ => 1.until(3).map(_ => randomSample() ))
+    val batches = 0.until(150).map(_ => 1.until(3).map(_ => randomSample() ))
     val finalResult = batches.foldLeft(initResult){ (lastResult, batch) =>
       trainer.trainBatch(batch, lastResult)
     }
