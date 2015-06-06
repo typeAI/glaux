@@ -31,14 +31,16 @@ trait BatchTrainer[Trainee <: Net] {
     val batchLoss = pairs.last._1 //todo: confirm on this
     val batchSize = pairs.size
     val paramsGrads = accumulate(pairs.map(_._2))
-
     val (newParams, newContext, lossInfo) = calculate(paramsGrads, lastResult, batchLoss, batchSize)
 
     val newLayers = newParams.map {
       case (l, ps) => l.updateParams(ps)
     }
-    val newNet: Trainee = build(net, newLayers)
-    newNet.validate()
+    val newLayersSorted = net.hiddenLayers.map { oldLayer =>
+      newLayers.find(_.id == oldLayer.id).getOrElse(oldLayer) //it is possible that some layer didn't get updated and thus use the old layer instead
+    }
+
+    val newNet: Trainee = build(net, newLayersSorted)
     BatchResult(lossInfo, newNet, batchSize, newContext)
   }
 
@@ -102,6 +104,7 @@ object BatchTrainer {
         NewParamResult(newParam, l1DecayLoss, l2DecayLoss, paramAdjustment)
       }
 
+      //note here if there is no paramGrad, the layer won't be calculated and will be missing
       val results: Results = (for {
         (layer, paramGrads) <- netParamGradients.toSeq
         paramGrad <- paramGrads

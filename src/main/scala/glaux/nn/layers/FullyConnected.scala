@@ -5,10 +5,12 @@ import glaux.nn._
 import glaux.nn.layers.FullyConnected.{Bias, Filter}
 
 
-case class FullyConnected(filter: Filter, bias: Bias, id: String = HiddenLayer.newId()) extends HiddenLayer {
+case class FullyConnected(filter: Filter,
+                          bias: Bias,
+                          filterRegularization: RegularizationSetting = RegularizationSetting(0, 1),
+                          id: String = HiddenLayer.newId()) extends HiddenLayer {
   val inDimension: InDimension = Dimension.Row(filter.dimension.x)
   val outDimension: OutDimension = Dimension.Row(filter.dimension.y)
-  private val filterRegularization = RegularizationSetting(0, 1)
   private val biasRegularization = RegularizationSetting(0, 0)
   lazy val filterParam: LayerParam = LayerParam("filter", filter, filterRegularization)
   lazy val biasParam: LayerParam = LayerParam("bias", bias, biasRegularization)

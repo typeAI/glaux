@@ -14,7 +14,7 @@ class MomentumSGDTrainerSpec extends Specification {
 
   val dim: Row = Row(3)
   val inputLayer = InputLayer[RowVector](dim)
-  val hiddenLayer = FullyConnected(Matrix.fill(TwoD(3, 1), 0.5), RowVector(1))
+  val hiddenLayer = FullyConnected(Matrix.fill(TwoD(3, 1), 0.1), RowVector(0))
   val lossLayer = Regression(1)
   val initNet: SimpleNet[RowVector] = SimpleNet(inputLayer, Seq(hiddenLayer), lossLayer)
 

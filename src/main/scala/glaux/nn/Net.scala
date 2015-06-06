@@ -63,7 +63,12 @@ object Net {
     validate()
   }
 
-  implicit def simpleUpdater[Input <: Vol]: CanBuildFrom[SimpleNet[Input]] = (net, newLayers) => net.copy(hiddenLayers = newLayers.toSeq)
+  implicit def simpleUpdater[Input <: Vol]: CanBuildFrom[SimpleNet[Input]] = (net, newLayers) => {
+    net.hiddenLayers.map(_.id).zip(newLayers.map(_.id)).foreach {
+      case (id1, id2) => assert(id1 == id2, "update layer cannot change layer ids and sequence")
+    }
+    net.copy(hiddenLayers = newLayers.toSeq)
+  }
 
   def apply[Input <: Vol](inputDimension: Input#Dimensionality, hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer): Net = SimpleNet(
     InputLayer[Input](inputDimension), hiddenLayers, lossLayer
