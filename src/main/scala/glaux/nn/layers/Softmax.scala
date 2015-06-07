@@ -13,7 +13,9 @@ case class Softmax(inDimension: Dimension.Row) extends LossLayer {
             "target must be same dimension as output with exact one 1 value and the rest 0s")
 
     val inGradient = actual - target
-    val loss = - Math.log(actual dot target)
+    val missMatch: Double = actual dot target
+
+    val loss = if(missMatch > 0) - Math.log(missMatch) else 99999
     (loss, inGradient)
   }
 

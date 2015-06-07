@@ -24,6 +24,12 @@ class SoftmaxSpec extends Specification {
     loss must beCloseTo(0.40760596 within 6.significantFigures)
     inGradient must_== RowVector(0.09003057, -0.33475904, 0.24472847)
   }
+
+  "loss returns correctly for complete missmatch" >> {
+    val (loss, inGradient) = layer.loss(RowVector(1, 0, 0), RowVector(0, 1, 0))
+    loss must be_>(1000d)
+    inGradient must_== RowVector(-1, 1, 0)
+  }
 }
 
 
@@ -33,8 +39,8 @@ class SoftmaxSpec extends Specification {
   * var l = new convnetjs.SoftmaxLayer({in_sx:1, in_sy: 1, in_depth: 3})
   * var input = new convnetjs.Vol([1,3,2])
   * l.forward(input)
-  * l.loss(1)
-  * l.loss(2)
+  * l.backward(1)
+  * l.backward(2)
   */
 
 
