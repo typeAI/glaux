@@ -13,7 +13,7 @@ import org.specs2.mutable.Specification
 class VanillaSGDTrainerSpec extends Specification {
   val dim: Row = Row(3)
   val inputLayer = InputLayer[RowVector](Row(3))
-  val hiddenLayer = FullyConnected(Matrix.fill(TwoD(3, 1), 0), RowVector(0))
+  val hiddenLayer = FullyConnected(Matrix(3, 1, Seq(0.5, -0.7, 1.5)), RowVector(0))
   val lossLayer = Regression(1)
   val initNet: SimpleNet[RowVector] = SimpleNet(inputLayer, Seq(hiddenLayer), lossLayer)
 
@@ -26,6 +26,16 @@ class VanillaSGDTrainerSpec extends Specification {
     val input = RowVector.sampleOf(dim, dist)
     val output = RowVector(input.sumAll + 1 + noise.sample)
     (input, output)
+  }
+
+  "net consistent with convnetjs" >> {
+    val df = initNet.forward(RowVector(3,2,1))
+    df.last.out must_== RowVector(1.6)
+  }
+
+  "trainer consistent with convnetjs" >> {
+    val result = trainer.trainBatch(Seq((RowVector(3,2,1), RowVector(5))), initResult)
+    result.lossInfo.cost must beCloseTo(5.78 within 4.significantFigures)
   }
 
   "train summation" >> {
@@ -45,14 +55,15 @@ class VanillaSGDTrainerSpec extends Specification {
   *
   * var layer_defs = [];
   * layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:3});
-  * layer_defs.push({type:'fc', in_sx:1, in_sy:1, in_depth:3, num_neurons: 1});
   * layer_defs.push({type:'regression', num_neurons: 1});
   *
   * var net = new convnetjs.Net();
   * net.makeLayers(layer_defs);
   * var trainer = new convnetjs.Trainer(net, {method: 'sgd', learning_rate: 0.05,
-                                    l2_decay: 0, momentum: 0, batch_size: 3,
-                                    l1_decay: 0});
-
-  *
+                                    l2_decay: 0, momentum: 0, batch_size: 1,
+                                    l1_decay: 1});
+  * net.layers[1].filters[0].w = [0.5,-0.7,1.5]
+  * //verify net output
+  * net.forward(new convnetjs.Vol([3,2,1]));
+  * trainer.train(new convnetjs.Vol([3,2,1]), 5)
   */
