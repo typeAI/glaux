@@ -1,10 +1,10 @@
 package glaux
 
-import glaux.linalg.RowVector
-import glaux.reinforcement.QLearner.State
+import java.time.ZonedDateTime
+
+import glaux.reinforcement.QLearner.{TemporalState, State}
 
 package object reinforcement {
-  type TemporalState = RowVector
 
   type History = Seq[TemporalState]
   type Action = Int
@@ -12,6 +12,8 @@ package object reinforcement {
   type Reward = Double
 
   type Q = Double
+
+  type Time = ZonedDateTime
 
   type Policy = (State, Action => Q) => Action
 }

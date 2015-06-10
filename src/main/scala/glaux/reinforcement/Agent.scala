@@ -1,5 +1,8 @@
 package glaux.reinforcement
 
+import java.time.ZonedDateTime
+
+import glaux.linalg.RowVector
 import glaux.nn.Net
 import glaux.reinforcement.QLearner.Transition
 
@@ -19,6 +22,7 @@ trait QLearner {
 }
 
 object QLearner {
+  case class TemporalState(inputs: RowVector, time: Time)
   case class State(fullHistory: History, isTerminal: Boolean)
   case class Transition(before: State, action: Action, reward: Reward, after: State)
 }
