@@ -74,12 +74,12 @@ object BatchTrainer {
     type Trainee = NT
 
 
-    case class NewParamResult(newParam: LayerParam, l1DecayLoss: Loss, l2DecayLoss: Loss, adjustment: Vol)
+    case class NewParamResult(newParam: LayerParam, l1DecayLoss: Loss, l2DecayLoss: Loss, adjustment: Tensor)
     type Results =  Map[HiddenLayer, Seq[NewParamResult]]
 
     val build: Net.CanBuildFrom[Trainee] = implicitly[Net.CanBuildFrom[Trainee]]
 
-    def calculateParamAdjustment(layer: HiddenLayer, param: LayerParam, rawBatchGradient: Vol, lastContext: CalculationContext) : Vol
+    def calculateParamAdjustment(layer: HiddenLayer, param: LayerParam, rawBatchGradient: Tensor, lastContext: CalculationContext) : Tensor
 
     def calculate(netParamGradients: NetParamGradients, lastIterationResult: BatchResult, loss: Loss, batchSize: Int): (NetParams, CalculationContext, LossInfo) = {
       val lastContext = lastIterationResult.calcContext
@@ -88,15 +88,15 @@ object BatchTrainer {
       def calcNewParam(paramGrad: ParamGradient, layer: HiddenLayer): NewParamResult = {
         val l1Decay =  options.l1Decay * paramGrad.param.regularizationSetting.l1DM
         val l2Decay =  options.l2Decay * paramGrad.param.regularizationSetting.l2DM
-        val p2DL: Vol = (paramGrad.param.value * paramGrad.param.value) * l2Decay / 2
-        val p1DL: Vol = paramGrad.param.value.map(Math.abs(_)) * l1Decay
+        val p2DL: Tensor = (paramGrad.param.value * paramGrad.param.value) * l2Decay / 2
+        val p1DL: Tensor = paramGrad.param.value.map(Math.abs(_)) * l1Decay
         val l2DecayLoss: Loss = p2DL.sumAll
         val l1DecayLoss: Loss = p1DL.sumAll
         val param = paramGrad.param
         val pValue = param.value
-        val l1grad: Vol = pValue.map((v: Double) => if(v > 0) 1 else -1) * l1Decay
-        val l2grad: Vol = pValue * l2Decay
-        val rawBatchGradient: Vol = (l1grad + l2grad + paramGrad.value) / batchSize
+        val l1grad: Tensor = pValue.map((v: Double) => if(v > 0) 1 else -1) * l1Decay
+        val l2grad: Tensor = pValue * l2Decay
+        val rawBatchGradient: Tensor = (l1grad + l2grad + paramGrad.value) / batchSize
 
         val paramAdjustment = calculateParamAdjustment(layer, param, rawBatchGradient, lastContext)
         val newParam = param.copy(value = pValue + paramAdjustment)
@@ -131,7 +131,7 @@ object BatchTrainer {
 
     def updateContext(lastContext: Unit, results: Results) = ()
 
-    def calculateParamAdjustment(layer: HiddenLayer, param: LayerParam, rawBatchGradient: Vol, lastContext: Unit): Vol =
+    def calculateParamAdjustment(layer: HiddenLayer, param: LayerParam, rawBatchGradient: Tensor, lastContext: Unit): Tensor =
       rawBatchGradient *  (- options.learningRate)
 
   }
@@ -139,7 +139,7 @@ object BatchTrainer {
   case class MomentumSGDOptions(sgdOptions: SGDOptions, momentum: Double)
   case class MomentumSGD[ NT <: Net: Net.CanBuildFrom](options: MomentumSGDOptions) extends SGDBase[NT](options.sgdOptions) {
 
-    case class ParamGSum(layer: HiddenLayer, param: LayerParam, value: Vol)
+    case class ParamGSum(layer: HiddenLayer, param: LayerParam, value: Tensor)
 
     case class MomentumSGDIterationContext(gSums: Seq[ParamGSum])
 
@@ -161,7 +161,7 @@ object BatchTrainer {
     }
 
 
-    def calculateParamAdjustment(layer: HiddenLayer, param: LayerParam, rawBatchGradient: Vol, lastContext: MomentumSGDIterationContext): Vol = {
+    def calculateParamAdjustment(layer: HiddenLayer, param: LayerParam, rawBatchGradient: Tensor, lastContext: MomentumSGDIterationContext): Tensor = {
       val lastGsum = lastContext.gSums.find(gs => gs.param.id == param.id && gs.layer.id == layer.id).get
       (lastGsum.value * options.momentum) - (rawBatchGradient * options.sgdOptions.learningRate)
     }

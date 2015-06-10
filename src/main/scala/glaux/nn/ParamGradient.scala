@@ -1,6 +1,6 @@
 package glaux.nn
 
-import glaux.linalg.Vol
+import glaux.linalg.Tensor
 
-case class ParamGradient(param: LayerParam, value: Vol)
+case class ParamGradient(param: LayerParam, value: Tensor)
 

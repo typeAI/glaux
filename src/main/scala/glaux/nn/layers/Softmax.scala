@@ -1,7 +1,7 @@
 package glaux.nn.layers
 
 import glaux.linalg._
-import Vol._
+import Tensor._
 import glaux.nn.{Loss, LossLayer}
 
 case class Softmax(inDimension: Dimension.Row) extends LossLayer {

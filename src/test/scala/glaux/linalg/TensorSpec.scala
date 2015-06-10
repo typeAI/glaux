@@ -3,7 +3,7 @@ package glaux.linalg
 import glaux.linalg.Dimension.{Row, ThreeD, TwoD}
 import org.specs2.mutable.Specification
 
-class VolSpec
+class TensorSpec
   extends Specification {
 
 
@@ -12,15 +12,15 @@ class VolSpec
     val dim = ThreeD(1,1,3)
 
     "* op keeps dimension" >> {
-      val vol = Vol(dim, Seq(2, 3, 4))
-      val vol2: Vol = vol * vol
-      vol2 must_== Vol(dim, Seq(4, 9, 16))
+      val vol = Tensor(dim, Seq(2, 3, 4))
+      val vol2: Tensor = vol * vol
+      vol2 must_== Tensor(dim, Seq(4, 9, 16))
     }
 
     "* scalar keeps dimension" >> {
-      val vol = Vol(dim, Seq(2, 3, 4))
-      val vol2: Vol = vol * 0.5
-      vol2 must_== Vol(dim, Seq(1, 1.5, 2))
+      val vol = Tensor(dim, Seq(2, 3, 4))
+      val vol2: Tensor = vol * 0.5
+      vol2 must_== Tensor(dim, Seq(1, 1.5, 2))
     }
 
     "sum correctly" >> {
@@ -62,10 +62,10 @@ class VolSpec
     "merge" >> {
 
       "correctly" >> {
-        val m = Vol3D(ThreeD(2, 2, 2), 1.until(9).map(_.toDouble))
-        val m2 = Vol3D(ThreeD(2, 2, 2), 9.until(1, -1).map(_.toDouble))
+        val m = Vol(ThreeD(2, 2, 2), 1.until(9).map(_.toDouble))
+        val m2 = Vol(ThreeD(2, 2, 2), 9.until(1, -1).map(_.toDouble))
         val result = m.merge(m2)(_ + _)
-        result must_== Vol3D(ThreeD(2, 2, 2), Seq.fill(8)(10d))
+        result must_== Vol(ThreeD(2, 2, 2), Seq.fill(8)(10d))
       }
     }
 
@@ -80,8 +80,8 @@ class VolSpec
     }
 
     "uniform" >> {
-      val m = Vol3D.fill(ThreeD(2, 2, 2), 10)
-      m must_== Vol3D(2, 2, 2, Seq.fill(8)(10d))
+      val m = Vol.fill(ThreeD(2, 2, 2), 10)
+      m must_== Vol(2, 2, 2, Seq.fill(8)(10d))
 
     }
 
@@ -100,7 +100,7 @@ class VolSpec
   "Generic VolOps " >> {
     "map correctly" >> {
       val d: TwoD = TwoD(3, 1)
-      val m: Vol = Matrix.fill(d, 0.5)
+      val m: Tensor = Matrix.fill(d, 0.5)
       val result = m.map(_ * 2)
       result must_== Matrix.fill(d, 1)
     }
@@ -111,7 +111,7 @@ class VolSpec
       RowVector(1, 3, 4, 5).sumAll === 13
     }
     "* works correctly" >> {
-      val result: Vol = RowVector(1, 3, 4, 5) * 3
+      val result: Tensor = RowVector(1, 3, 4, 5) * 3
       result must_==(RowVector(3, 9, 12, 15))
     }
 

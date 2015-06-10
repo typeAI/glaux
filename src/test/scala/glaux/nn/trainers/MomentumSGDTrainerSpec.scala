@@ -47,7 +47,7 @@ class MomentumSGDTrainerSpec extends Specification {
   }
 
   val dist = statistics.distributions.normal(0, 3)
-  val noise = statistics.distributions.normal(0, 0.01)
+  val noise = statistics.distributions.normal(0, 0.001)
   def randomSample() : (initNet.Input, initNet.Output) ={
     val input = RowVector.sampleOf(dim, dist)
     val output = RowVector(input.sumAll + 1 + noise.sample)
@@ -55,7 +55,7 @@ class MomentumSGDTrainerSpec extends Specification {
   }
 
   "train summation" >> {
-    val batches = 0.until(200).map(_ => 1.until(3).map(_ => randomSample() ))
+    val batches = 0.until(300).map(_ => 1.until(3).map(_ => randomSample() ))
     val finalResult = batches.foldLeft(initResult){ (lastResult, batch) =>
       trainer.trainBatch(batch, lastResult)
     }

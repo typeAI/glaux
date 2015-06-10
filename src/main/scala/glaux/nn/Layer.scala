@@ -1,12 +1,12 @@
 package glaux.nn
 
-import glaux.linalg.{RowVector, Vol}
+import glaux.linalg.{RowVector, Tensor}
 
 
 trait Layer {
 
-  type Input <: Vol
-  type Output <: Vol
+  type Input <: Tensor
+  type Output <: Tensor
   type InDimension = Input#Dimensionality
   type OutDimension = Output#Dimensionality
 
@@ -19,7 +19,7 @@ trait Layer {
 
 }
 
-case class Gradient[T <: Vol](data: T, gradient: T) {
+case class Gradient[T <: Tensor](data: T, gradient: T) {
   assert(data.dimension == gradient.dimension)
 }
 
@@ -40,7 +40,7 @@ trait LossLayer extends Layer {
   def loss(target: Output, actual: Output): (Loss, InGradient)
 }
 
-case class InputLayer[I <: Vol](inDimension: I#Dimensionality) extends Layer {
+case class InputLayer[I <: Tensor](inDimension: I#Dimensionality) extends Layer {
   type Input = I
   type Output = Input
   def outDimension: OutDimension = inDimension
@@ -48,7 +48,7 @@ case class InputLayer[I <: Vol](inDimension: I#Dimensionality) extends Layer {
 }
 
 
-case class LayerParam(id: String, value: Vol, regularizationSetting: RegularizationSetting)
+case class LayerParam(id: String, value: Tensor, regularizationSetting: RegularizationSetting)
 case class LayerData[L <: Layer](in: L#Input, out: L#Output, layer: L)
 
 case class RegularizationSetting(l1DM: DecayMultiplier, l2DM: DecayMultiplier)

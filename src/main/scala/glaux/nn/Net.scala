@@ -1,9 +1,9 @@
 package glaux.nn
 
-import glaux.linalg.Vol
+import glaux.linalg.Tensor
 
 trait Net {
-  type Input <: Vol
+  type Input <: Tensor
   final type Output = LossLayer#Output
   def inputLayer: InputLayer[Input]
   def hiddenLayers: Seq[HiddenLayer]
@@ -25,7 +25,7 @@ trait Net {
   }
 
   def forward(input: Input): DataFlow = {
-    val (_, dataFlow) = allLayers.foldLeft[(Vol, DataFlow)]((input, Vector[LayerData[_]]())) { (pair, layer) =>
+    val (_, dataFlow) = allLayers.foldLeft[(Tensor, DataFlow)]((input, Vector[LayerData[_]]())) { (pair, layer) =>
       val (lastOutput, dataFlow) = pair
       val in = lastOutput.asInstanceOf[layer.Input] //cast to this input
       val out = layer.forward(in, true)
@@ -38,7 +38,7 @@ trait Net {
 
   def backward(target: Output, dataFlow: DataFlow): (Loss, NetParamGradients) = {
     val (loss, lossLayerInGrad) = lossLayer.loss(target, finalOutput(dataFlow))
-    val (_, netParamGrads) = hiddenLayers.foldRight[(Vol, NetParamGradients)]((lossLayerInGrad, Map())) { (layer, pair) =>
+    val (_, netParamGrads) = hiddenLayers.foldRight[(Tensor, NetParamGradients)]((lossLayerInGrad, Map())) { (layer, pair) =>
       val (outGradientValue, accuParamGrads) = pair
       val layerData = findData[layer.type](dataFlow, layer)
       val (inGradient, layerParamGrads) = layer.backward(layerData.in, Gradient(layerData.out, outGradientValue.asInstanceOf[layer.Output]))
@@ -58,19 +58,19 @@ trait Net {
 object Net {
   type CanBuildFrom[N <: Net] = (N, Iterable[HiddenLayer]) => N
 
-  case class SimpleNet[InputT <: Vol](inputLayer: InputLayer[InputT], hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer) extends Net {
+  case class SimpleNet[InputT <: Tensor](inputLayer: InputLayer[InputT], hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer) extends Net {
     final type Input = InputT
     validate()
   }
 
-  implicit def simpleUpdater[Input <: Vol]: CanBuildFrom[SimpleNet[Input]] = (net, newLayers) => {
+  implicit def simpleUpdater[Input <: Tensor]: CanBuildFrom[SimpleNet[Input]] = (net, newLayers) => {
     net.hiddenLayers.map(_.id).zip(newLayers.map(_.id)).foreach {
       case (id1, id2) => assert(id1 == id2, "update layer cannot change layer ids and sequence")
     }
     net.copy(hiddenLayers = newLayers.toSeq)
   }
 
-  def apply[Input <: Vol](inputDimension: Input#Dimensionality, hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer): Net = SimpleNet(
+  def apply[Input <: Tensor](inputDimension: Input#Dimensionality, hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer): Net = SimpleNet(
     InputLayer[Input](inputDimension), hiddenLayers, lossLayer
   )
 }

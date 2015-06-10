@@ -1,6 +1,6 @@
 package glaux.nn.layers
 
-import glaux.linalg.{Vol, RowVector, Matrix, Dimension}
+import glaux.linalg.{Tensor, RowVector, Matrix, Dimension}
 import glaux.nn._
 import glaux.nn.layers.FullyConnected.{Bias, Filter}
 

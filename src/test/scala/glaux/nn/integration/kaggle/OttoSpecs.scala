@@ -12,8 +12,8 @@ import scala.io.Source
 import scala.util.Random
 
 class OttoSpecs extends Specification {
-  val runIntegraton = false //todo make this configurable
-  if(runIntegraton) {
+  val runIntegration = false //todo make this configurable
+  if(runIntegration) {
     "integration test with Otto data" >> {
       val source = Source.fromURL(getClass.getResource("/kaggle/train.csv"))
       val pairs = source.getLines().drop(1).map { line =>

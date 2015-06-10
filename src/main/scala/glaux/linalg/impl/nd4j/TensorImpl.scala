@@ -5,45 +5,45 @@ import glaux.linalg._
 import org.nd4j.linalg.api.ndarray.INDArray
 
 
-trait VolImpl extends Vol with VolOperationsImpl with WithIndArray
+trait TensorImpl extends Tensor with TensorOperationsImpl with WithIndArray
 
 trait WithIndArray {
   val indArray: INDArray
 }
 
 
-trait VolOperationsImpl extends VolOperations {
+trait TensorOperationsImpl extends TensorOperations {
   this: WithIndArray =>
 
-  import Implicits.volBuilder
+  import Implicits.tensorBuilder
   import Implicits.toWithIndArray
-  def +(that: Vol): Vol = this.indArray.add(that.indArray)
+  def +(that: Tensor): Tensor = this.indArray.add(that.indArray)
 
-  def -(that: Vol): Vol = indArray.sub(that.indArray) 
+  def -(that: Tensor): Tensor = indArray.sub(that.indArray)
 
   /** element-by-element multiplication */
-  def *(that: Vol): Vol = indArray.mul(that.indArray)
+  def *(that: Tensor): Tensor = indArray.mul(that.indArray)
 
   /** matrix multiplication */
-  def **(that: Vol): Vol = indArray.mmul(that.indArray)
+  def **(that: Tensor): Tensor = indArray.mmul(that.indArray)
 
-  def /(that: Vol): Vol = indArray.div(that.indArray)
+  def /(that: Tensor): Tensor = indArray.div(that.indArray)
 
   /** right division ... is this the correct symbol? */
-  def \(that: Vol): Vol = indArray.rdiv(that.indArray)
+  def \(that: Tensor): Tensor = indArray.rdiv(that.indArray)
 
-  def +(that: Number): Vol = indArray.add(that)
-  def -(that: Number): Vol = indArray.sub(that)
-  def *(that: Number): Vol = indArray.mul(that)
-  def /(that: Number): Vol = indArray.div(that)
-  def \(that: Number): Vol = indArray.rdiv(that)
+  def +(that: Number): Tensor = indArray.add(that)
+  def -(that: Number): Tensor = indArray.sub(that)
+  def *(that: Number): Tensor = indArray.mul(that)
+  def /(that: Number): Tensor = indArray.div(that)
+  def \(that: Number): Tensor = indArray.rdiv(that)
 
-  def T: Vol = indArray.transpose
+  def T: Tensor = indArray.transpose
 
 }
 
 
-protected sealed abstract class ND4JBackedVol(val indArray: INDArray) extends VolImpl {
+protected sealed abstract class ND4JBackedTensor(val indArray: INDArray) extends TensorImpl {
   val dimensionFactory: DimensionFactory[Dimensionality]
 
   lazy val dimension: Dimensionality = dimensionFactory.create(indArray.shape())
@@ -67,13 +67,13 @@ protected sealed abstract class ND4JBackedVol(val indArray: INDArray) extends Vo
 
 }
 
-case class Vol3DImp(override val indArray: INDArray)      extends ND4JBackedVol(indArray) with Vol3D {
+case class VolImp(override val indArray: INDArray)      extends ND4JBackedTensor(indArray) with Vol {
   val dimensionFactory = ThreeD
 }
-case class MatrixImp(override val indArray: INDArray)     extends ND4JBackedVol(indArray) with Matrix {
+case class MatrixImp(override val indArray: INDArray)     extends ND4JBackedTensor(indArray) with Matrix {
   val dimensionFactory = TwoD
 }
-case class RowVectorImp(override val indArray: INDArray)  extends ND4JBackedVol(indArray) with RowVector {
+case class RowVectorImp(override val indArray: INDArray)  extends ND4JBackedTensor(indArray) with RowVector {
   val dimensionFactory = Row
   def apply(index: Int): Double = indArray.getDouble(index)
 }
