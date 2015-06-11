@@ -3,9 +3,9 @@ package glaux.nn.integration.kaggle
 import glaux.linalg.Dimension.{TwoD, Row}
 import glaux.linalg.{Matrix, RowVector}
 import glaux.nn.InputLayer
-import glaux.nn.Net.SimpleNet
-import glaux.nn.layers.{Relu, Softmax, Regression, FullyConnected}
-import glaux.nn.trainers.BatchTrainer.{SGDOptions, MomentumSGDOptions, MomentumSGD}
+import glaux.nn.Net.DefaultNet
+import glaux.nn.layers.{Relu, Softmax, FullyConnected}
+import glaux.nn.trainers.{SGDOptions, MomentumSGDOptions, MomentumSGD}
 import org.specs2.mutable.Specification
 
 import scala.io.Source
@@ -44,9 +44,9 @@ class OttoSpecs extends Specification {
       val relu = Relu[RowVector](Row(numOfMidNeurons))
       val fc2 = FullyConnected(Matrix.sampleOf(TwoD(numOfMidNeurons, numOfClass), normal(0, 2)), RowVector.fill(Row(numOfClass), 0))
       val lossLayer = Softmax(Row(numOfClass))
-      val initNet: SimpleNet[RowVector] = SimpleNet(inputLayer, Seq(fc1, relu, fc2), lossLayer)
+      val initNet: DefaultNet[RowVector] = DefaultNet(inputLayer, Seq(fc1, relu, fc2), lossLayer)
 
-      val trainer = MomentumSGD[SimpleNet[RowVector]](MomentumSGDOptions(SGDOptions(learningRate = 0.001), 0.9))
+      val trainer = MomentumSGD[DefaultNet[RowVector]](MomentumSGDOptions(SGDOptions(learningRate = 0.001), 0.9))
       val initResult = trainer.init(initNet)
 
       val batchSize: Int = 20

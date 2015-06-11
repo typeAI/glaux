@@ -2,9 +2,8 @@ package glaux.nn.trainers
 
 import glaux.linalg.{Matrix, RowVector, Dimension}
 import Dimension.{TwoD, Row}
-import glaux.nn.Net.SimpleNet
+import glaux.nn.Net.DefaultNet
 import glaux.nn.layers.{Regression, FullyConnected}
-import glaux.nn.trainers.BatchTrainer.{SGDOptions, VanillaSGD}
 import glaux.nn.{InputLayer, Net}
 import glaux.statistics
 import org.specs2.mutable.Specification
@@ -15,9 +14,9 @@ class VanillaSGDTrainerSpec extends Specification {
   val inputLayer = InputLayer[RowVector](Row(3))
   val hiddenLayer = FullyConnected(Matrix(3, 1, Seq(0.5, -0.7, 1.5)), RowVector(0))
   val lossLayer = Regression(1)
-  val initNet: SimpleNet[RowVector] = SimpleNet(inputLayer, Seq(hiddenLayer), lossLayer)
+  val initNet: DefaultNet[RowVector] = DefaultNet(inputLayer, Seq(hiddenLayer), lossLayer)
 
-  val trainer = VanillaSGD[SimpleNet[RowVector]](SGDOptions(learningRate = 0.05))
+  val trainer = VanillaSGD[DefaultNet[RowVector]](SGDOptions(learningRate = 0.05))
   val initResult = trainer.init(initNet)
 
   val dist = statistics.distributions.normal(0, 3)

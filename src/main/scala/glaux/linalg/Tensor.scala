@@ -88,6 +88,8 @@ trait RowVector extends Tensor {
     assert(dimension == that.dimension, "can only dot vector with the same dimension")
     (this ** that.T).head
   }
+
+  def update(index: Int, value: Double): RowVector = (dimension, seqView.updated(index, value))
 }
 
 trait Matrix extends Tensor {

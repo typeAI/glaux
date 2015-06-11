@@ -58,19 +58,19 @@ trait Net {
 object Net {
   type CanBuildFrom[N <: Net] = (N, Iterable[HiddenLayer]) => N
 
-  case class SimpleNet[InputT <: Tensor](inputLayer: InputLayer[InputT], hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer) extends Net {
+  case class DefaultNet[InputT <: Tensor](inputLayer: InputLayer[InputT], hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer) extends Net {
     final type Input = InputT
     validate()
   }
 
-  implicit def simpleUpdater[Input <: Tensor]: CanBuildFrom[SimpleNet[Input]] = (net, newLayers) => {
+  implicit def simpleUpdater[Input <: Tensor]: CanBuildFrom[DefaultNet[Input]] = (net, newLayers) => {
     net.hiddenLayers.map(_.id).zip(newLayers.map(_.id)).foreach {
       case (id1, id2) => assert(id1 == id2, "update layer cannot change layer ids and sequence")
     }
     net.copy(hiddenLayers = newLayers.toSeq)
   }
 
-  def apply[Input <: Tensor](inputDimension: Input#Dimensionality, hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer): Net = SimpleNet(
+  def apply[Input <: Tensor](inputDimension: Input#Dimensionality, hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer): Net = DefaultNet(
     InputLayer[Input](inputDimension), hiddenLayers, lossLayer
   )
 }

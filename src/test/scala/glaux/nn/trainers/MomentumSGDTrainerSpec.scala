@@ -3,9 +3,8 @@ package glaux.nn.trainers
 import glaux.linalg.Dimension.{Row, TwoD}
 import glaux.linalg.{Dimension, Matrix, RowVector}
 import glaux.nn.InputLayer
-import glaux.nn.Net.SimpleNet
+import glaux.nn.Net.DefaultNet
 import glaux.nn.layers.{FullyConnected, Regression}
-import glaux.nn.trainers.BatchTrainer.{MomentumSGDOptions, MomentumSGD, SGDOptions, VanillaSGD}
 import glaux.statistics
 import org.specs2.mutable.Specification
 
@@ -16,9 +15,9 @@ class MomentumSGDTrainerSpec extends Specification {
   val inputLayer = InputLayer[RowVector](dim)
   val hiddenLayer = FullyConnected(Matrix(3, 1, Seq(0.5, -0.7, 1.5)), RowVector(0))
   val lossLayer = Regression(1)
-  val initNet: SimpleNet[RowVector] = SimpleNet(inputLayer, Seq(hiddenLayer), lossLayer)
+  val initNet: DefaultNet[RowVector] = DefaultNet(inputLayer, Seq(hiddenLayer), lossLayer)
 
-  val trainer = MomentumSGD[SimpleNet[RowVector]](MomentumSGDOptions(SGDOptions(learningRate = 0.01), 0.9))
+  val trainer = MomentumSGD[DefaultNet[RowVector]](MomentumSGDOptions(SGDOptions(learningRate = 0.01), 0.9))
   val initResult = trainer.init(initNet)
 
   "init context" >> {
