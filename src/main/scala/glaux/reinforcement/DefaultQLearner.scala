@@ -1,7 +1,6 @@
 package glaux.reinforcement
 
-import glaux.linalg.{Tensor, RowVector}
-import glaux.nn.trainers.{BatchTrainer, MomentumSGD}
+import glaux.linalg.Tensor
 import glaux.reinforcement.QLearner._
 
 import scala.util.Random
