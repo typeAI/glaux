@@ -1,29 +1,46 @@
 package glaux.reinforcement
 
-import java.time.ZonedDateTime
-
 import glaux.linalg.RowVector
 import glaux.nn.Net
-import glaux.reinforcement.QLearner.Transition
+import glaux.reinforcement.Agent.Policy
+import glaux.reinforcement.QLearner.{State, Observation, Iteration}
 
 
 trait Agent {
-  val qLearner : QLearner
+  val qLearner: QLearner
   val policy: Policy
 }
 
-trait QLearner {
-  protected val targetQFunction : Net
-  val learningQFunction : Net
-  val memory: Seq[Transition] //needs random access here
-  val gamma: Double
-  val actionResults: Map[Action, Q]
-  def iterate(reward: Reward, recentHistory: History, isTerminal: Boolean): QLearner
+object Agent {
+  type Policy = (State, Action => Q) => Action
 }
 
+trait QLearner {
+  def iterate(lastIteration: Iteration, observation: Observation): Iteration
+}
+
+
 object QLearner {
+  type History = Seq[TemporalState]
+
+  case class Iteration(targetQFunction: Net,
+                       learningQFunction: Net,
+                       memory: Seq[Transition], //Seq because we need random access here
+                       actionResults: Map[Action, Q])
+
+  case class Observation(reward: Reward,
+                         recentHistory: History,
+                         isTerminal: Boolean)
+
   case class TemporalState(inputs: RowVector, time: Time)
+
   case class State(fullHistory: History, isTerminal: Boolean)
-  case class Transition(before: State, action: Action, reward: Reward, after: State)
+
+  case class Transition(before: State,
+                        action: Action,
+                        reward: Reward,
+                        after: State)
+
+
 }
 

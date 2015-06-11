@@ -6,7 +6,6 @@ import glaux.reinforcement.QLearner.{TemporalState, State}
 
 package object reinforcement {
 
-  type History = Seq[TemporalState]
   type Action = Int
 
   type Reward = Double
@@ -15,5 +14,4 @@ package object reinforcement {
 
   type Time = ZonedDateTime
 
-  type Policy = (State, Action => Q) => Action
 }
