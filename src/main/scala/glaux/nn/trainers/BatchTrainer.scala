@@ -19,13 +19,33 @@ trait BatchTrainer[Trainee <: Net] {
   val initialLossInfo = LossInfo(0,0,0)
   def init(net: Trainee) = BatchResult(initialLossInfo, net, 0, initialCalculationContext(net))
 
+  type ScalarOutputInfo = (Double, Int) //(Value, Index)
+
+  //training based on only partial correction about output - a scalar value at an index, this helps us with regression on a single scalar value
+  def trainBatchWithScalaOutputInfo(batch: Iterable[(Input, ScalarOutputInfo)], lastResult: BatchResult) : BatchResult = {
+    val net: Trainee = lastResult.net
+    val dataFlowBatch = batch.map {
+      case (input, scalarOutputInfo) => {
+        val dataFlow = net.forward(input.asInstanceOf[net.Input])
+        val (targetScalar, index) = scalarOutputInfo
+        (dataFlow, dataFlow.last.out.update(index, targetScalar))
+      }
+    }
+    trainBatchWithFullDataFlow(dataFlowBatch, lastResult)
+  }
 
   def trainBatch(batch: Iterable[(Input, Output)], lastResult: BatchResult): BatchResult = {
     val net: Trainee = lastResult.net
+    val dataFlowBatch = batch.map {
+      case (input, output) => (net.forward(input.asInstanceOf[net.Input]), output)
+    }
+    trainBatchWithFullDataFlow(dataFlowBatch, lastResult)
+  }
+
+  private def trainBatchWithFullDataFlow(batch: Iterable[(DataFlow, Output)], lastResult: BatchResult): BatchResult = {
+    val net: Trainee = lastResult.net
     val pairs = batch.map {
-      case (input, target) =>
-        val dataFlow = net.forward(input.asInstanceOf[net.Input]) //unforutnately this is the cleanest way to encode Type
-        net.backward(target, dataFlow)
+      case (dataFlow, target) => net.backward(target, dataFlow)
     }
     val batchLoss = pairs.last._1 //todo: confirm on this
     val batchSize = pairs.size

@@ -1,15 +1,17 @@
 package glaux.reinforcement
 
 import glaux.linalg.Tensor
+import glaux.nn.trainers.BatchTrainer
 import glaux.reinforcement.QLearner._
 
 import scala.util.Random
 
 
-abstract class DefaultQLearner[NetInput <: Tensor]( historyLength: Int,
+abstract class DefaultQLearner[NetInput <: Tensor]( historyLength: Int = 50,
                                                     numberOfReadings: Int,
                                                     gamma: Int,
-                                                    batchSize: Int,
+                                                    batchSize: Int = 32,
+                                                    targetNetUpdateFreq: Int = 10, //avg # of iterations before updating the target net
                                                     override protected val trainer: QLearner[NetInput]#Trainer) extends QLearner[NetInput] {
 
   def iterate(lastIteration: Iteration, observation: Observation): Iteration = {
@@ -23,36 +25,33 @@ abstract class DefaultQLearner[NetInput <: Tensor]( historyLength: Int,
     }
 
     def updateMemory: Memory = {
-      val after = getState(lastIteration.memory, observation.recentHistory)
+      val after = produceState(lastIteration.memory, observation.recentHistory)
       val before = lastIteration.memory.last.after
       val action = observation.lastAction
       lastIteration.memory :+ Transition(before, action, observation.reward, after)
     }
 
+    def trainingInput(transition: Transition): (NetInput, Trainer#ScalarOutputInfo) = {
+      val regressionOnAction = if (transition.after.isTerminal) transition.reward else
+        transition.reward + targetNet.predict(transition.after).seqView.max * gamma
 
-    def trainingExample(example: Transition): (NetInput, NetOutput) = {
-
-      val regressionOnAction = if (example.after.isTerminal) example.reward else
-        observation.reward + targetNet.predict(example.after).seqView.max * gamma
-
-      val dataFlow = learningNet.forward(example.before) //todo: eliminate the need to do an extra forward, that is, having trainer be able to train on a single regression diff
-      val target = dataFlow.last.out.update(example.action, regressionOnAction)
-      (example.before, target)
+      (transition.before, (regressionOnAction, transition.action))
     }
 
     val newMemory = updateMemory
-    val result = trainer.trainBatch(randomExamples(newMemory).map(trainingExample), lastIteration.trainingResult)
+    val result = trainer.trainBatchWithScalaOutputInfo(randomExamples(newMemory).map(trainingInput), lastIteration.trainingResult)
+    val updateTarget = lastIteration.targetNetHitCount > targetNetUpdateFreq
 
     Iteration(
-      targetNet, //todo: periodically update targetNet to learning Net
+      if(updateTarget) result.net else targetNet,
       newMemory,
-      result
+      result,
+      if(updateTarget) 0 else lastIteration.targetNetHitCount + 1
     )
 
   }
 
-
-  def getState(memory: Memory, recentHistory: History): State = ???
+  def produceState(memory: Memory, recentHistory: History): State = ???
 
 
 }

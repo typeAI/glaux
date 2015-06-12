@@ -30,7 +30,8 @@ trait QLearner[NetInput <: Tensor] {
 
   case class Iteration(targetNet: Net,
                        memory: Memory, //Seq because we need random access here
-                       trainingResult: TrainerResult ) {
+                       trainingResult: TrainerResult,
+                       targetNetHitCount: Int = 0 ) {
 
     lazy val learningNet = trainingResult.net
     lazy val actionQs: Map[Action, Q] = learningNet.predict(memory.last.after).seqView.zipWithIndex.map(_.swap).toMap
