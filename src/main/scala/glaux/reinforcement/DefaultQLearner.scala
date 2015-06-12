@@ -18,11 +18,13 @@ abstract class DefaultQLearner[NetInput <: Tensor]( historyLength: Int = 50,
   assert(minMemorySizeBeforeTraining > batchSize, "must have enough transitions in memory before training")
 
   def iterate(lastIteration: Iteration, observation: Observation): Iteration = {
-    val targetNet = lastIteration.targetNet
 
     def updateMemory: Memory = {
-      val after = produceState(lastIteration.memory, observation.recentHistory)
       val before = lastIteration.memory.last.after
+
+      val relevantPreviousHistory = before.fullHistory.filter(_.time.isBefore(observation.recentHistory.head.time))
+      val after = State((relevantPreviousHistory ++ observation.recentHistory).takeRight(historyLength), observation.isTerminal)
+
       val action = observation.lastAction
       lastIteration.memory :+ Transition(before, action, observation.reward, after)
     }
@@ -31,6 +33,7 @@ abstract class DefaultQLearner[NetInput <: Tensor]( historyLength: Int = 50,
     val doTraining: Boolean = newMemory.size > minMemorySizeBeforeTraining
     val updateTarget: Boolean = doTraining && lastIteration.targetNetHitCount > targetNetUpdateFreq
 
+    val targetNet = lastIteration.targetNet
     lazy val newResult = train(newMemory, lastIteration.trainingResult, targetNet)
 
     Iteration(
@@ -59,7 +62,7 @@ abstract class DefaultQLearner[NetInput <: Tensor]( historyLength: Int = 50,
     trainer.trainBatchWithScalaOutputInfo(randomExamples.map(toTrainingInput), lastResult)
   }
 
-  def produceState(memory: Memory, recentHistory: History): State = ???
+
 
 
 }
