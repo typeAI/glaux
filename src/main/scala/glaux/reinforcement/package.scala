@@ -2,7 +2,6 @@ package glaux
 
 import java.time.ZonedDateTime
 
-import glaux.reinforcement.QLearner.{TemporalState, State}
 
 package object reinforcement {
 

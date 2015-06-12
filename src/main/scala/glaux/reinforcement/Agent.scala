@@ -3,17 +3,17 @@ package glaux.reinforcement
 import glaux.linalg.{Tensor, RowVector}
 import glaux.nn.trainers.BatchTrainer
 import glaux.nn.{Loss, Net}
-import glaux.reinforcement.Agent.Policy
-import glaux.reinforcement.QLearner.{Memory, State, Observation}
 
 
 trait Agent {
   val qLearner: QLearner
+  import qLearner.MyStateTypes._
+  type Policy = (State, Action => Q) => Action
+
   val policy: Policy
 }
 
 object Agent {
-  type Policy = (State, Action => Q) => Action
 }
 
 trait QNet[IT <: Tensor] <: Net {
@@ -22,11 +22,14 @@ trait QNet[IT <: Tensor] <: Net {
 
 trait QLearner {
   type NetInput <: Tensor
+  type Input <: Tensor
   type Net = QNet[NetInput] //Need to fix input to the type level
   type NetOutput = Net#Output
   type Trainer = BatchTrainer[Net]
   protected val trainer: Trainer
   type TrainerResult = trainer.BatchResult
+  object MyStateTypes extends QLearner.StateTypes[Input]
+  import MyStateTypes._
 
   case class Iteration(targetNet: Net,
                        memory: Memory, //Seq because we need random access here
@@ -50,26 +53,32 @@ trait QLearner {
   def buildNet: Net
 }
 
+
 object QLearner {
 
-  type History = Seq[TemporalState]
-  type Memory = Seq[Transition]
+  /**
+   * A type factory
+   * @tparam Input
+   */
+  trait StateTypes[Input <: Tensor] {
+    type History = Seq[TemporalState]
+    type Memory = Seq[Transition]
 
 
-  case class Observation( lastAction: Action,
+    case class Observation( lastAction: Action,
+                            reward: Reward,
+                            recentHistory: History,
+                            isTerminal: Boolean)
+
+    case class TemporalState(readings: Input, time: Time)
+
+    case class State(fullHistory: History, isTerminal: Boolean)
+
+    case class Transition(before: State,
+                          action: Action,
                           reward: Reward,
-                          recentHistory: History,
-                          isTerminal: Boolean)
+                          after: State)
 
-  case class TemporalState(readings: RowVector, time: Time)
-
-  case class State(fullHistory: History, isTerminal: Boolean)
-
-  case class Transition(before: State,
-                        action: Action,
-                        reward: Reward,
-                        after: State)
-
-
+  }
 }
 
