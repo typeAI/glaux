@@ -24,6 +24,7 @@ case class Softmax(inDimension: Dimension.Row) extends LossLayer {
   def forward(input: RowVector, isTraining: Boolean = false): RowVector = {
     val maxV = input.seqView.max
     val exp = input.map( v => Math.exp(v - maxV))
-    exp.normalize
+    val sum = exp.sumAll
+    exp.map(_ / sum)
   }
 }

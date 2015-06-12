@@ -26,7 +26,6 @@ case class Relu[DataType <: Tensor : TensorBuilder](dimension: DataType#Dimensio
 
   def inDimension: InDimension = dimension
 
-  def forward(input: Input, isTraining: Boolean = false): Output =
-    input.map(max(_, 0))
+  def forward(input: Input, isTraining: Boolean = false): Output = input.map(max(_, 0))
 
 }
