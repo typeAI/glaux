@@ -8,7 +8,7 @@ import glaux.reinforcement.QLearner.{Memory, State, Observation}
 
 
 trait Agent {
-  val qLearner: QLearner[_]
+  val qLearner: QLearner
   val policy: Policy
 }
 
@@ -20,9 +20,9 @@ trait QNet[IT <: Tensor] <: Net {
   type Input = IT
 }
 
-trait QLearner[NetInput <: Tensor] {
-
-  type Net = QNet[NetInput]
+trait QLearner {
+  type NetInput <: Tensor
+  type Net = QNet[NetInput] //Need to fix input to the type level
   type NetOutput = Net#Output
   type Trainer = BatchTrainer[Net]
   protected val trainer: Trainer
@@ -41,6 +41,13 @@ trait QLearner[NetInput <: Tensor] {
   implicit def toInput(state: State): NetInput
 
   def iterate(lastIteration: Iteration, observation: Observation): Iteration
+
+  def init: Iteration = {
+    val initNet = buildNet
+    Iteration(initNet, Nil, trainer.init(initNet))
+  }
+
+  def buildNet: Net
 }
 
 object QLearner {
@@ -54,7 +61,7 @@ object QLearner {
                           recentHistory: History,
                           isTerminal: Boolean)
 
-  case class TemporalState(inputs: RowVector, time: Time)
+  case class TemporalState(readings: RowVector, time: Time)
 
   case class State(fullHistory: History, isTerminal: Boolean)
 

@@ -1,23 +1,31 @@
 package glaux.reinforcement
 
-import glaux.linalg.Tensor
+import glaux.linalg.Dimension.Row
+import glaux.linalg.{RowVector, Tensor}
 import glaux.nn.trainers.BatchTrainer
 import glaux.reinforcement.QLearner._
 
 import scala.util.Random
 
+/**
+ * QLearner based on deepmind algorithm
+ */
+trait DeepMindQLearner extends QLearner {
+  val historyLength: Int
+  val numberOfReadings: Int
+  val gamma: Int
+  val batchSize: Int
+  val targetNetUpdateFreq: Int //avg # of iterations before updating the target net
 
-abstract class DefaultQLearner[NetInput <: Tensor]( historyLength: Int = 50,
-                                                    numberOfReadings: Int,
-                                                    gamma: Int,
-                                                    batchSize: Int = 32,
-                                                    targetNetUpdateFreq: Int = 10, //avg # of iterations before updating the target net
-                                                    override protected val trainer: QLearner[NetInput]#Trainer,
-                                                    minMemorySizeBeforeTraining: Int = 100
-                                                    ) extends QLearner[NetInput] {
-  assert(minMemorySizeBeforeTraining > batchSize, "must have enough transitions in memory before training")
+  val minMemorySizeBeforeTraining: Int
+
+  protected def validate: Unit = {
+    assert(minMemorySizeBeforeTraining > batchSize, "must have enough transitions in memory before training")
+  }
 
   def iterate(lastIteration: Iteration, observation: Observation): Iteration = {
+
+    assert(observation.recentHistory.forall(_.readings.dimension.size == numberOfReadings), "input readings doesn't conform to preset reading dimension")
 
     def updateMemory: Memory = {
       val before = lastIteration.memory.last.after
@@ -62,7 +70,26 @@ abstract class DefaultQLearner[NetInput <: Tensor]( historyLength: Int = 50,
     trainer.trainBatchWithScalaOutputInfo(randomExamples.map(toTrainingInput), lastResult)
   }
 
+}
 
+object DeepMindQLearner {
+  case class Simplified(  historyLength: Int = 50,
+                          numberOfReadings: Int,
+                          gamma: Int,
+                          batchSize: Int = 32,
+                          targetNetUpdateFreq: Int = 10, //avg # of iterations before updating the target net
+                          override protected val trainer: Simplified#Trainer,
+                          minMemorySizeBeforeTraining: Int = 100 ) extends DeepMindQLearner {
+    type NetInput = RowVector
+    validate
+
+    implicit def toInput(state: State): NetOutput = {
+      val inputDimension = Row(historyLength * numberOfReadings)
+      RowVector(inputDimension,  state.fullHistory.flatMap(_.readings.seqView))
+    }
+
+    def buildNet: Net = ???
+  }
 
 
 }
