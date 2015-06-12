@@ -64,7 +64,7 @@ class OttoSpecs extends Specification {
         track += 1
         println(s"training batch $track / ${trainning.length / batchSize}")
         println(s"last lost was ${lastResult.lossInfo.cost}")
-        trainer.trainBatch(processedBatch, lastResult)
+        trainer.trainBatch(lastResult)(processedBatch)
       }
 
       "reach 65% correct rate on test data" >> {

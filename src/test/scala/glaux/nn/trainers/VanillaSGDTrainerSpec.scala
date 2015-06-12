@@ -33,14 +33,14 @@ class VanillaSGDTrainerSpec extends Specification {
   }
 
   "trainer consistent with convnetjs" >> {
-    val result = trainer.trainBatch(Seq((RowVector(3,2,1), RowVector(5))), initResult)
+    val result = trainer.trainBatch(initResult)(Seq((RowVector(3,2,1), RowVector(5))))
     result.lossInfo.cost must beCloseTo(5.78 within 4.significantFigures)
   }
 
   "train summation" >> {
     val batches = 0.until(100).map(_ => 1.until(3).map(_ => randomSample() ))
     val finalResult = batches.foldLeft(initResult){ (lastResult, batch) =>
-      trainer.trainBatch(batch, lastResult)
+      trainer.trainBatch(lastResult)(batch)
     }
 
     val result = finalResult.net.predict(RowVector(2,3,4))

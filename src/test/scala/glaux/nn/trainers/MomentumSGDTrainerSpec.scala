@@ -31,17 +31,17 @@ class MomentumSGDTrainerSpec extends Specification {
   }
 
   "trainer consistent with convnetjs" >> {
-    val result = trainer.trainBatch(Seq((RowVector(3,2,1), RowVector(7))), initResult)
+    val result = trainer.trainBatch(initResult)(Seq((RowVector(3,2,1), RowVector(7))))
     result.lossInfo.cost must beCloseTo(14.58 within 4.significantFigures)
 
     result.calcContext.gSums.head.value must_== Matrix(3, 1, Seq(0.162, 0.108, 0.054))
     result.calcContext.gSums.last.value must_== RowVector(0.054)
 
 
-    val result2 = trainer.trainBatch(Seq((RowVector(4,4,5), RowVector(14))), result)
+    val result2 = trainer.trainBatch(result)(Seq((RowVector(4,4,5), RowVector(14))))
     result2.lossInfo.cost must beCloseTo(17.381408 within 4.significantFigures)
 
-    val result3 = trainer.trainBatch(Seq((RowVector(-1,1,3), RowVector(4))), result2)
+    val result3 = trainer.trainBatch(result2)(Seq((RowVector(-1,1,3), RowVector(4))))
     result3.lossInfo.cost must beCloseTo(0.15188 within 4.significantFigures)
   }
 
@@ -56,7 +56,7 @@ class MomentumSGDTrainerSpec extends Specification {
   "train summation" >> {
     val batches = 0.until(500).map(_ => 1.until(3).map(_ => randomSample() ))
     val finalResult = batches.foldLeft(initResult){ (lastResult, batch) =>
-      trainer.trainBatch(batch, lastResult)
+      trainer.trainBatch(lastResult)(batch)
     }
 
     val result = finalResult.net.predict(RowVector(2,3,4))

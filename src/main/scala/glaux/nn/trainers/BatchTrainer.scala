@@ -5,7 +5,6 @@ import glaux.nn._
 
 
 trait BatchTrainer[Trainee <: Net] {
-  type Input = Trainee#Input
   type Output = Trainee#Output
 
   type CalculationContext
@@ -22,11 +21,10 @@ trait BatchTrainer[Trainee <: Net] {
   type ScalarOutputInfo = (Double, Int) //(Value, Index)
 
   //training based on only partial correction about output - a scalar value at an index, this helps us with regression on a single scalar value
-  def trainBatchWithScalaOutputInfo(batch: Iterable[(Input, ScalarOutputInfo)], lastResult: BatchResult) : BatchResult = {
-    val net: Trainee = lastResult.net
+  def trainBatchWithScalaOutputInfo(lastResult: BatchResult)(batch: Iterable[(lastResult.net.Input, ScalarOutputInfo)]) : BatchResult = {
     val dataFlowBatch = batch.map {
       case (input, scalarOutputInfo) => {
-        val dataFlow = net.forward(input.asInstanceOf[net.Input])
+        val dataFlow =  lastResult.net.forward(input)
         val (targetScalar, index) = scalarOutputInfo
         (dataFlow, dataFlow.last.out.update(index, targetScalar))
       }
@@ -34,10 +32,9 @@ trait BatchTrainer[Trainee <: Net] {
     trainBatchWithFullDataFlow(dataFlowBatch, lastResult)
   }
 
-  def trainBatch(batch: Iterable[(Input, Output)], lastResult: BatchResult): BatchResult = {
-    val net: Trainee = lastResult.net
+  def trainBatch(lastResult: BatchResult)(batch: Iterable[(lastResult.net.Input, Output)]): BatchResult = {
     val dataFlowBatch = batch.map {
-      case (input, output) => (net.forward(input.asInstanceOf[net.Input]), output)
+      case (input, output) => (lastResult.net.forward(input), output)
     }
     trainBatchWithFullDataFlow(dataFlowBatch, lastResult)
   }

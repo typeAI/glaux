@@ -2,8 +2,6 @@ package glaux.reinforcement
 
 import glaux.linalg.Dimension.Row
 import glaux.linalg.{Dimension, RowVector, Tensor}
-import glaux.nn.trainers.BatchTrainer
-import glaux.reinforcement.QLearner._
 
 import scala.util.Random
 
@@ -11,7 +9,6 @@ import scala.util.Random
  * QLearner based on deepmind algorithm
  */
 trait DeepMindQLearner extends QLearner {
-  import MyStateTypes._
   val historyLength: Int
   val inputDimension: Input#Dimensionality
   val gamma: Int
@@ -68,7 +65,7 @@ trait DeepMindQLearner extends QLearner {
       (transition.before, (regressionOnAction, transition.action))
     }
 
-    trainer.trainBatchWithScalaOutputInfo(randomExamples.map(toTrainingInput), lastResult)
+    trainer.trainBatchWithScalaOutputInfo(lastResult)(randomExamples.map(toTrainingInput))
   }
 
 }
@@ -84,7 +81,6 @@ object DeepMindQLearner {
     type NetInput = RowVector
     type Input = RowVector
 
-    import MyStateTypes._
 
     validate
 
