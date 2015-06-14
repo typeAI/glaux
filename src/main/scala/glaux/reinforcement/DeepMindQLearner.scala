@@ -1,10 +1,10 @@
 package glaux.reinforcement
 
-import glaux.linalg.Dimension.{TwoD, Row}
-import glaux.linalg.{Matrix, Dimension, RowVector, Tensor}
-import glaux.nn.{HiddenLayer, InputLayer}
+import glaux.linalg.Dimension.Row
+import glaux.linalg.RowVector
+import glaux.nn.InputLayer
 import glaux.nn.Net.DefaultNet
-import glaux.nn.layers.{Regression, Softmax, Relu, FullyConnected}
+import glaux.nn.layers.{Regression, Relu, FullyConnected}
 
 import scala.util.Random
 
@@ -17,14 +17,14 @@ trait DeepMindQLearner extends QLearner {
   val gamma: Int
   val batchSize: Int
   val targetNetUpdateFreq: Int //avg # of iterations before updating the target net
-  case class MyIteration(targetNet: Net,
+  case class DeepMindIteration(targetNet: Net,
                        memory: Memory, //Seq because we need random access here
                        trainingResult: TrainerResult,
-                       targetNetHitCount: Int = 0 ) extends GenIteration {
+                       targetNetHitCount: Int = 0 ) extends IterationLike {
     lazy val net = trainingResult.net
   }
 
-  type Iteration = MyIteration
+  type Iteration = DeepMindIteration
 
   val minMemorySizeBeforeTraining: Int
 
@@ -34,7 +34,7 @@ trait DeepMindQLearner extends QLearner {
 
   def init(inputDimension: Input#Dimensionality, numOfActions: Int): Iteration = {
     val initNet = buildNet(inputDimension, numOfActions)
-    MyIteration(initNet, Nil, trainer.init(initNet))
+    DeepMindIteration(initNet, Nil, trainer.init(initNet))
   }
 
   def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net
@@ -60,7 +60,7 @@ trait DeepMindQLearner extends QLearner {
     val targetNet = lastIteration.targetNet
     lazy val newResult = train(newMemory, lastIteration.trainingResult, targetNet)
 
-    MyIteration(
+    DeepMindIteration(
       if(updateTarget) newResult.net else targetNet,
       newMemory,
       if(doTraining) newResult else lastIteration.trainingResult,
@@ -98,7 +98,6 @@ object DeepMindQLearner {
                           minMemorySizeBeforeTraining: Int = 100 ) extends DeepMindQLearner {
     type NetInput = RowVector
     type Input = RowVector
-
 
     validate
 
