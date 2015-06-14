@@ -2,7 +2,7 @@ package glaux.reinforcement
 
 import glaux.linalg.{Tensor, RowVector}
 import glaux.nn.trainers.BatchTrainer
-import glaux.nn.{Loss, Net}
+import glaux.nn.{NetOf, Loss, Net}
 
 
 trait Agent {
@@ -13,14 +13,11 @@ trait Agent {
   val policy: Policy
 }
 
-trait QNet[IT <: Tensor] <: Net {
-  type Input = IT
-}
 
 trait QLearner {
   type NetInput <: Tensor
   type Input <: Tensor
-  type Net = QNet[NetInput] //Need to fix input to the type level
+  type Net = NetOf[NetInput] //Need to fix input to the type level
   type NetOutput = Net#Output
   type Trainer = BatchTrainer[Net]
   protected val trainer: Trainer
@@ -43,26 +40,21 @@ trait QLearner {
                         reward: Reward,
                         after: State)
 
-  case class Iteration(targetNet: Net,
-                       memory: Memory, //Seq because we need random access here
-                       trainingResult: TrainerResult,
-                       targetNetHitCount: Int = 0 ) {
-
-    lazy val learningNet = trainingResult.net
-    lazy val actionQs: Map[Action, Q] = learningNet.predict(memory.last.after).seqView.zipWithIndex.map(_.swap).toMap
+  trait GenIteration {
+    val trainingResult: TrainerResult
+    val net: Net
+    val memory: Memory
+    lazy val actionQs: Map[Action, Q] = net.predict(memory.last.after).seqView.zipWithIndex.map(_.swap).toMap
     lazy val loss = trainingResult.lossInfo.cost
   }
+
+  type Iteration <: GenIteration
 
   implicit def toInput(state: State): NetInput
 
   def iterate(lastIteration: Iteration, observation: Observation): Iteration
 
-  def init: Iteration = {
-    val initNet = buildNet
-    Iteration(initNet, Nil, trainer.init(initNet))
-  }
-
-  def buildNet: Net
+  def init(inputDimension: Input#Dimensionality, numOfActions: Int): Iteration
 }
 
 

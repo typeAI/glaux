@@ -1,7 +1,10 @@
 package glaux.reinforcement
 
-import glaux.linalg.Dimension.Row
-import glaux.linalg.{Dimension, RowVector, Tensor}
+import glaux.linalg.Dimension.{TwoD, Row}
+import glaux.linalg.{Matrix, Dimension, RowVector, Tensor}
+import glaux.nn.{HiddenLayer, InputLayer}
+import glaux.nn.Net.DefaultNet
+import glaux.nn.layers.{Regression, Softmax, Relu, FullyConnected}
 
 import scala.util.Random
 
@@ -14,12 +17,27 @@ trait DeepMindQLearner extends QLearner {
   val gamma: Int
   val batchSize: Int
   val targetNetUpdateFreq: Int //avg # of iterations before updating the target net
+  case class MyIteration(targetNet: Net,
+                       memory: Memory, //Seq because we need random access here
+                       trainingResult: TrainerResult,
+                       targetNetHitCount: Int = 0 ) extends GenIteration {
+    lazy val net = trainingResult.net
+  }
+
+  type Iteration = MyIteration
 
   val minMemorySizeBeforeTraining: Int
 
   protected def validate: Unit = {
     assert(minMemorySizeBeforeTraining > batchSize, "must have enough transitions in memory before training")
   }
+
+  def init(inputDimension: Input#Dimensionality, numOfActions: Int): Iteration = {
+    val initNet = buildNet(inputDimension, numOfActions)
+    MyIteration(initNet, Nil, trainer.init(initNet))
+  }
+
+  def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net
 
   def iterate(lastIteration: Iteration, observation: Observation): Iteration = {
 
@@ -42,7 +60,7 @@ trait DeepMindQLearner extends QLearner {
     val targetNet = lastIteration.targetNet
     lazy val newResult = train(newMemory, lastIteration.trainingResult, targetNet)
 
-    Iteration(
+    MyIteration(
       if(updateTarget) newResult.net else targetNet,
       newMemory,
       if(doTraining) newResult else lastIteration.trainingResult,
@@ -85,10 +103,19 @@ object DeepMindQLearner {
     validate
 
     implicit def toInput(state: State): NetOutput = {
-      RowVector(inputDimension,  state.fullHistory.flatMap(_.readings.seqView))
+      RowVector(inputDimension, state.fullHistory.flatMap(_.readings.seqView))
     }
 
-    def buildNet: Net = ???
+    def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net = {
+      val inputSize = inputDimension.size
+      val inputLayer = InputLayer[RowVector](inputDimension)
+      val fc1 = FullyConnected(inputSize, inputSize)
+      val relu = Relu[RowVector](inputDimension)
+      val fc2 = FullyConnected(inputSize, numOfActions)
+      val lossLayer = Regression(numOfActions)
+      DefaultNet(inputLayer, Seq(fc1, relu, fc2), lossLayer)
+
+    }
   }
 
 

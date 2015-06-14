@@ -27,7 +27,7 @@ trait Net {
   def forward(input: Input): DataFlow = {
     val (_, dataFlow) = allLayers.foldLeft[(Tensor, DataFlow)]((input, Vector[LayerData[_]]())) { (pair, layer) =>
       val (lastOutput, dataFlow) = pair
-      val in = lastOutput.asInstanceOf[layer.Input] //cast to this input
+      val in = lastOutput.asInstanceOf[layer.Input] //cast to this input, hard to have compiler check for dynamically constructed layers.
       val out = layer.forward(in, true)
       (out, dataFlow :+ LayerData(in, out, layer))
     }
@@ -53,13 +53,15 @@ trait Net {
 
 }
 
-
+//A net type with defined input T
+trait NetOf[InputT <: Tensor] extends Net {
+  final type Input = InputT
+}
 
 object Net {
   type CanBuildFrom[N <: Net] = (N, Iterable[HiddenLayer]) => N
 
-  case class DefaultNet[InputT <: Tensor](inputLayer: InputLayer[InputT], hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer) extends Net {
-    final type Input = InputT
+  case class DefaultNet[InputT <: Tensor](inputLayer: InputLayer[InputT], hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer) extends NetOf[InputT] {
     validate()
   }
 

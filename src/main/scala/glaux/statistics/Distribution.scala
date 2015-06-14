@@ -14,4 +14,5 @@ trait RealDistribution extends Distribution {
 
 trait DistributionImplementations {
   def normal(mean: Double, std: Double): RealDistribution
+  def uniform(min: Double = 0, max: Double = 1): RealDistribution
 }

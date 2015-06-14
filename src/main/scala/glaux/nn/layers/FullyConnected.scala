@@ -1,5 +1,6 @@
 package glaux.nn.layers
 
+import glaux.linalg.Dimension.{Row, TwoD}
 import glaux.linalg.{Tensor, RowVector, Matrix, Dimension}
 import glaux.nn._
 import glaux.nn.layers.FullyConnected.{Bias, Filter}
@@ -46,4 +47,11 @@ case class FullyConnected(filter: Filter,
 object FullyConnected {
   type Filter = Matrix
   type Bias = RowVector
+
+  def apply(numOfFeatures: Int, numOfNeurons: Int): FullyConnected = {
+    import glaux.statistics.distributions.uniform
+    val filter = Matrix.sampleOf(TwoD(numOfFeatures, numOfNeurons), uniform(0, 2))
+    val bias = RowVector.fill(Row(numOfNeurons), 0)
+    FullyConnected(filter, bias)
+  }
 }
