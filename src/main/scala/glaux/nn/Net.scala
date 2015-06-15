@@ -9,7 +9,7 @@ trait Net {
   def hiddenLayers: Seq[HiddenLayer]
   def lossLayer: LossLayer
   def inputDimension: Input#Dimensionality = inputLayer.inDimension
-
+  def outputDimension: Output#Dimensionality = lossLayer.outDimension
   def allLayers: Seq[Layer] = inputLayer +: hiddenLayers :+ lossLayer
 
   //throws assertion exceptions
