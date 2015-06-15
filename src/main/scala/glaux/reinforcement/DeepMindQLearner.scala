@@ -2,8 +2,8 @@ package glaux.reinforcement
 
 import glaux.linalg.Dimension.Row
 import glaux.linalg.RowVector
-import glaux.nn.InputLayer
-import glaux.nn.Net.DefaultNet
+import glaux.nn.{Net, InputLayer}
+import glaux.nn.Net.{CanBuildFrom, DefaultNet}
 import glaux.nn.layers.{Regression, Relu, FullyConnected}
 
 import scala.util.Random
@@ -13,13 +13,12 @@ import scala.util.Random
  */
 trait DeepMindQLearner extends QLearner {
   val historyLength: Int
-  val inputDimension: Input#Dimensionality
-  val gamma: Int
+  val gamma: Double
   val batchSize: Int
   val targetNetUpdateFreq: Int //avg # of iterations before updating the target net
   case class DeepMindIteration(targetNet: Net,
                        memory: Memory, //Seq because we need random access here
-                       trainingResult: TrainerResult,
+                       trainingResult: TrainingResult,
                        targetNetHitCount: Int = 0 ) extends IterationLike {
     lazy val net = trainingResult.net
   }
@@ -37,14 +36,14 @@ trait DeepMindQLearner extends QLearner {
     DeepMindIteration(initNet, Nil, trainer.init(initNet))
   }
 
-  def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net
+  protected def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net
 
   def iterate(lastIteration: Iteration, observation: Observation): Iteration = {
 
-    assert(observation.recentHistory.forall(_.readings.dimension == inputDimension), "input readings doesn't conform to preset reading dimension")
+    assert(observation.recentHistory.forall(_.readings.dimension == lastIteration.inputDimension), "input readings doesn't conform to preset reading dimension")
 
     def updateMemory: Memory = {
-      val before = lastIteration.memory.last.after
+      val before = lastIteration.latestState
 
       val relevantPreviousHistory = before.fullHistory.filter(_.time.isBefore(observation.recentHistory.head.time))
       val after = State((relevantPreviousHistory ++ observation.recentHistory).takeRight(historyLength), observation.isTerminal)
@@ -69,7 +68,7 @@ trait DeepMindQLearner extends QLearner {
 
   }
 
-  private def train(memory: Memory, lastResult: TrainerResult, targetNet: Net): TrainerResult = {
+  private def train(memory: Memory, lastResult: TrainingResult, targetNet: Net): TrainingResult = {
     def randomExamples: Memory = {
       (1 to batchSize).map { _ =>
         memory(Random.nextInt(memory.size))
@@ -89,23 +88,22 @@ trait DeepMindQLearner extends QLearner {
 }
 
 object DeepMindQLearner {
-  case class Simplified(  historyLength: Int = 50,
-                          inputDimension: Row,
-                          gamma: Int,
+  case class Simplified(  override protected val trainer: Simplified#Trainer,
+                          historyLength: Int = 50,
+                          gamma: Double = 0.95,
                           batchSize: Int = 32,
                           targetNetUpdateFreq: Int = 10, //avg # of iterations before updating the target net
-                          override protected val trainer: Simplified#Trainer,
                           minMemorySizeBeforeTraining: Int = 100 ) extends DeepMindQLearner {
     type NetInput = RowVector
     type Input = RowVector
-
+    type Net = DefaultNet[NetInput]
     validate
 
-    implicit def toInput(state: State): NetOutput = {
-      RowVector(inputDimension, state.fullHistory.flatMap(_.readings.seqView))
+    implicit def inputToNet(state: State): NetOutput = {
+      RowVector(state.fullHistory.flatMap(_.readings.seqView):_*)
     }
 
-    def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net = {
+    protected def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net = {
       val inputSize = inputDimension.size
       val inputLayer = InputLayer[RowVector](inputDimension)
       val fc1 = FullyConnected(inputSize, inputSize)
@@ -113,9 +111,7 @@ object DeepMindQLearner {
       val fc2 = FullyConnected(inputSize, numOfActions)
       val lossLayer = Regression(numOfActions)
       DefaultNet(inputLayer, Seq(fc1, relu, fc2), lossLayer)
-
     }
   }
-
 
 }

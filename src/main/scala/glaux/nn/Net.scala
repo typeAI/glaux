@@ -8,6 +8,7 @@ trait Net {
   def inputLayer: InputLayer[Input]
   def hiddenLayers: Seq[HiddenLayer]
   def lossLayer: LossLayer
+  def inputDimension: Input#Dimensionality = inputLayer.inDimension
 
   def allLayers: Seq[Layer] = inputLayer +: hiddenLayers :+ lossLayer
 
@@ -46,6 +47,7 @@ trait Net {
     }
     (loss, netParamGrads)
   }
+
 
   private def finalOutput(dataFlow: DataFlow): Output = dataFlow.last.out.asInstanceOf[Output]
   private def findData[L <: Layer](dataFlow: DataFlow, layer: L): LayerData[L] =

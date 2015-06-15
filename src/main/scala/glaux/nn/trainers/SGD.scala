@@ -9,7 +9,6 @@ case class SGDOptions(learningRate: Double = 0.01, l1Decay: Decay = 0, l2Decay: 
 abstract class SGDBase[NT <: Net: Net.CanBuildFrom](options: SGDOptions) extends BatchTrainer[NT] {
   type Trainee = NT
 
-
   case class NewParamResult(newParam: LayerParam, l1DecayLoss: Loss, l2DecayLoss: Loss, adjustment: Tensor)
   type Results =  Map[HiddenLayer, Seq[NewParamResult]]
 

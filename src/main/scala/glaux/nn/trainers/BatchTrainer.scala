@@ -1,6 +1,5 @@
 package glaux.nn.trainers
 
-import glaux.linalg._
 import glaux.nn._
 
 
