@@ -55,19 +55,15 @@ trait Net {
 
 }
 
-//A net type with defined input T
-trait NetOf[InputT <: Tensor] extends Net {
-  final type Input = InputT
-}
-
 object Net {
-  type CanBuildFrom[N <: Net] = (N, Iterable[HiddenLayer]) => N
+  type Updater[N <: Net] = (N, Iterable[HiddenLayer]) => N
 
-  case class DefaultNet[InputT <: Tensor](inputLayer: InputLayer[InputT], hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer) extends NetOf[InputT] {
+  case class DefaultNet[InputT <: Tensor](inputLayer: InputLayer[InputT], hiddenLayers: Seq[HiddenLayer], lossLayer: LossLayer) extends Net {
+    type Input = InputT
     validate()
   }
 
-  implicit def simpleUpdater[Input <: Tensor]: CanBuildFrom[DefaultNet[Input]] = (net, newLayers) => {
+  implicit def simpleUpdater[Input <: Tensor]: Updater[DefaultNet[Input]] = (net, newLayers) => {
     net.hiddenLayers.map(_.id).zip(newLayers.map(_.id)).foreach {
       case (id1, id2) => assert(id1 == id2, "update layer cannot change layer ids and sequence")
     }

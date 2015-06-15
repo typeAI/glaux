@@ -1,14 +1,14 @@
-package glaux.reinforcement
+package glaux
+package reinforcement
 
 import glaux.linalg.Tensor
-import glaux.nn.NetOf
 import glaux.nn.trainers.BatchTrainer
 
 
 trait QLearner {
   type NetInput <: Tensor
   type Input <: Tensor
-  type Net <: NetOf[NetInput] //Need to fix input to the type level
+  type Net <: nn.Net { type Input = NetInput } //Need to fix input to the type level
   type NetOutput = Net#Output
   type Trainer = BatchTrainer[Net]
   protected val trainer: Trainer

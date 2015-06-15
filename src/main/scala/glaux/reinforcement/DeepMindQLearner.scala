@@ -3,7 +3,7 @@ package glaux.reinforcement
 import glaux.linalg.Dimension.Row
 import glaux.linalg.RowVector
 import glaux.nn.{Net, InputLayer}
-import glaux.nn.Net.{CanBuildFrom, DefaultNet}
+import glaux.nn.Net.{Updater, DefaultNet}
 import glaux.nn.layers.{Regression, Relu, FullyConnected}
 
 import scala.util.Random

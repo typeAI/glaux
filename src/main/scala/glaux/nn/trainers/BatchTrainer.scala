@@ -10,7 +10,7 @@ trait BatchTrainer[Trainee <: Net] {
 
   case class BatchResult(lossInfo: LossInfo, net: Trainee, batchSize: Int, calcContext: CalculationContext)
 
-  val build: Net.CanBuildFrom[Trainee]
+  val build: Net.Updater[Trainee]
 
   def initialCalculationContext(net: Trainee) : CalculationContext
 

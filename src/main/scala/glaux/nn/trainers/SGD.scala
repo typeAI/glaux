@@ -6,13 +6,13 @@ import glaux.nn._
 
 case class SGDOptions(learningRate: Double = 0.01, l1Decay: Decay = 0, l2Decay: Decay = 0)
 
-abstract class SGDBase[NT <: Net: Net.CanBuildFrom](options: SGDOptions) extends BatchTrainer[NT] {
+abstract class SGDBase[NT <: Net: Net.Updater](options: SGDOptions) extends BatchTrainer[NT] {
   type Trainee = NT
 
   case class NewParamResult(newParam: LayerParam, l1DecayLoss: Loss, l2DecayLoss: Loss, adjustment: Tensor)
   type Results =  Map[HiddenLayer, Seq[NewParamResult]]
 
-  val build: Net.CanBuildFrom[Trainee] = implicitly[Net.CanBuildFrom[Trainee]]
+  val build: Net.Updater[Trainee] = implicitly[Net.Updater[Trainee]]
 
   def calculateParamAdjustment(layer: HiddenLayer, param: LayerParam, rawBatchGradient: Tensor, lastContext: CalculationContext) : Tensor
 
@@ -58,7 +58,7 @@ abstract class SGDBase[NT <: Net: Net.CanBuildFrom](options: SGDOptions) extends
   def updateContext(lastContext: CalculationContext, results: Results): CalculationContext
 }
 
-case class VanillaSGD[NT <: Net: Net.CanBuildFrom](options: SGDOptions) extends SGDBase[NT](options) {
+case class VanillaSGD[NT <: Net: Net.Updater](options: SGDOptions) extends SGDBase[NT](options) {
 
   type CalculationContext = Unit
 
@@ -72,7 +72,7 @@ case class VanillaSGD[NT <: Net: Net.CanBuildFrom](options: SGDOptions) extends 
 }
 
 case class MomentumSGDOptions(sgdOptions: SGDOptions, momentum: Double)
-case class MomentumSGD[ NT <: Net: Net.CanBuildFrom](options: MomentumSGDOptions) extends SGDBase[NT](options.sgdOptions) {
+case class MomentumSGD[ NT <: Net: Net.Updater](options: MomentumSGDOptions) extends SGDBase[NT](options.sgdOptions) {
 
   case class ParamGSum(layer: HiddenLayer, param: LayerParam, value: Tensor)
 
