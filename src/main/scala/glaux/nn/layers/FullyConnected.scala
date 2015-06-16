@@ -39,6 +39,7 @@ case class FullyConnected(filter: Filter,
   }
 
   def forward(input: Input, isTraining: Boolean = false): Output = {
+    assert(input.dimension == inDimension, s"incorrect input dimension ${input.dimension} vs ${inDimension}")
     (input ** filter) + bias
   }
 

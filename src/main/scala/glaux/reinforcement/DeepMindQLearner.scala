@@ -21,6 +21,7 @@ trait DeepMindQLearner extends QLearner {
                                memory: Memory, //Seq because we need random access here
                                trainingResult: TrainingResult,
                                recentHistory: History,
+                               inputDimension: Input#Dimensionality,
                                isTerminal: Boolean = false,
                                targetNetHitCount: Int = 0 ) extends IterationLike {
     lazy val net = trainingResult.net
@@ -40,7 +41,7 @@ trait DeepMindQLearner extends QLearner {
 
   def init(inputDimension: Input#Dimensionality, numOfActions: Int): Iteration = {
     val initNet = buildNet(inputDimension, numOfActions)
-    DeepMindIteration(initNet, Nil, trainer.init(initNet), Nil)
+    DeepMindIteration(initNet, Nil, trainer.init(initNet), Nil, inputDimension)
   }
 
   protected def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net
@@ -71,13 +72,13 @@ trait DeepMindQLearner extends QLearner {
     val targetNet = lastIteration.targetNet
     lazy val newResult = train(newMemory, lastIteration.trainingResult, targetNet)
 
-    DeepMindIteration(
-      if(updateTarget) newResult.net else targetNet,
-      newMemory,
-      if(doTraining) newResult else lastIteration.trainingResult,
-      recentHistory,
-      observation.isTerminal,
-      if(updateTarget) 0 else lastIteration.targetNetHitCount + 1
+    lastIteration.copy(
+      targetNet = if(updateTarget) newResult.net else targetNet,
+      memory = newMemory,
+      trainingResult =  if(doTraining) newResult else lastIteration.trainingResult,
+      recentHistory = recentHistory,
+      isTerminal = observation.isTerminal,
+      targetNetHitCount = if(updateTarget) 0 else lastIteration.targetNetHitCount + 1
     )
 
   }
@@ -105,7 +106,7 @@ object DeepMindQLearner {
   case class Simplified(  override protected val trainer: Simplified#Trainer = VanillaSGD[DeepMindQLearner.Simplified#Net](SGDOptions()),
                           historyLength: Int = 50,
                           gamma: Double = 0.95,
-                          batchSize: Int = 32,
+                          batchSize: Int = 40,
                           targetNetUpdateFreq: Int = 10, //avg # of iterations before updating the target net
                           minMemorySizeBeforeTraining: Int = 100 ) extends DeepMindQLearner {
     type NetInput = RowVector
@@ -118,10 +119,11 @@ object DeepMindQLearner {
     }
 
     protected def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net = {
-      val inputSize = inputDimension.size
-      val inputLayer = InputLayer[RowVector](inputDimension)
+      val inputSize = inputDimension.size * historyLength
+      val netInputDimension = Row(inputSize)
+      val inputLayer = InputLayer[RowVector](netInputDimension)
       val fc1 = FullyConnected(inputSize, inputSize)
-      val relu = Relu[RowVector](inputDimension)
+      val relu = Relu[RowVector](netInputDimension)
       val fc2 = FullyConnected(inputSize, numOfActions)
       val lossLayer = Regression(numOfActions)
       DefaultNet(inputLayer, Seq(fc1, relu, fc2), lossLayer)

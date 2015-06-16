@@ -22,12 +22,14 @@ trait QLearner {
                           reward: Reward,
                           recentHistory: History,
                           isTerminal: Boolean) {
-    lazy val startTime = recentHistory.head.time
+    def startTime = recentHistory.head.time
   }
 
   case class TemporalState(readings: Input, time: Time)
 
-  case class State(fullHistory: History, isTerminal: Boolean)
+  case class State(fullHistory: History, isTerminal: Boolean) {
+    def endTime = fullHistory.last.time
+  }
 
   case class Transition(before: State,
                         action: Action,
@@ -50,7 +52,6 @@ trait QLearner {
     }
 
     lazy val loss: Loss = trainingResult.lossInfo.cost
-    lazy val inputDimension = net.inputDimension
   }
 
   type Iteration <: IterationLike

@@ -23,7 +23,7 @@ class SimplifiedDeepMindQLearnerSpec extends Specification {
     }
 
     "net" >> {
-      init.net.inputDimension must_==(Row(2))
+      init.net.inputDimension must_==(Row(4))
       init.net.outputDimension must_==(Row(2))
     }
 
