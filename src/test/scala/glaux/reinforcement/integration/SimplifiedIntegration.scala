@@ -4,6 +4,8 @@ import java.time.{Clock, LocalTime, LocalDate, ZonedDateTime}
 
 import glaux.linalg.Dimension.Row
 import glaux.linalg.RowVector
+import glaux.nn.trainers.{MomentumSGDOptions, MomentumSGD, SGDOptions, VanillaSGD}
+import glaux.reinforcement.DeepMindQLearner.Simplified
 import glaux.reinforcement.{Time, Action, DeepMindQLearner}
 import org.specs2.mutable.Specification
 
@@ -12,7 +14,9 @@ import scala.util.Random
 class SimplifiedIntegration extends Specification {
 
   val start = ZonedDateTime.of(LocalDate.of(2015, 2, 14), LocalTime.of(14, 30), Clock.systemDefaultZone().getZone)
-  val learner = DeepMindQLearner.Simplified(historyLength = 3)
+//  val trainer = MomentumSGD[Simplified#Net](MomentumSGDOptions(SGDOptions(learningRate = 0.005), momentum = 0.9))
+  val trainer = VanillaSGD[Simplified#Net](SGDOptions(learningRate = 0.05))
+  val learner = DeepMindQLearner.Simplified(historyLength = 2, batchSize = 20, trainer = trainer)
   import learner.{Observation, TemporalState, State, History}
   val init = learner.init(Row(3),3)
 
@@ -37,7 +41,7 @@ class SimplifiedIntegration extends Specification {
 
   "can learn the right action" >> skipped {
     //learning
-    val lastIter = (1 to 20000).foldLeft(init) { (lastIteration, _) =>
+    val lastIter = (1 to 2000).foldLeft(init) { (lastIteration, _) =>
       print(".")
       learner.iterate(lastIteration, newObservation(lastIteration.latestState, Random.nextInt(3)))
 
