@@ -103,7 +103,7 @@ trait DeepMindQLearner extends QLearner {
 }
 
 object DeepMindQLearner {
-  case class Simplified(  override protected val trainer: Simplified#Trainer = VanillaSGD[DeepMindQLearner.Simplified#Net](SGDOptions()),
+  case class Simplified(  override protected val trainer: Simplified#Trainer = VanillaSGD[Simplified#Net](SGDOptions()),
                           historyLength: Int = 50,
                           gamma: Double = 0.95,
                           batchSize: Int = 40,

@@ -45,7 +45,7 @@ class VanillaSGDTrainerSpec extends Specification {
 
     val result = finalResult.net.predict(RowVector(2,3,4))
     result.dimension.size === 1
-    result(0) must  beCloseTo(10.0 within 3.significantFigures)
+    result(0) must  beCloseTo(10.0 within 2.significantFigures)
   }
 
 }
