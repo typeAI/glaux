@@ -1,2 +1,5 @@
-WIP - DQN library
+WIP - DQN library 
+
+### Test
+sbt test
 
