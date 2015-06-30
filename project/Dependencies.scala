@@ -12,12 +12,6 @@ object Dependencies {
     "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
   )
 
-
-  val akka = Seq (
-    "com.typesafe.akka" %% "akka-actor" % "2.3.11",
-    "com.typesafe.akka" %% "akka-testkit" % "2.3.11" % "test"
-  )
-
   val test = Seq (
     "org.specs2" %% "specs2-core" % "3.6.1" % "test"
   )
