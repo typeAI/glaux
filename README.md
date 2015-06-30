@@ -1,1 +1,2 @@
-WIP - DQN library in scala
+WIP - DQN library
+
