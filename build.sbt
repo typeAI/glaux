@@ -10,3 +10,5 @@ resolvers ++= Dependencies.resolvers
 libraryDependencies ++= Dependencies.math ++ Dependencies.test
 
 scalacOptions in Test ++= Seq("-Yrangepos")
+
+lazy val glaux = project in file(".")
