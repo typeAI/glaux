@@ -94,7 +94,7 @@ class SimplifiedDeepMindQLearnerSpec extends Specification {
 
     }
 
-    val fouth = learner.iterate(thirdIter, Observation(lastAction = 1,
+    val fourth = learner.iterate(thirdIter, Observation(lastAction = 1,
       reward = 1,
       recentHistory = Seq(TemporalState(RowVector(4, 3), start.plusMinutes(3)),
                           TemporalState(RowVector(4, 3), start.plusMinutes(4))),
@@ -102,11 +102,11 @@ class SimplifiedDeepMindQLearnerSpec extends Specification {
 
     "fourth iter" >> {
       "add to memory because last one is terminated" >> {
-        fouth.memory.size === 1
+        fourth.memory.size === 1
       }
     }
 
-    val fifth = learner.iterate(fouth, Observation(lastAction = 3,
+    val fifth = learner.iterate(fourth, Observation(lastAction = 3,
       reward = 2,
       recentHistory = Seq(TemporalState(RowVector(5, 4), start.plusMinutes(5)),
                           TemporalState(RowVector(5, 4), start.plusMinutes(6))),
