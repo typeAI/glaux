@@ -18,45 +18,47 @@ class SimplifiedIntegration extends Specification {
   val trainer = VanillaSGD[Simplified#Net](SGDOptions(learningRate = 0.05))
   val learner = DeepMindQLearner.Simplified(historyLength = 2, batchSize = 20, trainer = trainer)
   import learner.{Observation, TemporalState, State, History}
-  val init = learner.init(Row(3),3)
+  
 
   def randomBinary = if(Random.nextBoolean) 1 else 0
   def randomReading = RowVector(randomBinary, randomBinary, randomBinary)
 
-  def randomHistory(start: Time): History = Seq(
-    TemporalState(randomReading, start),
-    TemporalState(randomReading, start.plusMinutes(1)),
-    TemporalState(randomReading, start.plusMinutes(2)))
+  def randomHistory(from: Time): History = Seq(
+    TemporalState(randomReading, from),
+    TemporalState(randomReading, from.plusMinutes(1)),
+    TemporalState(randomReading, from.plusMinutes(2)))
   def randomTerminal: Boolean = Random.nextDouble > 0.97
 
-  def newObservation(lastState: Option[State], lastAction: Action): Observation = {
-    val time = lastState.map(_.endTime.plusMinutes(1)).getOrElse(ZonedDateTime.now)
+  def newObservation(lastState: State, lastAction: Action): Observation = {
+    val time = lastState.endTime.plusMinutes(1)
     val reward = {
-      if(lastState.map(_.isTerminal).getOrElse(true)) 0 else {
+      if(lastState.isTerminal) 0 else {
         //reward when action matches the reading, that is, sum of three readings in the index exceed certain threshed
-        if(lastState.get.fullHistory.takeRight(2).map(_.readings(lastAction)).sum > 1.5 ) 1.0 else 0
+        if(lastState.fullHistory.takeRight(2).map(_.readings(lastAction)).sum > 1.5 ) 1.0 else 0
       }
     }
     Observation(lastAction, reward, randomHistory(time), randomTerminal)
   }
-
+  
+  val init = learner.init(randomHistory(start), 3).right.get
+  
   "can learn the right action" >> {
     //learning
     val lastIter = (1 to 500).foldLeft(init) { (lastIteration, _) =>
-      val obs = newObservation(lastIteration.latestState, Random.nextInt(3))
+      val obs = newObservation(lastIteration.state, Random.nextInt(3))
       learner.iterate(lastIteration, obs)
     }
 
     val testSize = 100
     //testing
     val results = (1 to testSize).scanLeft(lastIter) { (lastIteration, _) =>
-      val result = learner.iterate(lastIteration, newObservation(lastIteration.latestState, Random.nextInt(3)))
+      val result = learner.iterate(lastIteration, newObservation(lastIteration.state, Random.nextInt(3)))
 
       result
     }.filterNot(_.actionQs.isEmpty)
 
     val correct = results.filter { result =>
-      val cumReading = result.latestState.get.fullHistory.map(_.readings).takeRight(2).reduce(_ + _).seqView
+      val cumReading = result.state.fullHistory.map(_.readings).takeRight(2).reduce(_ + _).seqView
       val correctActions = cumReading.zipWithIndex.filter(_._1 > 1.5).map(_._2)
       val predictedAction = result.actionQs.maxBy(_._2)._1
 //      println(cumReading.map( v => (v * 10).toInt))

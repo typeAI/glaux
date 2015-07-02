@@ -2,7 +2,6 @@ package glaux.nn
 
 import glaux.linalg.{RowVector, Tensor}
 
-
 trait Layer {
 
   type Input <: Tensor

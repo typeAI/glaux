@@ -5,6 +5,8 @@ import glaux.linalg.Tensor
 import glaux.nn.Loss
 import glaux.nn.trainers.BatchTrainer
 
+import scala.util.Try
+
 
 trait QLearner {
   type NetInput <: Tensor
@@ -18,6 +20,8 @@ trait QLearner {
   type History = Seq[TemporalState]
   type Memory = Seq[Transition]
 
+  type InputDimension = Input#Dimensionality
+
   case class Observation( lastAction: Action,
                           reward: Reward,
                           recentHistory: History,
@@ -29,6 +33,7 @@ trait QLearner {
 
   case class State(fullHistory: History, isTerminal: Boolean) {
     def endTime = fullHistory.last.time
+    lazy val inputDimension: InputDimension = fullHistory.head.readings.dimension
   }
 
   case class Transition(before: State,
@@ -41,15 +46,12 @@ trait QLearner {
     def net: Net
     def memory: Memory
     def isTerminal: Boolean
-    def latestState: Option[State]
+    def state: State
 
-    lazy val actionQs: Map[Action, Q] = {
-      val void = Map.empty[Action, Q]
-      if(isTerminal)
-        void
+    lazy val actionQs: Map[Action, Q] = if (isTerminal)
+        Map.empty[Action, Q] //doesn't make sense to give Q function for terminal state
       else
-        latestState.fold(void){ net.predict(_).seqView.zipWithIndex.map(_.swap).toMap }
-    }
+        net.predict(state).seqView.zipWithIndex.map(_.swap).toMap
 
     lazy val loss: Loss = trainingResult.lossInfo.cost
   }
@@ -60,7 +62,22 @@ trait QLearner {
 
   def iterate(lastIteration: Iteration, observation: Observation): Iteration
 
-  def init(inputDimension: Input#Dimensionality, numOfActions: Int): Iteration
+
+  /**
+   *
+   * @param initHistory initial history to construct the fist state, MUST NOT BE Terminal
+   * @param numOfActions
+   * @return
+   */
+  def init(initHistory: History, numOfActions: Int): Either[String, Iteration]
+
+
+  protected def inputDimensionOfHistory(history: History): Option[InputDimension] =
+    history.headOption.flatMap { head =>
+      val inputDim = head.readings.dimension
+      if (history.map(_.readings).exists(_.dimension != inputDim)) None else Some(inputDim)
+    }
+
 }
 
 

@@ -7,7 +7,7 @@ import glaux.nn.{Net, InputLayer}
 import glaux.nn.Net.{Updater, DefaultNet}
 import glaux.nn.layers.{Regression, Relu, FullyConnected}
 
-import scala.util.Random
+import scala.util.{Try, Random}
 
 /**
  * QLearner based on deepmind algorithm
@@ -20,52 +20,52 @@ trait DeepMindQLearner extends QLearner {
   case class DeepMindIteration(targetNet: Net,
                                memory: Memory, //Seq because we need random access here
                                trainingResult: TrainingResult,
-                               recentHistory: History,
-                               inputDimension: Input#Dimensionality,
+                               state: State,
                                isTerminal: Boolean = false,
                                targetNetHitCount: Int = 0 ) extends IterationLike {
     lazy val net = trainingResult.net
-    lazy val latestState = stateFromHistory(recentHistory, isTerminal)
+
   }
+
+  assert(historyLength > 0)
 
   type Iteration = DeepMindIteration
 
   val minMemorySizeBeforeTraining: Int
 
-  def stateFromHistory(history: History, isTerminal: Boolean): Option[State] =
-    if(history.size >= historyLength) Some(State(history, isTerminal)) else None
-
-  protected def validate: Unit = {
-    assert(minMemorySizeBeforeTraining > batchSize, "must have enough transitions in memory before training")
-  }
-
-  def init(inputDimension: Input#Dimensionality, numOfActions: Int): Iteration = {
-    val initNet = buildNet(inputDimension, numOfActions)
-    DeepMindIteration(initNet, Nil, trainer.init(initNet), Nil, inputDimension)
-  }
-
   protected def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net
+
+  def init(initHistory: History, numOfActions: Int): Either[String, Iteration] = {
+    if (initHistory.length < historyLength) {
+      Left("not enough history")
+    } else {
+      val inputDim = inputDimensionOfHistory(initHistory)
+      if(inputDim.isEmpty)
+         Left("readings doens't have consistent dimension")
+      else {
+        val initNet = buildNet(inputDim.get, numOfActions)
+        Right(DeepMindIteration(initNet, Nil, trainer.init(initNet), stateFromHistory(initHistory, false)))
+      }
+    }
+  }
 
   def iterate(lastIteration: Iteration, observation: Observation): Iteration = {
 
-    assert(observation.recentHistory.forall(_.readings.dimension == lastIteration.inputDimension), "input readings doesn't conform to preset reading dimension")
+    assert(observation.recentHistory.forall(_.readings.dimension == lastIteration.state.inputDimension),
+      s"input readings doesn't conform to preset reading dimension ${lastIteration.state.inputDimension}")
 
-    def updateRecentHistory: History = {
-      val relevantPreviousHistory = lastIteration.recentHistory.filter(_.time.isBefore(observation.startTime)) //remove duplicated temporal state when there is an overlap between two observations
-      (relevantPreviousHistory ++ observation.recentHistory).takeRight(historyLength)
+    val relevantHistory = {
+      val relevantPreviousHistory = lastIteration.state.fullHistory.filter(_.time.isBefore(observation.startTime)) //remove duplicated temporal state when there is an overlap between two observations
+      (relevantPreviousHistory ++ observation.recentHistory)
     }
 
+    val currentState = stateFromHistory(relevantHistory, observation.isTerminal)
 
-    def updateMemory(recentHistory: History): Option[Memory] = {
-      for {
-        before <- if(lastIteration.isTerminal) None else lastIteration.latestState
-        after <- stateFromHistory(recentHistory, observation.isTerminal)
-      } yield
-        lastIteration.memory :+ Transition(before, observation.lastAction, observation.reward, after)
-    }
+    val newMemory = if (lastIteration.isTerminal) lastIteration.memory else {
+        val before = lastIteration.state
+        lastIteration.memory :+ Transition(before, observation.lastAction, observation.reward, currentState)
+      }
 
-    val recentHistory = updateRecentHistory
-    val newMemory = updateMemory(recentHistory).getOrElse(lastIteration.memory)
     val doTraining: Boolean = newMemory.size > minMemorySizeBeforeTraining
     val updateTarget: Boolean = doTraining && lastIteration.targetNetHitCount > targetNetUpdateFreq
 
@@ -76,12 +76,25 @@ trait DeepMindQLearner extends QLearner {
       targetNet = if(updateTarget) newResult.net else targetNet,
       memory = newMemory,
       trainingResult =  if(doTraining) newResult else lastIteration.trainingResult,
-      recentHistory = recentHistory,
+      state = currentState,
       isTerminal = observation.isTerminal,
       targetNetHitCount = if(updateTarget) 0 else lastIteration.targetNetHitCount + 1
     )
 
   }
+
+  protected def stateFromHistory(history: History, isTerminal: Boolean): State = {
+    assert(history.size >= historyLength, "incorrect history length to create a state")
+    assert(inputDimensionOfHistory(history).isDefined, "Inconsistent history input dimension")
+    State(history.takeRight(historyLength), isTerminal)
+  }
+
+
+  protected def validate: Unit = {
+    assert(minMemorySizeBeforeTraining > batchSize, "must have enough transitions in memory before training")
+  }
+
+
 
   private def train(memory: Memory, lastResult: TrainingResult, targetNet: Net): TrainingResult = {
     def randomExamples: Memory = {

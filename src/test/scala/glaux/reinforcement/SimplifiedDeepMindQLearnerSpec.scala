@@ -14,7 +14,9 @@ class SimplifiedDeepMindQLearnerSpec extends Specification {
 
   import learner.{Observation, TemporalState} //todo: can this import be easier (don't need to remember)
 
-  val init = learner.init(Row(2),2)
+  val initHistory = Seq(TemporalState(RowVector(1, 0), start), TemporalState(RowVector(2, 1), start.plusMinutes(1)))
+
+  val init = learner.init(initHistory, 2).right.get
 
   "init" >> {
 
@@ -31,42 +33,16 @@ class SimplifiedDeepMindQLearnerSpec extends Specification {
       init.trainingResult.batchSize === 0
     }
 
+    "recentHistory" >> {
+      init.state.fullHistory.size === 2
+    }
+
   }
 
   "initial iterations" >> {
 
-    val firstIter = learner.iterate(init, Observation(lastAction = 1,
-                                                    reward = 0,
-                                                    recentHistory = Seq(TemporalState(RowVector(1, 0), start)),
-                                                    isTerminal = false
-                                                  ))
-    "first iter" >> {
-      "memory without enough history" >> {
-        firstIter.memory must beEmpty
-      }
 
-      "recentHistory" >> {
-        firstIter.recentHistory.head.readings must_== RowVector(1, 0)
-      }
-    }
-
-    val secondIter = learner.iterate(firstIter, Observation(lastAction = 0,
-      reward = 0,
-      recentHistory = Seq(TemporalState(RowVector(2, 1), start.plusMinutes(1))),
-      isTerminal = false))
-
-    "second iter" >> {
-      "still not enough history for memory" >> {
-        secondIter.memory must beEmpty
-      }
-
-      "building recentHistory" >> {
-        secondIter.recentHistory.size === 2
-      }
-
-    }
-
-    val thirdIter = learner.iterate(secondIter, Observation(lastAction = 1,
+    val thirdIter = learner.iterate(init, Observation(lastAction = 1,
       reward = 1,
       recentHistory = Seq(TemporalState(RowVector(3, 2), start.plusMinutes(2))),
       isTerminal = true))
@@ -85,11 +61,11 @@ class SimplifiedDeepMindQLearnerSpec extends Specification {
       }
 
       "keep only relevant recentHistory" >> {
-        thirdIter.recentHistory.size === 2
+        thirdIter.state.fullHistory.size === 2
       }
 
       "latest state is terminal" >> {
-        thirdIter.latestState.map(_.isTerminal) must beSome(true)
+        thirdIter.state.isTerminal must beTrue
       }
 
     }
