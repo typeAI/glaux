@@ -13,4 +13,6 @@ package object reinforcement {
 
   type Time = ZonedDateTime
 
+  type Reading = (Seq[Double], Time)
+
 }

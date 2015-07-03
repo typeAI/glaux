@@ -7,5 +7,5 @@ trait Implementation {
   implicit val rBuilder: RowBuilder
   implicit val mBuilder: MatrixBuilder
   implicit val vBuilder: Vol3DBuilder
-  implicit val genBuilder: GenVolBuilder[Tensor]
+  implicit val genBuilder: GenTensorBuilder[Tensor]
 }

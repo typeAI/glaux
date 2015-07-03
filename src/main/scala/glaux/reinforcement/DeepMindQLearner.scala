@@ -54,10 +54,7 @@ trait DeepMindQLearner extends QLearner {
     assert(observation.recentHistory.forall(_.readings.dimension == lastIteration.state.inputDimension),
       s"input readings doesn't conform to preset reading dimension ${lastIteration.state.inputDimension}")
 
-    val relevantHistory = {
-      val relevantPreviousHistory = lastIteration.state.fullHistory.filter(_.time.isBefore(observation.startTime)) //remove duplicated temporal state when there is an overlap between two observations
-      (relevantPreviousHistory ++ observation.recentHistory)
-    }
+    val relevantHistory = concat(lastIteration.state.fullHistory, observation.recentHistory)
 
     val currentState = stateFromHistory(relevantHistory, observation.isTerminal)
 
@@ -82,6 +79,21 @@ trait DeepMindQLearner extends QLearner {
     )
 
   }
+
+  private def concat(previous: History, newHistory: History): History = {
+    val relevantPreviousHistory = previous.filter(_.time.isBefore(newHistory.head.time))
+    (relevantPreviousHistory ++ newHistory)
+  }
+
+
+  private[reinforcement] def updateInit(iteration: Iteration, newHistory: History): Iteration = {
+    val previous = iteration.state.fullHistory
+    assert(!iteration.state.isTerminal, "init state cannot be terminal")
+    assert(iteration.memory.isEmpty, "init iteration should not have transition memory already")
+    iteration.copy(state = stateFromHistory(concat(previous, newHistory) , false))
+  }
+
+
 
   protected def stateFromHistory(history: History, isTerminal: Boolean): State = {
     assert(history.size >= historyLength, "incorrect history length to create a state")

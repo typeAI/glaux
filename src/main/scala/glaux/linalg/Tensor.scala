@@ -53,7 +53,7 @@ object Tensor {
   
   type CanBuildFrom[From, V <: Tensor] = From => V
   type TensorBuilder[V <: Tensor] = CanBuildFrom[(V#Dimensionality, Seq[Double]), V] //Seq instead of Iterable for performance concerns
-  type GenVolBuilder[V <: Tensor] = CanBuildFrom[(Dimension, Seq[Double]), V]
+  type GenTensorBuilder[V <: Tensor] = CanBuildFrom[(Dimension, Seq[Double]), V]
   type RowBuilder = TensorBuilder[RowVector]
   type MatrixBuilder = TensorBuilder[Matrix]
   type Vol3DBuilder = TensorBuilder[Vol]
@@ -62,7 +62,7 @@ object Tensor {
   implicit val toRow: CanBuildFrom[Tensor, RowVector] = v => v.asInstanceOf[RowVector]
   implicit val toMatrix: CanBuildFrom[Tensor, Matrix] = v => v.asInstanceOf[Matrix]
 
-  implicit def toGen[V <: Tensor](implicit gb: GenVolBuilder[V]): TensorBuilder[V] = gb
+  implicit def toGen[V <: Tensor](implicit gb: GenTensorBuilder[V]): TensorBuilder[V] = gb
   implicit class TensorOps[V <: Tensor : TensorBuilder](self: V) {
 
     def map(f: Double => Double): V = (self.dimension, self.seqView.map(f))

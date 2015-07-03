@@ -25,7 +25,7 @@ object Implicits {
   implicit val rBuilder: RowBuilder = builder[RowVector]
   implicit val mBuilder: MatrixBuilder = builder[Matrix]
   implicit val vBuilder: Vol3DBuilder = builder[Vol]
-  implicit val genBuilder: GenVolBuilder[Tensor] = (createINDArray _).tupled.andThen(tensorBuilder)
+  implicit val genBuilder: GenTensorBuilder[Tensor] = (createINDArray _).tupled.andThen(tensorBuilder)
 
   implicit def toWithIndArray(v: Tensor): WithIndArray = new WithIndArray{ val indArray = v.asInstanceOf[ND4JBackedTensor].indArray }
 

@@ -20,6 +20,7 @@ trait QLearner {
   type History = Seq[TemporalState]
   type Memory = Seq[Transition]
 
+
   type InputDimension = Input#Dimensionality
 
   case class Observation( lastAction: Action,
@@ -58,7 +59,9 @@ trait QLearner {
 
   type Iteration <: IterationLike
 
-  implicit def inputToNet(state: State): NetInput
+  private[reinforcement] def updateInit(iteration: Iteration, newHistory: History): Iteration
+
+  implicit protected def inputToNet(state: State): NetInput
 
   def iterate(lastIteration: Iteration, observation: Observation): Iteration
 
