@@ -54,7 +54,7 @@ trait DeepMindQLearner extends QLearner {
     assert(observation.recentHistory.forall(_.readings.dimension == lastIteration.state.inputDimension),
       s"input readings doesn't conform to preset reading dimension ${lastIteration.state.inputDimension}")
 
-    val relevantHistory = concat(lastIteration.state.fullHistory, observation.recentHistory)
+    val relevantHistory = if(lastIteration.isTerminal) observation.recentHistory else concat(lastIteration.state.fullHistory, observation.recentHistory)
 
     val currentState = stateFromHistory(relevantHistory, observation.isTerminal)
 
