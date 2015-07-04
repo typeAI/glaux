@@ -26,8 +26,11 @@ trait QAgent {
     }
   }
 
-  case class Session(iteration: Iteration, currentReward: Reward, currentReadings: Vector[Reading], lastAction: Option[Action] = None ) {
-    def isClosed = iteration.isTerminal
+  case class Session(private[reinforcement] val iteration: Iteration,
+                     currentReward: Reward,
+                     currentReadings: Vector[Reading],
+                     lastAction: Option[Action] = None,
+                     isClosed: Boolean = false) {
   }
 
   def start(initReadings: Iterable[Reading], previous: Option[Session]): Either[String, Session] = {
@@ -64,14 +67,14 @@ trait QAgent {
     }
   }
 
-  def close(session: Session): Option[Session] = {
+  def close(session: Session): Session = {
     assert(!session.isClosed)
     val currentHistory = toHistory(session.currentReadings)
     if(session.lastAction.isDefined) {
       val observation = Observation(session.lastAction.get, session.currentReward, currentHistory, true)
-      Some(session.copy(iteration = qLearner.iterate(session.iteration, observation)))
+      session.copy(iteration = qLearner.iterate(session.iteration, observation), isClosed = true)
     } else
-      None //useless session
+      session.copy(isClosed = true)
   }
 
 }
