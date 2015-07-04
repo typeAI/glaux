@@ -1,6 +1,7 @@
 package glaux.reinforcement
 
 import glaux.linalg.Dimension.Row
+import glaux.linalg.RowVector
 import glaux.linalg.Tensor.TensorBuilder
 import glaux.nn.trainers.{SGDOptions, VanillaSGD}
 import glaux.reinforcement.DeepMindQLearner.Simplified
@@ -10,43 +11,78 @@ import scala.util.Random
 trait QAgent {
   val qLearner: QLearner
 
-  implicit val builder : TensorBuilder[qLearner.Input]
+  import qLearner.{Observation, TemporalState, Iteration, State}
 
-  type Iteration = qLearner.Iteration
+  type Policy = (State, State => Action => Q ) => Action
 
-  import qLearner.Observation
-  type Policy = (Iteration) => Action
-
-  import qLearner.TemporalState
-
-  def init(initReadings: Iterable[Reading]): Either[String, Iteration]
-  
-  def updateInitIteration(iteration: Iteration, newReading: Reading): Iteration =
-    qLearner.updateInit(iteration, toHistory(Seq(newReading), iteration.state.inputDimension))
-
-  def iterate(lastIteration: Iteration, lastAction: Action, reward: Reward, readings: Iterable[Reading]): (Iteration, Action) = {
-    val observation = Observation(lastAction, reward, toHistory(readings, lastIteration.state.inputDimension), false)
-    val newIteration = qLearner.iterate(lastIteration, observation)
-    (newIteration, policy(newIteration))
-  }
-
+  val numOfActions: Int
   val policy: Policy
 
-  protected def toHistory(readings: Iterable[Reading], dimension: qLearner.InputDimension): qLearner.History = {
+  protected def readingsToInput(readings: Seq[Double]): qLearner.Input
+
+  protected def toHistory(readings: Iterable[Reading]): qLearner.History = {
     readings.toSeq.map {
-      case (r, time) => TemporalState(builder((dimension, r.toSeq)), time)
+      case (r, time) => TemporalState(readingsToInput(r), time)
     }
   }
+
+  case class Session(iteration: Iteration, currentReward: Reward, currentReadings: Vector[Reading], lastAction: Option[Action] = None ) {
+    def isClosed = iteration.isTerminal
+  }
+
+  def start(initReadings: Iterable[Reading], previous: Option[Session]): Either[String, Session] = {
+    val initHistory = toHistory(initReadings)
+
+    if(qLearner.canBuildStateFrom(initHistory))
+
+      Right(Session(iteration = previous.map(_.iteration).getOrElse(qLearner.init(initHistory, numOfActions)),
+              currentReward = 0,
+              currentReadings = initReadings.toVector))
+    else
+      Left("Not enough initial history to start a session")
+  }
+
+  def report(reading: Reading, reward: Reward, session: Session): Session = {
+    assert(!session.isClosed)
+    session.copy(
+      currentReadings = session.currentReadings :+ reading,
+      currentReward = session.currentReward + reward
+    )
+  }
+
+  def requestAction(session: Session): (Action, Session) = {
+    assert(!session.isClosed)
+    val currentHistory = toHistory(session.currentReadings)
+    if(session.lastAction.isDefined) {
+      val observation = Observation(session.lastAction.get, session.currentReward, currentHistory, false)
+      val newIteration = qLearner.iterate(session.iteration, observation)
+      val action = policy(newIteration.state, newIteration.stateActionQ)
+      (action, Session(newIteration, 0, Vector.empty, Some(action)))
+    } else {
+      val action = policy(qLearner.stateFromHistory(currentHistory, false), session.iteration.stateActionQ)
+      (action, session.copy(lastAction = Some(action)))
+    }
+  }
+
+  def close(session: Session): Option[Session] = {
+    assert(!session.isClosed)
+    val currentHistory = toHistory(session.currentReadings)
+    if(session.lastAction.isDefined) {
+      val observation = Observation(session.lastAction.get, session.currentReward, currentHistory, true)
+      Some(session.copy(iteration = qLearner.iterate(session.iteration, observation)))
+    } else
+      None //useless session
+  }
+
 }
 
 
-class SimpleQAgent(numOfReads: Int, numOfActions: Int) extends QAgent {
+
+case class SimpleQAgent(numOfActions: Int) extends QAgent {
   val trainer = VanillaSGD[Simplified#Net](SGDOptions(learningRate = 0.05))
   val qLearner = DeepMindQLearner.Simplified(historyLength = 10, batchSize = 20, trainer = trainer)
 
-  implicit val builder = implicitly[TensorBuilder[qLearner.Input]]
+  protected def readingsToInput(readings: Seq[Double]): qLearner.Input = RowVector(readings :_*)
 
-  def init(initReadings: Iterable[Reading]) = qLearner.init(toHistory(initReadings, Row(initReadings.head._1.size)), numOfActions)
-
-  val policy = (iteration: Iteration) => Random.nextInt(numOfActions) //todo: implement a real policy
+  val policy: Policy = (state, _) => Random.nextInt(numOfActions) //todo: implement a real policy
 }

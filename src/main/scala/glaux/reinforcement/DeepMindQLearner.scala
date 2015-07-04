@@ -13,7 +13,6 @@ import scala.util.{Try, Random}
  * QLearner based on deepmind algorithm
  */
 trait DeepMindQLearner extends QLearner {
-  val historyLength: Int
   val gamma: Double
   val batchSize: Int
   val targetNetUpdateFreq: Int //avg # of iterations before updating the target net
@@ -35,30 +34,16 @@ trait DeepMindQLearner extends QLearner {
 
   protected def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net
 
-  def init(initHistory: History, numOfActions: Int): Either[String, Iteration] = {
-    if (initHistory.length < historyLength) {
-      Left("not enough history")
-    } else {
-      val inputDim = inputDimensionOfHistory(initHistory)
-      if(inputDim.isEmpty)
-         Left("readings doens't have consistent dimension")
-      else {
-        val initNet = buildNet(inputDim.get, numOfActions)
-        Right(DeepMindIteration(initNet, Nil, trainer.init(initNet), stateFromHistory(initHistory, false)))
-      }
-    }
+
+
+  override protected def doInit(initState: State, numOfActions: Action, inputDim: InputDimension): Iteration = {
+    val initNet = buildNet(inputDim, numOfActions)
+    DeepMindIteration(initNet, Nil, trainer.init(initNet), initState)
   }
 
-  def iterate(lastIteration: Iteration, observation: Observation): Iteration = {
-
-    assert(observation.recentHistory.forall(_.readings.dimension == lastIteration.state.inputDimension),
-      s"input readings doesn't conform to preset reading dimension ${lastIteration.state.inputDimension}")
-
-    val relevantHistory = if(lastIteration.isTerminal) observation.recentHistory else concat(lastIteration.state.fullHistory, observation.recentHistory)
-
-    val currentState = stateFromHistory(relevantHistory, observation.isTerminal)
-
-    val newMemory = if (lastIteration.isTerminal) lastIteration.memory else {
+  override protected def doIterate(lastIteration: Iteration, observation: Observation, currentState: State): Iteration = {
+    val newMemory = if (lastIteration.isTerminal) lastIteration.memory
+      else {
         val before = lastIteration.state
         lastIteration.memory :+ Transition(before, observation.lastAction, observation.reward, currentState)
       }
@@ -70,37 +55,14 @@ trait DeepMindQLearner extends QLearner {
     lazy val newResult = train(newMemory, lastIteration.trainingResult, targetNet)
 
     lastIteration.copy(
-      targetNet = if(updateTarget) newResult.net else targetNet,
+      targetNet = if (updateTarget) newResult.net else targetNet,
       memory = newMemory,
-      trainingResult =  if(doTraining) newResult else lastIteration.trainingResult,
+      trainingResult = if (doTraining) newResult else lastIteration.trainingResult,
       state = currentState,
       isTerminal = observation.isTerminal,
-      targetNetHitCount = if(updateTarget) 0 else lastIteration.targetNetHitCount + 1
+      targetNetHitCount = if (updateTarget) 0 else lastIteration.targetNetHitCount + 1
     )
-
   }
-
-  private def concat(previous: History, newHistory: History): History = {
-    val relevantPreviousHistory = previous.filter(_.time.isBefore(newHistory.head.time))
-    (relevantPreviousHistory ++ newHistory)
-  }
-
-
-  private[reinforcement] def updateInit(iteration: Iteration, newHistory: History): Iteration = {
-    val previous = iteration.state.fullHistory
-    assert(!iteration.state.isTerminal, "init state cannot be terminal")
-    assert(iteration.memory.isEmpty, "init iteration should not have transition memory already")
-    iteration.copy(state = stateFromHistory(concat(previous, newHistory) , false))
-  }
-
-
-
-  protected def stateFromHistory(history: History, isTerminal: Boolean): State = {
-    assert(history.size >= historyLength, "incorrect history length to create a state")
-    assert(inputDimensionOfHistory(history).isDefined, "Inconsistent history input dimension")
-    State(history.takeRight(historyLength), isTerminal)
-  }
-
 
   protected def validate: Unit = {
     assert(minMemorySizeBeforeTraining > batchSize, "must have enough transitions in memory before training")

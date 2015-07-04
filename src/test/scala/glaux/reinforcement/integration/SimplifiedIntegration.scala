@@ -40,7 +40,7 @@ class SimplifiedIntegration extends Specification {
     Observation(lastAction, reward, randomHistory(time), randomTerminal)
   }
   
-  val init = learner.init(randomHistory(start), 3).right.get
+  val init = learner.init(randomHistory(start), 3)
   
   "can learn the right action" >> {
     //learning

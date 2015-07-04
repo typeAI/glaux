@@ -16,7 +16,7 @@ class SimplifiedDeepMindQLearnerSpec extends Specification {
 
   val initHistory = Seq(TemporalState(RowVector(1, 0), start), TemporalState(RowVector(2, 1), start.plusMinutes(1)))
 
-  val init = learner.init(initHistory, 2).right.get
+  val init = learner.init(initHistory, 2)
 
   "init" >> {
 
