@@ -51,7 +51,7 @@ class OttoSpecs extends Specification {
 
       val batchSize: Int = 20
       val batches = trainning.grouped(batchSize) //two batches first
-      val length = trainning.length
+
       def classificationVector(classification: Int, numOfClassification: Int): RowVector = {
         val seqValues = (Seq.fill(classification - 1)(0) ++ Seq(1) ++ Seq.fill(9 - classification)(0)).map(_.toDouble)
         RowVector(seqValues: _*)
