@@ -82,6 +82,14 @@ class QAgentSpec extends Specification {
       memory.head.after.fullHistory.last.readings.seqView === Seq(9d, 5d)
       memory.head.reward === 7
     }
+
+    "consecutive requests returns same action without changing session " in new ReportScope {
+      val (a1, s1) = agent.requestAction(session)
+      val (a2, s2) = agent.requestAction(s1)
+
+      a1 === a2
+      s1 === s2
+    }
   }
 
   "close" should {

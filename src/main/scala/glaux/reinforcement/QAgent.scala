@@ -32,8 +32,24 @@ trait QAgent {
                      lastAction: Option[Action] = None,
                      isClosed: Boolean = false) {
     def canForward: Boolean = !isClosed && lastAction.isDefined && !currentReadings.isEmpty
-   
-  }
+
+    object Status extends Enumeration {
+      val ReadyToForward, PendingReadingAfterAction, PendingFirstAction, Closed = Value
+    }
+
+    def status: Status.Value = if (isClosed) Status.Closed
+                               else
+                                 if(lastAction.isDefined)
+                                   if(currentReadings.isEmpty)
+                                     Status.PendingReadingAfterAction
+                                   else
+                                     Status.ReadyToForward
+                                 else
+                                   if(currentReadings.isEmpty)
+                                     throw new Exception("session should not be in this state")
+                                   else
+                                     Status.PendingFirstAction
+}
 
   def start(initReadings: Iterable[Reading], previous: Option[Session]): Either[String, Session] = {
     val initHistory = toHistory(initReadings)
@@ -58,13 +74,17 @@ trait QAgent {
   def requestAction(session: Session): (Action, Session) = {
     assert(!session.isClosed)
     val currentHistory = toHistory(session.currentReadings)
-    if(session.canForward) {
-      val newIteration = forward(session, false)
-      val action = policy(newIteration.state, newIteration.stateActionQ)
-      (action, Session(newIteration, 0, Vector.empty, Some(action)))
-    } else {
-      val action = policy(qLearner.stateFromHistory(currentHistory, false), session.iteration.stateActionQ)
-      (action, session.copy(lastAction = Some(action), currentReadings = Vector.empty))
+    session.status match {
+      case session.Status.ReadyToForward =>
+        val newIteration = forward(session, false)
+        val action = policy(newIteration.state, newIteration.stateActionQ)
+        (action, Session(newIteration, 0, Vector.empty, Some(action)))
+      case session.Status.PendingFirstAction =>
+        val firstAction = policy(qLearner.stateFromHistory(currentHistory, false), session.iteration.stateActionQ)
+        (firstAction, session.copy(lastAction = Some(firstAction), currentReadings = Vector.empty))
+      case session.Status.PendingReadingAfterAction =>
+        (session.lastAction.get, session)  //simply repeat the last action
+      case _ => throw new NotImplementedError(s"request action not implemented for ${session.status}")
     }
   }
 
