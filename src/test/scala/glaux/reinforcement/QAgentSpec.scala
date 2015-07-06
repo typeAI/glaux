@@ -39,24 +39,77 @@ class QAgentSpec extends Specification {
     }
   }
 
-  "Request Action" should  {
+  "Request Action Without Report" should  {
     trait RequestActionScope extends QAgentScope {
-      val reading = (Seq(3d, 2d), ZonedDateTime.now)
-      val result = agent.start(List(reading, reading, reading), None)
+      val testReading = (Seq(3d, 2d), ZonedDateTime.now)
+      val result = agent.start(List(testReading, testReading, testReading), None)
       val session = result.right.get
       val (action, newSession) = agent.requestAction(session)
     }
 
     "return the action from policy" in new RequestActionScope {
       action === 2
-
     }
+
+    "without empty recentHistory" in new RequestActionScope {
+      newSession.currentReadings must beEmpty
+    }
+
     "remember the action from policy" in new RequestActionScope {
       newSession.lastAction must beSome(action)
     }
 
     "not create memory for the first action request" in new RequestActionScope {
       newSession.iteration.memory must beEmpty
+    }
+  }
+
+  "Request Action After Report" should {
+    trait ReportScope extends QAgentScope {
+      val testReading = (Seq(3d, 2d), ZonedDateTime.now)
+      val start = agent.start(List(testReading, testReading, testReading), None)
+      val startSession = start.right.get
+      val (_, s) = agent.requestAction(startSession)
+      val session = agent.report((Seq(9d, 5d), ZonedDateTime.now.plusMinutes(1)), 7, s)
+
+    }
+
+    "add reading and reward to the memory" in new ReportScope {
+      val (_, result) = agent.requestAction(session)
+      val memory = result.iteration.memory
+
+      memory.size === 1
+      memory.head.after.fullHistory.last.readings.seqView === Seq(9d, 5d)
+      memory.head.reward === 7
+    }
+  }
+
+  "close" should {
+    trait CloseScope extends QAgentScope {
+      val testReading = (Seq(3d, 2d), ZonedDateTime.now)
+      val start = agent.start(List(testReading, testReading, testReading), None)
+      val startSession = start.right.get
+      val (_, session) = agent.requestAction(startSession)
+    }
+
+    "return a session that is closed" in new CloseScope {
+      agent.close(session).isClosed must beTrue
+    }
+
+    "does not create extra memory if no further readings is provided" in new CloseScope {
+      agent.close(session).iteration.memory must beEmpty
+    }
+
+    "creates extra memory if further readings is provided" in new CloseScope {
+
+      val s = agent.report((Seq(9d, 5d), ZonedDateTime.now.plusMinutes(1)), 7, session)
+      val closed = agent.close(s)
+
+      closed.isClosed must beTrue
+      val memory = closed.iteration.memory
+      memory.size === 1
+      memory.head.after.fullHistory.last.readings.seqView === Seq(9d, 5d)
+      memory.head.reward === 7
     }
   }
 }

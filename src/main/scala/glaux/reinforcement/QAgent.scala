@@ -31,6 +31,8 @@ trait QAgent {
                      currentReadings: Vector[Reading],
                      lastAction: Option[Action] = None,
                      isClosed: Boolean = false) {
+    def canForward: Boolean = !isClosed && lastAction.isDefined && !currentReadings.isEmpty
+   
   }
 
   def start(initReadings: Iterable[Reading], previous: Option[Session]): Either[String, Session] = {
@@ -56,27 +58,28 @@ trait QAgent {
   def requestAction(session: Session): (Action, Session) = {
     assert(!session.isClosed)
     val currentHistory = toHistory(session.currentReadings)
-    if(session.lastAction.isDefined) {
-      val observation = Observation(session.lastAction.get, session.currentReward, currentHistory, false)
-      val newIteration = qLearner.iterate(session.iteration, observation)
+    if(session.canForward) {
+      val newIteration = forward(session, false)
       val action = policy(newIteration.state, newIteration.stateActionQ)
       (action, Session(newIteration, 0, Vector.empty, Some(action)))
     } else {
       val action = policy(qLearner.stateFromHistory(currentHistory, false), session.iteration.stateActionQ)
-      (action, session.copy(lastAction = Some(action)))
+      (action, session.copy(lastAction = Some(action), currentReadings = Vector.empty))
     }
   }
 
   def close(session: Session): Session = {
     assert(!session.isClosed)
-    val currentHistory = toHistory(session.currentReadings)
-    if(session.lastAction.isDefined) {
-      val observation = Observation(session.lastAction.get, session.currentReward, currentHistory, true)
-      session.copy(iteration = qLearner.iterate(session.iteration, observation), isClosed = true)
+    if(session.canForward) {
+      session.copy(iteration = forward(session, true), isClosed = true)
     } else
       session.copy(isClosed = true)
   }
-
+  
+  private def forward(session: Session, terminal: Boolean): Iteration = {
+    val observation = Observation(session.lastAction.get, session.currentReward, toHistory(session.currentReadings), terminal)
+    qLearner.iterate(session.iteration, observation)
+  }
 }
 
 

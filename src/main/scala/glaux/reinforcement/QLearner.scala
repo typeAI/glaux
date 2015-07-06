@@ -27,7 +27,9 @@ trait QLearner {
                           reward: Reward,
                           recentHistory: History,
                           isTerminal: Boolean) {
+    assert(!recentHistory.isEmpty, "Cannot create an observation without recent history")
     def startTime = recentHistory.head.time
+
   }
 
   case class TemporalState(readings: Input, time: Time)
