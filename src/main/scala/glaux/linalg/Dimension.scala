@@ -2,7 +2,7 @@ package glaux.linalg
 
 import Dimension.Shape
 
-trait Dimension {
+sealed trait Dimension {
   lazy val totalSize: Int = shape.reduce(_ * _)
   def shape: Shape
 }
