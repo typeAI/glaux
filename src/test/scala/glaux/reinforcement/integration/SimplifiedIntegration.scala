@@ -67,7 +67,7 @@ class SimplifiedIntegration extends Specification {
     }
     val correctionRate = correct.size.toDouble / results.size
 //    println("correction rate " + correctionRate)
-    correctionRate must be_>=(0.65)
+    correctionRate must be_>=(0.60)
   }
 
 }
