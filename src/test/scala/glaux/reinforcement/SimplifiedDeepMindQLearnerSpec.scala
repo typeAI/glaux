@@ -5,6 +5,7 @@ import java.time.{Clock, LocalTime, LocalDate, ZonedDateTime}
 
 import glaux.linalg.Dimension.Row
 import glaux.linalg.RowVector
+import glaux.reinforcement.QLearner._
 
 import org.specs2.mutable.Specification
 
@@ -12,7 +13,7 @@ class SimplifiedDeepMindQLearnerSpec extends Specification {
   val start = ZonedDateTime.of(LocalDate.of(2015, 2, 14), LocalTime.of(14, 30), Clock.systemDefaultZone().getZone)
   val learner = DeepMindQLearner.Simplified(historyLength = 2)
 
-  import learner.Observation //todo: can this import be easier (don't need to remember)
+  //todo: can this import be easier (don't need to remember)
 
   val initHistory = Seq(TemporalState(RowVector(1, 0), start), TemporalState(RowVector(2, 1), start.plusMinutes(1)))
 

@@ -4,9 +4,8 @@ package reinforcement
 import glaux.linalg.Tensor
 import glaux.nn.Loss
 import glaux.nn.trainers.BatchTrainer
+import glaux.reinforcement.QLearner.{HistoryOf, Transition, Observation => QObservation, State => QState}
 
-
-case class TemporalState[Input <: Tensor](readings: Input, time: Time)
 
 trait QLearner {
   type NetInput <: Tensor
@@ -19,33 +18,16 @@ trait QLearner {
   protected val trainer: Trainer
   type TrainingResult = trainer.BatchResult
 
-  type History = Seq[TemporalState[Input]]
-  type Memory = Seq[Transition]
+  type History = HistoryOf[Input]
 
+  type Memory = Seq[Transition[Input]]
 
   type InputDimension = Input#Dimensionality
 
-  case class Observation( lastAction: Action,
-                          reward: Reward,
-                          recentHistory: History,
-                          isTerminal: Boolean) {
-    assert(!recentHistory.isEmpty, "Cannot create an observation without recent history")
-    def startTime = recentHistory.head.time
-
-  }
-
-
   val historyLength: Int
 
-  case class State(fullHistory: History, isTerminal: Boolean) {
-    def endTime = fullHistory.last.time
-    lazy val inputDimension: InputDimension = fullHistory.head.readings.dimension
-  }
-
-  case class Transition(before: State,
-                        action: Action,
-                        reward: Reward,
-                        after: State)
+  type Observation = QObservation[Input]
+  type State = QState[Input]
 
   trait IterationLike {
     def trainingResult: TrainingResult
@@ -108,7 +90,7 @@ trait QLearner {
 
   private[reinforcement] def stateFromHistory(history: History, isTerminal: Boolean): State = {
     assert(canBuildStateFrom(history), "incorrect history length or dimension to create a state")
-    State(history.takeRight(historyLength), isTerminal)
+    QState(history.takeRight(historyLength), isTerminal)
   }
 
   def canBuildStateFrom(history: History): Boolean = 
@@ -116,5 +98,31 @@ trait QLearner {
 
 }
 
+
+object QLearner {
+  case class TemporalState[Input <: Tensor](readings: Input, time: Time)
+
+  type HistoryOf[Input <: Tensor] = Seq[TemporalState[Input]]
+
+  case class Observation[Input <: Tensor]( lastAction: Action,
+                                  reward: Reward,
+                                  recentHistory: HistoryOf[Input],
+                                  isTerminal: Boolean) {
+    assert(!recentHistory.isEmpty, "Cannot create an observation without recent history")
+    def startTime = recentHistory.head.time
+
+  }
+
+  case class State[Input <: Tensor ](fullHistory: HistoryOf[Input], isTerminal: Boolean) {
+    def endTime = fullHistory.last.time
+    lazy val inputDimension: Input#Dimensionality = fullHistory.head.readings.dimension
+  }
+
+  private[reinforcement] case class Transition[Input <: Tensor] (before: State[Input],
+                                                                  action: Action,
+                                                                  reward: Reward,
+                                                                  after: State[Input])
+
+}
 
 

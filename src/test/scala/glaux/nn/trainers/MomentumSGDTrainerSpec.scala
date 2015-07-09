@@ -22,7 +22,7 @@ class MomentumSGDTrainerSpec extends Specification {
 
   "init context" >> {
     initResult.calcContext.gSums.size === hiddenLayer.params.size
-    initResult.calcContext.gSums.find(gs => gs.param.id == hiddenLayer.params.head.id && gs.layer == hiddenLayer) must beSome[trainer.ParamGSum]
+    initResult.calcContext.gSums.find(gs => gs.param.id == hiddenLayer.params.head.id && gs.layer == hiddenLayer) must beSome[MomentumSGD.ParamGSum]
   }
 
   "net consistent with convnetjs" >> {

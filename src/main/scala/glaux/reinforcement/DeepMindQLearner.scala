@@ -3,11 +3,12 @@ package glaux.reinforcement
 import glaux.linalg.Dimension.Row
 import glaux.linalg.RowVector
 import glaux.nn.trainers.{SGDOptions, VanillaSGD}
-import glaux.nn.{Net, InputLayer}
-import glaux.nn.Net.{Updater, DefaultNet}
+import glaux.nn.{InputLayer, Net}
+import Net.DefaultNet
 import glaux.nn.layers.{Regression, Relu, FullyConnected}
+import glaux.reinforcement.QLearner.Transition
 
-import scala.util.{Try, Random}
+import scala.util.Random
 
 /**
  * QLearner based on deepmind algorithm
@@ -77,7 +78,7 @@ trait DeepMindQLearner extends QLearner {
       }
     }
 
-    def toTrainingInput(transition: Transition): (NetInput, Trainer#ScalarOutputInfo) = {
+    def toTrainingInput(transition: Transition[Input]): (NetInput, Trainer#ScalarOutputInfo) = {
       val regressionOnAction = if (transition.after.isTerminal) transition.reward else
         transition.reward + targetNet.predict(transition.after).seqView.max * gamma
 

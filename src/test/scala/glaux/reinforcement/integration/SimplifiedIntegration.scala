@@ -6,7 +6,8 @@ import glaux.linalg.Dimension.Row
 import glaux.linalg.RowVector
 import glaux.nn.trainers.{MomentumSGDOptions, MomentumSGD, SGDOptions, VanillaSGD}
 import glaux.reinforcement.DeepMindQLearner.Simplified
-import glaux.reinforcement.{TemporalState, Time, Action, DeepMindQLearner}
+import glaux.reinforcement.QLearner._
+import glaux.reinforcement.{Time, Action, DeepMindQLearner}
 import org.specs2.mutable.Specification
 
 import scala.util.Random
@@ -17,7 +18,7 @@ class SimplifiedIntegration extends Specification {
 //  val trainer = MomentumSGD[Simplified#Net](MomentumSGDOptions(SGDOptions(learningRate = 0.005), momentum = 0.9))
   val trainer = VanillaSGD[Simplified#Net](SGDOptions(learningRate = 0.05))
   val learner = DeepMindQLearner.Simplified(historyLength = 2, batchSize = 20, trainer = trainer)
-  import learner.{Observation, State, History}
+  import learner.{State, History}
   
 
   def randomBinary = if(Random.nextBoolean) 1 else 0
@@ -29,7 +30,7 @@ class SimplifiedIntegration extends Specification {
     TemporalState(randomReading, from.plusMinutes(2)))
   def randomTerminal: Boolean = Random.nextDouble > 0.97
 
-  def newObservation(lastState: State, lastAction: Action): Observation = {
+  def newObservation(lastState: State, lastAction: Action): learner.Observation = {
     val time = lastState.endTime.plusMinutes(1)
     val reward = {
       if(lastState.isTerminal) 0 else {

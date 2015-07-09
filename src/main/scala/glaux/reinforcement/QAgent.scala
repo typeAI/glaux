@@ -5,10 +5,12 @@ import glaux.linalg.RowVector
 import glaux.linalg.Tensor.TensorBuilder
 import glaux.nn.trainers.{SGDOptions, VanillaSGD}
 import glaux.reinforcement.DeepMindQLearner.Simplified
+import glaux.reinforcement.QLearner.{Observation, TemporalState}
 
 import scala.util.Random
 
 trait QAgent {
+
   val qLearner: QLearner
 
   import qLearner.{Observation, Iteration, State}

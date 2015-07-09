@@ -1,6 +1,7 @@
 package glaux.nn.trainers
 
 import glaux.nn._
+import glaux.nn.trainers.BatchTrainer.LossInfo
 
 
 trait BatchTrainer[Trainee <: Net] {
@@ -8,14 +9,15 @@ trait BatchTrainer[Trainee <: Net] {
 
   type CalculationContext
 
-  case class BatchResult(lossInfo: LossInfo, net: Trainee, batchSize: Int, calcContext: CalculationContext)
 
   val build: Net.Updater[Trainee]
+
+  type BatchResult = BatchTrainer.BatchResult[Trainee, CalculationContext]
 
   def initialCalculationContext(net: Trainee) : CalculationContext
 
   val initialLossInfo = LossInfo(0,0,0)
-  def init(net: Trainee) = BatchResult(initialLossInfo, net, 0, initialCalculationContext(net))
+  def init(net: Trainee): BatchResult = BatchTrainer.BatchResult(initialLossInfo, net, 0, initialCalculationContext(net))
 
   type ScalarOutputInfo = (Double, Int) //(Value, Index)
 
@@ -56,7 +58,7 @@ trait BatchTrainer[Trainee <: Net] {
     }
 
     val newNet: Trainee = build(net, newLayersSorted)
-    BatchResult(lossInfo, newNet, batchSize, newContext)
+    BatchTrainer.BatchResult(lossInfo, newNet, batchSize, newContext)
   }
 
   def accumulate(netParamGradients: Iterable[NetParamGradients]): NetParamGradients =
@@ -76,7 +78,13 @@ trait BatchTrainer[Trainee <: Net] {
   def calculate(paramGrads: NetParamGradients, lastIterationResult: BatchResult, loss: Loss, batchSize: Int ): (NetParams, CalculationContext, LossInfo)
 }
 
+object BatchTrainer {
+  case class LossInfo(l1Decay: Loss, l2Decay: Loss, cost: Loss) {
+    val total: Loss = l1Decay + l2Decay + cost
+  }
 
-case class LossInfo(l1Decay: Loss, l2Decay: Loss, cost: Loss) {
-  val total: Loss = l1Decay + l2Decay + cost
+  case class BatchResult[Trainee <: Net, CalculationContext](lossInfo: LossInfo, net: Trainee, batchSize: Int, calcContext: CalculationContext)
+
 }
+
+
