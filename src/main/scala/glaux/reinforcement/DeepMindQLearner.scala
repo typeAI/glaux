@@ -2,7 +2,7 @@ package glaux.reinforcement
 
 import glaux.linalg.Dimension.Row
 import glaux.linalg.RowVector
-import glaux.nn.trainers.{SGDOptions, VanillaSGD}
+import glaux.nn.trainers.{SGDSettings, VanillaSGD}
 import glaux.nn.{InputLayer, Net}
 import Net.DefaultNet
 import glaux.nn.layers.{Regression, Relu, FullyConnected}
@@ -91,7 +91,7 @@ trait DeepMindQLearner extends QLearner {
 }
 
 object DeepMindQLearner {
-  case class Simplified(  override protected val trainer: Simplified#Trainer = VanillaSGD[Simplified#Net](SGDOptions()),
+  case class Simplified(  override protected val trainer: Simplified#Trainer = VanillaSGD[Simplified#Net](SGDSettings()),
                           historyLength: Int = 50,
                           gamma: Double = 0.95,
                           batchSize: Int = 40,

@@ -16,7 +16,7 @@ class VanillaSGDTrainerSpec extends Specification {
   val lossLayer = Regression(1)
   val initNet: DefaultNet[RowVector] = DefaultNet(inputLayer, Seq(hiddenLayer), lossLayer)
 
-  val trainer = VanillaSGD[DefaultNet[RowVector]](SGDOptions(learningRate = 0.05))
+  val trainer = VanillaSGD[DefaultNet[RowVector]](SGDSettings(learningRate = 0.05))
   val initResult = trainer.init(initNet)
 
   val dist = statistics.distributions.normal(0, 3)

@@ -5,6 +5,7 @@ import glaux.linalg.{Dimension, Matrix, RowVector}
 import glaux.nn.InputLayer
 import glaux.nn.Net.DefaultNet
 import glaux.nn.layers.{FullyConnected, Regression}
+import glaux.nn.trainers.MomentumSGD.Settings
 import glaux.statistics
 import org.specs2.mutable.Specification
 
@@ -17,7 +18,7 @@ class MomentumSGDTrainerSpec extends Specification {
   val lossLayer = Regression(1)
   val initNet: DefaultNet[RowVector] = DefaultNet(inputLayer, Seq(hiddenLayer), lossLayer)
 
-  val trainer = MomentumSGD[DefaultNet[RowVector]](MomentumSGDOptions(SGDOptions(learningRate = 0.01), 0.9))
+  val trainer = MomentumSGD[DefaultNet[RowVector]](Settings(SGDSettings(learningRate = 0.01), 0.9))
   val initResult = trainer.init(initNet)
 
   "init context" >> {

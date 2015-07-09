@@ -2,9 +2,8 @@ package glaux.reinforcement.integration
 
 import java.time.{Clock, LocalTime, LocalDate, ZonedDateTime}
 
-import glaux.linalg.Dimension.Row
 import glaux.linalg.RowVector
-import glaux.nn.trainers.{MomentumSGDOptions, MomentumSGD, SGDOptions, VanillaSGD}
+import glaux.nn.trainers.{SGDSettings, VanillaSGD}
 import glaux.reinforcement.DeepMindQLearner.Simplified
 import glaux.reinforcement.QLearner._
 import glaux.reinforcement.{Time, Action, DeepMindQLearner}
@@ -16,7 +15,7 @@ class SimplifiedIntegration extends Specification {
 
   val start = ZonedDateTime.of(LocalDate.of(2015, 2, 14), LocalTime.of(14, 30), Clock.systemDefaultZone().getZone)
 //  val trainer = MomentumSGD[Simplified#Net](MomentumSGDOptions(SGDOptions(learningRate = 0.005), momentum = 0.9))
-  val trainer = VanillaSGD[Simplified#Net](SGDOptions(learningRate = 0.05))
+  val trainer = VanillaSGD[Simplified#Net](SGDSettings(learningRate = 0.05))
   val learner = DeepMindQLearner.Simplified(historyLength = 2, batchSize = 20, trainer = trainer)
   import learner.{State, History}
   

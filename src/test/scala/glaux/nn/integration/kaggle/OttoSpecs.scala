@@ -5,7 +5,9 @@ import glaux.linalg.{Matrix, RowVector}
 import glaux.nn.InputLayer
 import glaux.nn.Net.DefaultNet
 import glaux.nn.layers.{Relu, Softmax, FullyConnected}
-import glaux.nn.trainers.{SGDOptions, MomentumSGDOptions, MomentumSGD}
+import glaux.nn.trainers.MomentumSGD.Settings
+import glaux.nn.trainers.{SGDSettings, MomentumSGD}
+
 import org.specs2.mutable.Specification
 
 import scala.io.Source
@@ -46,7 +48,7 @@ class OttoSpecs extends Specification {
       val lossLayer = Softmax(Row(numOfClass))
       val initNet: DefaultNet[RowVector] = DefaultNet(inputLayer, Seq(fc1, relu, fc2), lossLayer)
 
-      val trainer = MomentumSGD[DefaultNet[RowVector]](MomentumSGDOptions(SGDOptions(learningRate = 0.001), 0.9))
+      val trainer = MomentumSGD[DefaultNet[RowVector]](Settings(SGDSettings(learningRate = 0.001), 0.9))
       val initResult = trainer.init(initNet)
 
       val batchSize: Int = 20

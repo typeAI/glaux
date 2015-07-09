@@ -3,7 +3,7 @@ package glaux.reinforcement
 import java.time.ZonedDateTime
 
 import glaux.linalg.RowVector
-import glaux.nn.trainers.{SGDOptions, VanillaSGD}
+import glaux.nn.trainers.{SGDSettings, VanillaSGD}
 import glaux.reinforcement.DeepMindQLearner.Simplified
 import org.specs2.matcher.Scope
 import org.specs2.mutable.Specification
@@ -13,7 +13,7 @@ import org.specs2.mutable.Specification
 class QAgentSpec extends Specification {
   trait QAgentScope extends Scope {
     case class TestAgent(numOfActions: Int, fixedReturnAction: Int) extends QAgent {
-      val trainer = VanillaSGD[Simplified#Net](SGDOptions(learningRate = 0.05))
+      val trainer = VanillaSGD[Simplified#Net](SGDSettings(learningRate = 0.05))
       val qLearner = DeepMindQLearner.Simplified(historyLength = 3, batchSize = 20, trainer = trainer)
       val policy: Policy = (_, _) => fixedReturnAction
 

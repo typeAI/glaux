@@ -3,13 +3,13 @@ package glaux.nn.trainers
 import glaux.linalg.Tensor
 import glaux.nn._
 import glaux.nn.trainers.BatchTrainer._
-import glaux.nn.trainers.MomentumSGD.{ParamGSum, MomentumSGDIterationContext}
+import glaux.nn.trainers.MomentumSGD.{Settings, ParamGSum, IterationContext}
 import glaux.nn.trainers.SGDBase.{Results, NewParamResult}
 
 
-case class SGDOptions(learningRate: Double = 0.01, l1Decay: Decay = 0, l2Decay: Decay = 0)
+case class SGDSettings(learningRate: Double = 0.01, l1Decay: Decay = 0, l2Decay: Decay = 0)
 
-abstract class SGDBase[NT <: Net: Net.Updater](options: SGDOptions) extends BatchTrainer[NT] {
+abstract class SGDBase[NT <: Net: Net.Updater](options: SGDSettings) extends BatchTrainer[NT] {
   type Trainee = NT
 
   val build: Net.Updater[Trainee] = implicitly[Net.Updater[Trainee]]
@@ -64,7 +64,7 @@ object SGDBase {
 }
 
 
-case class VanillaSGD[NT <: Net: Net.Updater](options: SGDOptions) extends SGDBase[NT](options) {
+case class VanillaSGD[NT <: Net: Net.Updater](options: SGDSettings) extends SGDBase[NT](options) {
 
   type CalculationContext = Unit
 
@@ -77,17 +77,16 @@ case class VanillaSGD[NT <: Net: Net.Updater](options: SGDOptions) extends SGDBa
 
 }
 
-case class MomentumSGDOptions(sgdOptions: SGDOptions, momentum: Double)
-case class MomentumSGD[NT <: Net: Net.Updater](options: MomentumSGDOptions) extends SGDBase[NT](options.sgdOptions) {
+case class MomentumSGD[NT <: Net: Net.Updater](settings: Settings) extends SGDBase[NT](settings.sgdSettings) {
 
-  type CalculationContext = MomentumSGDIterationContext
+  type CalculationContext = IterationContext
 
-  def initialCalculationContext(net: Trainee): MomentumSGDIterationContext = {
+  def initialCalculationContext(net: Trainee): IterationContext = {
     val paramGSums = net.hiddenLayers.flatMap { layer =>
       layer.params.map { p => ParamGSum(layer, p, p.value.fill(0))
       }
     }
-    MomentumSGDIterationContext(paramGSums)
+    IterationContext(paramGSums)
   }
 
   def updateContext(lastContext: CalculationContext, results: Results): CalculationContext = {
@@ -100,12 +99,15 @@ case class MomentumSGD[NT <: Net: Net.Updater](options: MomentumSGDOptions) exte
 
   def calculateParamAdjustment(layer: HiddenLayer, param: LayerParam, rawBatchGradient: Tensor, lastContext: CalculationContext): Tensor = {
     val lastGsum = lastContext.gSums.find(gs => gs.param.id == param.id && gs.layer.id == layer.id).get
-    (lastGsum.value * options.momentum) - (rawBatchGradient * options.sgdOptions.learningRate)
+    (lastGsum.value * settings.momentum) - (rawBatchGradient * settings.sgdSettings.learningRate)
   }
 }
 
 object MomentumSGD {
   case class ParamGSum(layer: HiddenLayer, param: LayerParam, value: Tensor)
 
-  case class MomentumSGDIterationContext(gSums: Seq[ParamGSum])
+  case class IterationContext(gSums: Seq[ParamGSum])
+
+  case class Settings(sgdSettings: SGDSettings, momentum: Double)
+
 }

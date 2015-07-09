@@ -3,7 +3,7 @@ package glaux.reinforcement
 import glaux.linalg.Dimension.Row
 import glaux.linalg.RowVector
 import glaux.linalg.Tensor.TensorBuilder
-import glaux.nn.trainers.{SGDOptions, VanillaSGD}
+import glaux.nn.trainers.{SGDSettings, VanillaSGD}
 import glaux.reinforcement.DeepMindQLearner.Simplified
 import glaux.reinforcement.QLearner.{Observation, TemporalState}
 
@@ -107,7 +107,7 @@ trait QAgent {
 
 
 case class SimpleQAgent(numOfActions: Int) extends QAgent {
-  val trainer = VanillaSGD[Simplified#Net](SGDOptions(learningRate = 0.05))
+  val trainer = VanillaSGD[Simplified#Net](SGDSettings(learningRate = 0.05))
   val qLearner = DeepMindQLearner.Simplified(historyLength = 10, batchSize = 20, trainer = trainer)
 
   protected def readingsToInput(readings: Seq[Double]): qLearner.Input = RowVector(readings :_*)
