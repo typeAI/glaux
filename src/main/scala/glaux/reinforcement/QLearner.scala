@@ -14,7 +14,8 @@ trait QLearner {
   type Net <: nn.Net { type Input = NetInput } //Need to fix input to the type level
 
   type NetOutput = Net#Output
-  type Trainer = BatchTrainer[Net]
+  type Trainer <: BatchTrainer[Net]
+
   protected val trainer: Trainer
   type TrainingResult = trainer.BatchResult
   type History = Seq[TemporalState]

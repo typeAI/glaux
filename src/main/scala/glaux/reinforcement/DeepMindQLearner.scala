@@ -99,6 +99,8 @@ object DeepMindQLearner {
     type NetInput = RowVector
     type Input = RowVector
     type Net = DefaultNet[NetInput]
+    type Trainer = VanillaSGD[Net]
+
     validate
 
     implicit def inputToNet(state: State): NetOutput = {
