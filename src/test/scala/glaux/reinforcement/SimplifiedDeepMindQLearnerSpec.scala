@@ -12,7 +12,7 @@ class SimplifiedDeepMindQLearnerSpec extends Specification {
   val start = ZonedDateTime.of(LocalDate.of(2015, 2, 14), LocalTime.of(14, 30), Clock.systemDefaultZone().getZone)
   val learner = DeepMindQLearner.Simplified(historyLength = 2)
 
-  import learner.{Observation, TemporalState} //todo: can this import be easier (don't need to remember)
+  import learner.Observation //todo: can this import be easier (don't need to remember)
 
   val initHistory = Seq(TemporalState(RowVector(1, 0), start), TemporalState(RowVector(2, 1), start.plusMinutes(1)))
 

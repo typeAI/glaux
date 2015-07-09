@@ -5,8 +5,8 @@ import glaux.linalg.Tensor
 import glaux.nn.Loss
 import glaux.nn.trainers.BatchTrainer
 
-import scala.util.Try
 
+case class TemporalState[Input <: Tensor](readings: Input, time: Time)
 
 trait QLearner {
   type NetInput <: Tensor
@@ -18,7 +18,8 @@ trait QLearner {
 
   protected val trainer: Trainer
   type TrainingResult = trainer.BatchResult
-  type History = Seq[TemporalState]
+
+  type History = Seq[TemporalState[Input]]
   type Memory = Seq[Transition]
 
 
@@ -33,7 +34,6 @@ trait QLearner {
 
   }
 
-  case class TemporalState(readings: Input, time: Time)
 
   val historyLength: Int
 

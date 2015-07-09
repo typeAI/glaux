@@ -11,7 +11,7 @@ import scala.util.Random
 trait QAgent {
   val qLearner: QLearner
 
-  import qLearner.{Observation, TemporalState, Iteration, State}
+  import qLearner.{Observation, Iteration, State}
 
   type Policy = (State, State => Action => Q ) => Action
 
