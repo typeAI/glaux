@@ -13,6 +13,7 @@ import org.specs2.mutable.Specification
 class QAgentSpec extends Specification {
   trait QAgentScope extends Scope {
     case class TestAgent(numOfActions: Int, fixedReturnAction: Int) extends QAgent {
+      type Learner = DeepMindQLearner.Simplified
       val trainer = VanillaSGD[Simplified#Net](SGDSettings(learningRate = 0.05))
       val qLearner = DeepMindQLearner.Simplified(historyLength = 3, batchSize = 20, trainer = trainer)
       val policy: Policy = (_, _) => fixedReturnAction

@@ -13,14 +13,13 @@ trait QLearner {
   type Net <: nn.Net { type Input = NetInput } //Need to fix input to the type level
 
   type NetOutput = Net#Output
-  type Trainer <: BatchTrainer[Net]
+  type Trainer <: BatchTrainer[Net, _]
 
   protected val trainer: Trainer
+
   type TrainingResult = trainer.BatchResult
 
   type History = HistoryOf[Input]
-
-  type Memory = Seq[Transition[Input]]
 
   type InputDimension = Input#Dimensionality
 
@@ -28,6 +27,8 @@ trait QLearner {
 
   type Observation = QObservation[Input]
   type State = QState[Input]
+
+  type Memory = Seq[Transition[Input]]
 
   trait IterationLike {
     def trainingResult: TrainingResult
@@ -122,6 +123,7 @@ object QLearner {
                                                                   action: Action,
                                                                   reward: Reward,
                                                                   after: State[Input])
+
 
 }
 

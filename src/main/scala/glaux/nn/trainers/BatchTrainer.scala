@@ -4,11 +4,8 @@ import glaux.nn._
 import glaux.nn.trainers.BatchTrainer.LossInfo
 
 
-trait BatchTrainer[Trainee <: Net] {
+trait BatchTrainer[Trainee <: Net, CalculationContext] {
   type Output = Trainee#Output
-
-  type CalculationContext
-
 
   val build: Net.Updater[Trainee]
 

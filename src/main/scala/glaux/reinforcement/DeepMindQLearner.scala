@@ -17,6 +17,7 @@ trait DeepMindQLearner extends QLearner {
   val gamma: Double
   val batchSize: Int
   val targetNetUpdateFreq: Int //avg # of iterations before updating the target net
+
   case class DeepMindIteration(targetNet: Net,
                                memory: Memory, //Seq because we need random access here
                                trainingResult: TrainingResult,
@@ -39,6 +40,7 @@ trait DeepMindQLearner extends QLearner {
 
   override protected def doInit(initState: State, numOfActions: Action, inputDim: InputDimension): Iteration = {
     val initNet = buildNet(inputDim, numOfActions)
+
     DeepMindIteration(initNet, Nil, trainer.init(initNet), initState)
   }
 
@@ -84,7 +86,6 @@ trait DeepMindQLearner extends QLearner {
 
       (transition.before, (regressionOnAction, transition.action))
     }
-
     trainer.trainBatchWithScalaOutputInfo(lastResult)(randomExamples.map(toTrainingInput))
   }
 
