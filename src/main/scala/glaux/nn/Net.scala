@@ -1,6 +1,6 @@
 package glaux.nn
 
-import glaux.linalg.Tensor
+import glaux.linalg.{RowVector, Tensor}
 
 trait Net {
   type Input <: Tensor
@@ -62,6 +62,7 @@ object Net {
     type Input = InputT
     validate()
   }
+
 
   implicit def simpleUpdater[Input <: Tensor]: Updater[DefaultNet[Input]] = (net, newLayers) => {
     net.hiddenLayers.map(_.id).zip(newLayers.map(_.id)).foreach {

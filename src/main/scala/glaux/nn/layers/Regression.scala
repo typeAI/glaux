@@ -3,7 +3,7 @@ package glaux.nn.layers
 import glaux.linalg.Dimension
 import glaux.nn._
 
-case class Regression private(inDimension: Dimension.Row) extends LossLayer {
+case class Regression(inDimension: Dimension.Row) extends LossLayer {
   def loss(target: Output, actual: Output): (Loss, InGradient) = {
     assert(target.dimension == outDimension && actual.dimension == outDimension)
     val gradient: Output = actual - target
