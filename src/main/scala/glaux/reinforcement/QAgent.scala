@@ -83,7 +83,7 @@ trait QAgent {
 }
 
 object QAgent {
-  case class Session[IterationT](private[reinforcement] val iteration: IterationT,
+  case class Session[IterationT](iteration: IterationT,
                                  currentReward: Reward,
                                  currentReadings: Vector[Reading],
                                  lastAction: Option[Action] = None,
@@ -110,10 +110,10 @@ object QAgent {
 }
 
 
-case class SimpleQAgent(numOfActions: Int) extends QAgent {
+case class SimpleQAgent(numOfActions: Int, historyLength: Int = 10) extends QAgent {
   type Learner = DeepMindQLearner.Simplified
   val trainer = VanillaSGD[Simplified#Net](SGDSettings(learningRate = 0.05))
-  val qLearner = DeepMindQLearner.Simplified(historyLength = 10, batchSize = 20, trainer = trainer)
+  val qLearner = DeepMindQLearner.Simplified(historyLength = historyLength, batchSize = 20, trainer = trainer)
 
   protected def readingsToInput(readings: Seq[Double]): qLearner.Input = RowVector(readings :_*)
 
