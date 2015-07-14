@@ -4,7 +4,7 @@ package reinforcement
 import glaux.linalg.Tensor
 import glaux.nn.Loss
 import glaux.nn.trainers.BatchTrainer
-import glaux.reinforcement.QLearner.{HistoryOf, Transition, Observation => QObservation, State => QState}
+import glaux.reinforcement.QLearner.{History => QHistory, Transition, Observation => QObservation, State => QState}
 
 
 trait QLearner {
@@ -19,7 +19,7 @@ trait QLearner {
 
   type TrainingResult = trainer.BatchResult
 
-  type History = HistoryOf[Input]
+  type History = QHistory[Input]
 
   type InputDimension = Input#Dimensionality
 
@@ -103,26 +103,26 @@ trait QLearner {
 object QLearner {
   case class TemporalState[Input <: Tensor](readings: Input, time: Time)
 
-  type HistoryOf[Input <: Tensor] = Seq[TemporalState[Input]]
+  type History[Input <: Tensor] = Seq[TemporalState[Input]]
 
   case class Observation[Input <: Tensor]( lastAction: Action,
                                   reward: Reward,
-                                  recentHistory: HistoryOf[Input],
+                                  recentHistory: History[Input],
                                   isTerminal: Boolean) {
     assert(!recentHistory.isEmpty, "Cannot create an observation without recent history")
     def startTime = recentHistory.head.time
 
   }
 
-  case class State[Input <: Tensor ](fullHistory: HistoryOf[Input], isTerminal: Boolean) {
+  case class State[Input <: Tensor ](fullHistory: History[Input], isTerminal: Boolean) {
     def endTime = fullHistory.last.time
     lazy val inputDimension: Input#Dimensionality = fullHistory.head.readings.dimension
   }
 
-  private[reinforcement] case class Transition[Input <: Tensor] (before: State[Input],
-                                                                  action: Action,
-                                                                  reward: Reward,
-                                                                  after: State[Input])
+  case class Transition[Input <: Tensor] (before: State[Input],
+                                          action: Action,
+                                          reward: Reward,
+                                          after: State[Input])
 
 
 }
