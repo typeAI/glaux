@@ -3,7 +3,8 @@ package glaux.reinforcement.integration
 import java.time.{Clock, LocalTime, LocalDate, ZonedDateTime}
 
 import glaux.linalg.RowVector
-import glaux.nn.trainers.{SGDSettings, VanillaSGD}
+import glaux.nn.trainers.VanillaSGD
+import glaux.nn.trainers.SGD.SGDSettings
 import glaux.reinforcement.DeepMindQLearner.Simplified
 import glaux.reinforcement.QLearner._
 import glaux.reinforcement.{Time, Action, DeepMindQLearner}

@@ -6,8 +6,8 @@ import glaux.nn.InputLayer
 import glaux.nn.Net.DefaultNet
 import glaux.nn.layers.{Relu, Softmax, FullyConnected}
 import glaux.nn.trainers.MomentumSGD.Settings
-import glaux.nn.trainers.{SGDSettings, MomentumSGD}
-
+import glaux.nn.trainers.{SGD, MomentumSGD}
+import SGD.SGDSettings
 import org.specs2.mutable.Specification
 
 import scala.io.Source

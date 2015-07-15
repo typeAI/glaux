@@ -3,7 +3,8 @@ package glaux.reinforcement
 import java.time.ZonedDateTime
 
 import glaux.linalg.RowVector
-import glaux.nn.trainers.{SGDSettings, VanillaSGD}
+import glaux.nn.trainers.VanillaSGD
+import glaux.nn.trainers.SGD.SGDSettings
 import glaux.reinforcement.DeepMindQLearner.Simplified
 import org.specs2.matcher.Scope
 import org.specs2.mutable.Specification

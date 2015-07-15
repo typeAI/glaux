@@ -6,6 +6,7 @@ import glaux.nn.InputLayer
 import glaux.nn.Net.DefaultNet
 import glaux.nn.layers.{FullyConnected, Regression}
 import glaux.nn.trainers.MomentumSGD.Settings
+import glaux.nn.trainers.SGD.SGDSettings
 import glaux.statistics
 import org.specs2.mutable.Specification
 

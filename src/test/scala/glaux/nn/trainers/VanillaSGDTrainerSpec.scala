@@ -7,7 +7,7 @@ import glaux.nn.layers.{Regression, FullyConnected}
 import glaux.nn.{InputLayer, Net}
 import glaux.statistics
 import org.specs2.mutable.Specification
-
+import glaux.nn.trainers.SGD.SGDSettings
 
 class VanillaSGDTrainerSpec extends Specification {
   val dim: Row = Row(3)

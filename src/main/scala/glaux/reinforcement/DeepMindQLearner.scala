@@ -2,7 +2,8 @@ package glaux.reinforcement
 
 import glaux.linalg.Dimension.Row
 import glaux.linalg.RowVector
-import glaux.nn.trainers.{SGDSettings, VanillaSGD}
+import glaux.nn.trainers.VanillaSGD
+import glaux.nn.trainers.SGD.SGDSettings
 import glaux.nn.{InputLayer, Net}
 import Net.DefaultNet
 import glaux.nn.layers.{Regression, Relu, FullyConnected}

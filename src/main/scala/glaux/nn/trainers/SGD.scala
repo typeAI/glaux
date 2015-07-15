@@ -4,12 +4,11 @@ import glaux.linalg.Tensor
 import glaux.nn._
 import glaux.nn.trainers.BatchTrainer._
 import glaux.nn.trainers.MomentumSGD.{Settings, ParamGSum, IterationContext}
-import glaux.nn.trainers.SGDBase.{Results, NewParamResult}
+import glaux.nn.trainers.SGD._
 
 
-case class SGDSettings(learningRate: Double = 0.01, l1Decay: Decay = 0, l2Decay: Decay = 0)
 
-abstract class SGDBase[NT <: Net: Net.Updater, CalculationContext](options: SGDSettings) extends BatchTrainer[NT, CalculationContext] {
+abstract class SGD[NT <: Net: Net.Updater, CalculationContext](options: SGDSettings) extends BatchTrainer[NT, CalculationContext] {
   type Trainee = NT
 
   val build: Net.Updater[Trainee] = implicitly[Net.Updater[Trainee]]
@@ -58,13 +57,15 @@ abstract class SGDBase[NT <: Net: Net.Updater, CalculationContext](options: SGDS
   def updateContext(lastContext: CalculationContext, results: Results): CalculationContext
 }
 
-object SGDBase {
+object SGD {
   case class NewParamResult(newParam: LayerParam, l1DecayLoss: Loss, l2DecayLoss: Loss, adjustment: Tensor)
   type Results =  Map[HiddenLayer, Seq[NewParamResult]]
+
+  case class SGDSettings(learningRate: Double = 0.01, l1Decay: Decay = 0, l2Decay: Decay = 0)
 }
 
 
-case class VanillaSGD[NT <: Net: Net.Updater](options: SGDSettings) extends SGDBase[NT, Unit](options) {
+case class VanillaSGD[NT <: Net: Net.Updater](options: SGDSettings) extends SGD[NT, Unit](options) {
 
   def initialCalculationContext(net: Trainee): Unit = ()
 
@@ -75,7 +76,7 @@ case class VanillaSGD[NT <: Net: Net.Updater](options: SGDSettings) extends SGDB
 
 }
 
-case class MomentumSGD[NT <: Net: Net.Updater](settings: Settings) extends SGDBase[NT, IterationContext](settings.sgdSettings) {
+case class MomentumSGD[NT <: Net: Net.Updater](settings: Settings) extends SGD[NT, IterationContext](settings.sgdSettings) {
 
   def initialCalculationContext(net: Trainee): IterationContext = {
     val paramGSums = net.hiddenLayers.flatMap { layer =>
