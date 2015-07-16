@@ -94,8 +94,10 @@ trait QLearner {
     QState(history.takeRight(historyLength), isTerminal)
   }
 
-  def canBuildStateFrom(history: History): Boolean = 
-    history.size >= historyLength && inputDimensionOfHistory(history).isDefined
+  def canBuildStateFrom(history: History): Boolean = {
+    assert(inputDimensionOfHistory(history).isDefined, "history has inconsistent dimension")
+    history.size >= historyLength
+  }
 
 }
 
