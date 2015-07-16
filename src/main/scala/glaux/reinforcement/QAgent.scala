@@ -23,18 +23,16 @@ trait QAgent {
 
   protected def readingsToInput(readings: Seq[Double]): qLearner.Input
 
-  protected def toHistory(readings: Iterable[Reading]): qLearner.History = {
+  protected def toHistory(readings: Iterable[Reading]): qLearner.History =
     readings.toSeq.map {
       case (r, time) => TemporalState(readingsToInput(r), time)
     }
-  }
 
 
   def start(initReadings: Iterable[Reading], previous: Option[Session]): Either[String, Session] = {
     val initHistory = toHistory(initReadings)
 
     if(qLearner.canBuildStateFrom(initHistory))
-
       Right(QSession(iteration = previous.map(_.iteration).getOrElse(qLearner.init(initHistory, numOfActions)),
               currentReward = 0,
               currentReadings = initReadings.toVector))
