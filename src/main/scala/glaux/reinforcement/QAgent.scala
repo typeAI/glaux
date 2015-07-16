@@ -1,8 +1,6 @@
 package glaux.reinforcement
 
-import glaux.linalg.Dimension.Row
 import glaux.linalg.RowVector
-import glaux.linalg.Tensor.TensorBuilder
 import glaux.nn.trainers.VanillaSGD
 import glaux.nn.trainers.SGD.SGDSettings
 import glaux.reinforcement.DeepMindQLearner.Simplified
