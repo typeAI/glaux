@@ -50,9 +50,7 @@ object FullyConnected {
   type Bias = RowVector
 
   def apply(numOfFeatures: Int, numOfNeurons: Int): FullyConnected = {
-    import glaux.statistics.distributions.normal
-    val filterDim = TwoD(numOfFeatures, numOfNeurons)
-    val filter = Matrix.sampleOf(filterDim, normal(0, Math.sqrt(1.0d / filterDim.totalSize)))
+    val filter = Matrix.normalized(TwoD(numOfFeatures, numOfNeurons))
     val bias = RowVector.fill(Row(numOfNeurons), 0)
     FullyConnected(filter, bias)
   }
