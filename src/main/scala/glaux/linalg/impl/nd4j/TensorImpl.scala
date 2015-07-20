@@ -5,7 +5,9 @@ import glaux.linalg._
 import org.nd4j.linalg.api.ndarray.INDArray
 
 
-trait TensorImpl extends Tensor with TensorOperationsImpl with WithIndArray
+trait TensorImpl extends Tensor with TensorOperationsImpl with WithIndArray {
+  def getSalar(indices: Seq[Int]): Double = indArray.getDouble(indices:_*)
+}
 
 trait WithIndArray {
   val indArray: INDArray

@@ -14,6 +14,7 @@ trait Tensor extends TensorOperations {
   def toArray: Array[Double] = seqView.toArray
   def toRowVector: RowVector =
     if(isInstanceOf[RowVector]) this.asInstanceOf[RowVector] else (Row(dimension.totalSize), seqView)
+  def getSalar(indices: Seq[Int]): Double
 }
 
 
@@ -94,14 +95,18 @@ trait RowVector extends Tensor {
 
 trait Matrix extends Tensor {
   type Dimensionality = TwoD
+  def apply(x: Int, y: Int) = getSalar(Seq(x, y))
 }
 
 trait Vol extends Tensor {
   type Dimensionality = ThreeD
+  def apply(x: Int, y: Int, z: Int) = getSalar(Seq(x, y, z))
+
 }
 
 trait Tensor4 extends Tensor {
   type Dimensionality = FourD
+  def apply(x: Int, y: Int, z: Int, f: Int) = getSalar(Seq(x, y, z, f))
 }
 
 
