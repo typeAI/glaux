@@ -5,6 +5,8 @@ import Dimension.Shape
 sealed trait Dimension {
   lazy val totalSize: Int = shape.reduce(_ * _)
   def shape: Shape
+
+  def ranges: Array[Range] = shape.map(Range(0, _))
 }
 
 object Dimension {
