@@ -27,28 +27,41 @@ case class Convolution( filters: Tensor4,
     (inputSize.y + (pad.y * 2) - filters.dimension.y ) / stride + 1,
     filters.dimension.f)
 
-  def inDimension: InDimension = ThreeD(inputSize.x, inputSize.y, filters.dimension.z)
+  def inDimension: InDimension = ThreeD(inputSize.x, inputSize.y, inputDepth)
 
   def params: Seq[LayerParam] = Seq(filtersParam, biasParam)
 
   def forward(input: Input, isTraining: Boolean): Output = {
-    assert(input.dimension == ThreeD(inputSize.x, inputSize.y, inputDepth))
-    val Array(inputXRange, inputYRange, inputZRange) = input.dimension.ranges
+    val Array(inputXRange, inputYRange, _) = input.dimension.ranges
     val Array(filterXRange, filterYRange, filterZRange, filterFRange) = filters.dimension.ranges
     val values = for {
                    f <- filterFRange
-                   offsetY <- Range.inclusive(- pad.y, input.dimension.y + pad.y - filters.dimension.y)
-                   offsetX <- Range.inclusive(- pad.x, input.dimension.x + pad.x - filters.dimension.x)
-                 } yield (for (x <- filterXRange; y <- filterYRange; z <- filterZRange)
-                  yield {
-                    val (ix, iy) = (x + offsetX, y + offsetY)
-                    val inPaddedArea = !(inputXRange.contains(ix) && inputYRange.contains(iy))
-                    filters(x, y, z, f) * (if(inPaddedArea) 0 else input(ix, iy, z))
-                  }).sum
-    Vol(inputSize.x, inputSize.y, filters.dimension.f, values)
+                   offsetY <- Range.inclusive(- pad.y, input.dimension.y + pad.y - filters.dimension.y, stride)
+                   offsetX <- Range.inclusive(- pad.x, input.dimension.x + pad.x - filters.dimension.x, stride)
+                 } yield ( for (x <- filterXRange; y <- filterYRange; z <- filterZRange)
+                           yield {
+                            val (ix, iy) = (x + offsetX, y + offsetY)
+                            val inPaddedArea = !(inputXRange.contains(ix) && inputYRange.contains(iy))
+                            filters(x, y, z, f) * (if(inPaddedArea) 0 else input(ix, iy, z))
+                          }).sum
+    Vol(outDimension, values)
   }
 
-  def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient]) = ???
+  def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient]) = {
+    val Array(inputXRange, inputYRange, inputZRange) = input.dimension.ranges
+    val Array(filterXRange, filterYRange, _, filterFRange) = filters.dimension.ranges
+
+    val inGradValues = for (z <- inputZRange; y <- inputYRange; x <- inputXRange)
+                       yield ( for (fx <- filterXRange; fy <- filterYRange; ff <- filterFRange)
+                               yield {
+                                 println((x - fx + 1, y - fy + 1, z, ff))
+                                  outGradient.gradient(fx, fy, ff) * filters(x - fx + 1, y - fy + 1, z, ff)
+                                }).sum
+    val inGrad = Vol(inDimension, inGradValues)
+
+
+    (input, Nil)
+  }
 
   def updateParams(params: Iterable[LayerParam]): HiddenLayer = ???
 
