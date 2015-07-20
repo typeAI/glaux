@@ -33,7 +33,7 @@ class FullyConnectedSpec extends Specification {
   "initialize with random normalized filters" >> {
     val created = FullyConnected(100, 100)
     val weights = created.filter.seqView
-    val within3Std = weights.count( w => Math.abs(w) < 0.03)
+    val within3Std = weights.count( w => Math.abs(w) < 0.3)
     (within3Std.toDouble / weights.length) must be_>(0.9)
 
   }

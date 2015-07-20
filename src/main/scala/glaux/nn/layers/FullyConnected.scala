@@ -50,7 +50,7 @@ object FullyConnected {
   type Bias = RowVector
 
   def apply(numOfFeatures: Int, numOfNeurons: Int): FullyConnected = {
-    val filter = Matrix.normalized(TwoD(numOfFeatures, numOfNeurons))
+    val filter = Matrix.normalized(TwoD(numOfFeatures, numOfNeurons), numOfFeatures)
     val bias = RowVector.fill(Row(numOfNeurons), 0)
     FullyConnected(filter, bias)
   }

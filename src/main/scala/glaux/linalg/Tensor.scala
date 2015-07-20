@@ -116,9 +116,9 @@ trait TensorFactory[V <: Tensor] {
   def sampleOf(dimension: V#Dimensionality, dist: RealDistribution)(implicit b: TensorBuilder[V]): V =
     apply(dimension, dist.sample(dimension.totalSize).toSeq)
 
-  def normalized(dimension: V#Dimensionality)(implicit b: TensorBuilder[V]): V = {
+  def normalized(dimension: V#Dimensionality, size: Int)(implicit b: TensorBuilder[V]): V = {
     import glaux.statistics.distributions.normal
-    sampleOf(dimension, normal(0, Math.sqrt(1.0d / dimension.totalSize)))
+    sampleOf(dimension, normal(0, Math.sqrt(1.0d / size)))
   }
 
 }
