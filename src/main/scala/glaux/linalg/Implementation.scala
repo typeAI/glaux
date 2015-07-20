@@ -6,6 +6,7 @@ import glaux.linalg.Tensor._
 trait Implementation {
   implicit val rBuilder: RowBuilder
   implicit val mBuilder: MatrixBuilder
-  implicit val vBuilder: Vol3DBuilder
+  implicit val vBuilder: VolBuilder
+  implicit val t4Builder: Tensor4Builder
   implicit val genBuilder: GenTensorBuilder[Tensor]
 }

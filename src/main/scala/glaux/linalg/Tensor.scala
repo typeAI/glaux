@@ -56,7 +56,8 @@ object Tensor {
   type GenTensorBuilder[V <: Tensor] = CanBuildFrom[(Dimension, Seq[Double]), V]
   type RowBuilder = TensorBuilder[RowVector]
   type MatrixBuilder = TensorBuilder[Matrix]
-  type Vol3DBuilder = TensorBuilder[Vol]
+  type VolBuilder = TensorBuilder[Vol]
+  type Tensor4Builder = TensorBuilder[Tensor4]
 
 
   implicit val toRow: CanBuildFrom[Tensor, RowVector] = v => v.asInstanceOf[RowVector]
@@ -99,6 +100,10 @@ trait Vol extends Tensor {
   type Dimensionality = ThreeD
 }
 
+trait Tensor4 extends Tensor {
+  type Dimensionality = FourD
+}
+
 
 trait TensorFactory[V <: Tensor] {
   def apply(dimension: V#Dimensionality, data: Seq[Double])(implicit b: TensorBuilder[V]) : V = b((dimension, data))
@@ -122,10 +127,15 @@ object RowVector extends TensorFactory[RowVector]{
   def apply(values: Double*): RowVector = apply(Dimension.Row(values.length), values)
 }
 
+object Matrix extends TensorFactory[Matrix]{
+  def apply(x: Int, y: Int, data: Seq[Double]): Matrix = apply(Dimension.TwoD(x,y), data)
+}
+
 object Vol extends TensorFactory[Vol] {
   def apply(x: Int, y: Int, z: Int, data: Seq[Double]): Vol = apply(Dimension.ThreeD(x,y,z), data)
 }
 
-object Matrix extends TensorFactory[Matrix]{
-  def apply(x: Int, y: Int, data: Seq[Double]): Matrix = apply(Dimension.TwoD(x,y), data)
+object Tensor4 extends TensorFactory[Tensor4] {
+  def apply(x: Int, y: Int, z: Int, f: Int, data: Seq[Double]): Tensor4 = apply(Dimension.FourD(x,y,z,f), data)
 }
+

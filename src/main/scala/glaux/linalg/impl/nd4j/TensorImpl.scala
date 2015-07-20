@@ -1,6 +1,6 @@
 package glaux.linalg.impl.nd4j
 
-import glaux.linalg.Dimension.{TwoD, ThreeD, Row, DimensionFactory}
+import glaux.linalg.Dimension._
 import glaux.linalg._
 import org.nd4j.linalg.api.ndarray.INDArray
 
@@ -67,15 +67,20 @@ protected sealed abstract class ND4JBackedTensor(val indArray: INDArray) extends
 
 }
 
-case class VolImp(override val indArray: INDArray)      extends ND4JBackedTensor(indArray) with Vol {
-  val dimensionFactory = ThreeD
-}
-case class MatrixImp(override val indArray: INDArray)     extends ND4JBackedTensor(indArray) with Matrix {
-  val dimensionFactory = TwoD
-}
 case class RowVectorImp(override val indArray: INDArray)  extends ND4JBackedTensor(indArray) with RowVector {
   val dimensionFactory = Row
   def apply(index: Int): Double = indArray.getDouble(index)
 }
 
+case class MatrixImp(override val indArray: INDArray)     extends ND4JBackedTensor(indArray) with Matrix {
+  val dimensionFactory = TwoD
+}
+
+case class VolImp(override val indArray: INDArray)      extends ND4JBackedTensor(indArray) with Vol {
+  val dimensionFactory = ThreeD
+}
+
+case class Tensor4Imp(override val indArray: INDArray)      extends ND4JBackedTensor(indArray) with Tensor4 {
+  val dimensionFactory = FourD
+}
 
