@@ -1,0 +1,13 @@
+language: scala
+sudo: false
+scala:
+   - 2.11.5
+jdk:
+   - oraclejdk8
+service:
+   - mongodb
+cache:
+  directories:
+  - $HOME/.ivy2
+script: "sbt clean coverage test"
+after_success: "sbt coveralls"
