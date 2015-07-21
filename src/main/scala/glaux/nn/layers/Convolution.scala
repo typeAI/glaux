@@ -50,18 +50,21 @@ case class Convolution( filters: Tensor4,
   def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient]) = {
     val Array(inputXRange, inputYRange, inputZRange) = input.dimension.ranges
     val Array(filterXRange, filterYRange, _, filterFRange) = filters.dimension.ranges
-
+    val Array(outXRange, outYRange, _) = outDimension.ranges
     val inGradValues = for (z <- inputZRange; y <- inputYRange; x <- inputXRange)
                        yield ( for (fx <- filterXRange; fy <- filterYRange; ff <- filterFRange)
                                yield {
                                   val outX = (x - fx + pad.x) / stride
                                   val outY = (y - fy + pad.y) / stride
-                                  outGradient.gradient(outX, outY, ff) * filters(fx, fy, z, ff)
+                                  if(outXRange.contains(outX) && outYRange.contains(outY))
+                                    outGradient.gradient(outX, outY, ff) * filters(fx, fy, z, ff)
+                                  else
+                                    0
                                 }).sum
     val inGrad = Vol(inDimension, inGradValues)
 
 
-    (input, Nil)
+    (inGrad, Nil)
   }
 
   def updateParams(params: Iterable[LayerParam]): HiddenLayer = ???

@@ -41,8 +41,8 @@ class ConvolutionSpec extends Specification {
       val outGrad = Vol(4, 4, 3, Seq(0, 0, 0, 0, 0.9, 0, 3, 0, 0, 0, 0, -1, 0, 0, 0.2, 0.3, 0.4, 0.1, 0, 0, 0, 2, 0.3, 0.09, 0, 0, 0, -0.3, 0.4, 0.7, 0.1, 0.5, 0.2, -0.1, -0.01, 0.3, 1, 0, 0, -1, 0, 0, 3, 0, 0, 0, 0, 0))
       val (inGrad, paraGrads) = layer.backward(input, Gradient(output, outGrad ))
 
-      val expectedInGrad = Vol(inputDim, Seq(-0.21, 0.99, 0.311, -0.173, 0.07, -1.653, -0.042, -0.317, 0.54, 0.9, 1.371, -0.342, -0.15, 0.69, 0.52, -0.76, -0.44, -0.668, 1.393, 0.027, 0.86, -1.121, 1.788, 1.072, -0.18, 1.04, -0.759, 0.473, 0.09, 0.28, 0.1, 0.13))
-      expectedInGrad === inGrad
+      val expectedInGrad = Vol(inputDim, Seq(-0.21, 0.981, 0.311, -0.173, 0.07, -1.653, -0.042, -0.317, 0.54, 0.90, 1.371, -0.342, -0.15, 0.69, 0.52, -0.76, -0.44, -0.668, 1.393, 0.027, 0.86, -1.121, 1.788, 1.072, -0.18, 1.04, -0.759, 0.473, 0.09, 0.28, 0.1, 0.13))
+      inGrad === expectedInGrad
     }
   }
 
@@ -89,7 +89,7 @@ class ConvolutionSpec extends Specification {
 
   var f = [] //filter in linear array
   for(d = 0; d < 3 ; d ++ ) {
-    f = f.concat(linear(l.filters[d])
+    f = f.concat(linear(l.filters[d]))
   }
   f
 
@@ -100,7 +100,7 @@ class ConvolutionSpec extends Specification {
 
   l.out_act.dw = [0, 0.4, 0.2, 0, 0.1, -0.1, 0, 0, -0.01, 0, 0, 0.3, 0.9, 0, 1, 0, 2, 0, 3, 0.3, 0, 0, 0.09, -1.0, 0, 0, 0, 0, 0, 0, 0, 0, 3, -1, -0.3, 0, 0, 0.4, 0, 0, 0.7, 0, 0.2, 0.1, 0, 0.3, 0.5, 0]
 
-  linearGrad(out_act)
+  linearGrad(l.out_act)
 
   l.backward()
 
