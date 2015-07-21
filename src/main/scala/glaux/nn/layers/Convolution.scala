@@ -43,14 +43,14 @@ case class Convolution( filters: Tensor4,
                             val (ix, iy) = (x + offsetX, y + offsetY)
                             val inPaddedArea = !(inputXRange.contains(ix) && inputYRange.contains(iy))
                             filters(x, y, z, f) * (if(inPaddedArea) 0 else input(ix, iy, z))
-                          }).sum
+                          }).sum + bias(0, 0, f)
     Vol(outDimension, values)
   }
 
   def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient]) = {
     val Array(inputXRange, inputYRange, inputZRange) = input.dimension.ranges
     val Array(filterXRange, filterYRange, _, filterFRange) = filters.dimension.ranges
-    val Array(outXRange, outYRange, _) = outDimension.ranges
+    val Array(outXRange, outYRange, outZRange) = outDimension.ranges
     val inGradValues = for (z <- inputZRange; y <- inputYRange; x <- inputXRange)
                        yield ( for (fx <- filterXRange; fy <- filterYRange; ff <- filterFRange)
                                yield {
@@ -63,8 +63,10 @@ case class Convolution( filters: Tensor4,
                                 }).sum
     val inGrad = Vol(inDimension, inGradValues)
 
-
-    (inGrad, Nil)
+    val biasGrad = Vol(1, 1, 3,
+      for(f <- outZRange) yield (for(x <- outXRange; y <- outYRange) yield outGradient.gradient(x,y,f)).sum
+    )
+    (inGrad, Seq(ParamGradient(biasParam, biasGrad)))
   }
 
   def updateParams(params: Iterable[LayerParam]): HiddenLayer = ???
