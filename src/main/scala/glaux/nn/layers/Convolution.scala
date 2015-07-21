@@ -54,8 +54,9 @@ case class Convolution( filters: Tensor4,
     val inGradValues = for (z <- inputZRange; y <- inputYRange; x <- inputXRange)
                        yield ( for (fx <- filterXRange; fy <- filterYRange; ff <- filterFRange)
                                yield {
-                                 println((x - fx + 1, y - fy + 1, z, ff))
-                                  outGradient.gradient(fx, fy, ff) * filters(x - fx + 1, y - fy + 1, z, ff)
+                                  val outX = (x - fx + pad.x) / stride
+                                  val outY = (y - fy + pad.y) / stride
+                                  outGradient.gradient(outX, outY, ff) * filters(fx, fy, z, ff)
                                 }).sum
     val inGrad = Vol(inDimension, inGradValues)
 
