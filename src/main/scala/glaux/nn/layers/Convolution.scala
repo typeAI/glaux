@@ -87,7 +87,10 @@ case class Convolution( filters: Tensor4,
     (inGrad, Seq(ParamGradient(biasParam, biasGrad), ParamGradient(filtersParam, filtersGrad)))
   }
 
-  def updateParams(params: Iterable[LayerParam]): HiddenLayer = ???
+  def updateParams(params: Iterable[LayerParam]): HiddenLayer = copy(
+    filters = params.find(_.id == "filters").get.value.asInstanceOf[Tensor4],
+    bias = params.find(_.id == "bias").get.value.asInstanceOf[Vol]
+  )
 
 }
 
