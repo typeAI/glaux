@@ -61,28 +61,25 @@ case class Convolution( filters: Tensor4,
     val Array(inputXRange, inputYRange, inputZRange) = input.dimension.ranges
     val Array(filterXRange, filterYRange, filterZRange, filterFRange) = filters.dimension.ranges
     val Array(outXRange, outYRange, outZRange) = outDimension.ranges
+
+    def outGradValue(x: Int, filterX: Int, y: Int, filterY: Int, filterF: Int): Double = {
+      val outX = (x - filterX + pad.x) / stride
+      val outY = (y - filterY + pad.y) / stride
+      if(outXRange.contains(outX) && outYRange.contains(outY))
+        outGradient.gradient(outX, outY, filterF)
+      else
+        0
+    }
+
     val inGradValues = for (z <- inputZRange; y <- inputYRange; x <- inputXRange)
                        yield ( for (fx <- filterXRange; fy <- filterYRange; ff <- filterFRange)
-                               yield {
-                                  val outX = (x - fx + pad.x) / stride
-                                  val outY = (y - fy + pad.y) / stride
-                                  if(outXRange.contains(outX) && outYRange.contains(outY))
-                                    outGradient.gradient(outX, outY, ff) * filters(fx, fy, z, ff)
-                                  else
-                                    0
-                                }).sum
+                               yield outGradValue(x, fx, y, fy, ff) * filters(fx, fy, z, ff)).sum
+
     val inGrad = Vol(inDimension, inGradValues)
 
     val filtersGradValues = for (ff <- filterFRange; z <- filterZRange; fy <- filterYRange; fx <- filterXRange)
                        yield ( for (y <- inputYRange; x <- inputXRange)
-                               yield {
-                                 val outX = (x - fx + pad.x) / stride
-                                 val outY = (y - fy + pad.y) / stride
-                                 if(outXRange.contains(outX) && outYRange.contains(outY))
-                                    input(x, y, z) * outGradient.gradient(outX, outY, ff)
-                                 else
-                                   0
-                               }).sum
+                               yield outGradValue(x, fx, y, fy, ff) * input(x, y, z)).sum
     val filtersGrad = Tensor4(filters.dimension, filtersGradValues)
     val biasGrad = Vol(1, 1, 3,
       for(f <- outZRange) yield (for(x <- outXRange; y <- outYRange) yield outGradient.gradient(x,y,f)).sum
