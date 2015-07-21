@@ -20,11 +20,11 @@ case class Convolution( filters: Tensor4,
                         pad: Rectangle,
                         inputSize: Rectangle,
                         filterRegularization: RegularizationSetting,
-                        id: String) extends HiddenLayer {
+                        id: String) extends HiddenLayer with MovingFilter {
 
   private val biasRegularization = RegularizationSetting(0, 0)
   assert(bias.dimension ==  ThreeD(1, 1, filters.dimension.f), "bias size matches number of filters")
-
+  val filterSize = Rectangle(filters.dimension.x, filters.dimension.y)
   val inputDepth = filters.dimension.z
   lazy val filtersParam: LayerParam = LayerParam("filters", filters, filterRegularization)
   lazy val biasParam: LayerParam = LayerParam("bias", bias, biasRegularization)
@@ -32,10 +32,7 @@ case class Convolution( filters: Tensor4,
   type Output = Vol
   type Input = Vol
 
-  def outDimension: OutDimension = ThreeD(
-    (inputSize.x + (pad.x * 2) - filters.dimension.x ) / stride + 1,
-    (inputSize.y + (pad.y * 2) - filters.dimension.y ) / stride + 1,
-    filters.dimension.f)
+  def outDimension: OutDimension = ThreeD(outSize.x, outSize.y, filters.dimension.f)
 
   def inDimension: InDimension = ThreeD(inputSize.x, inputSize.y, inputDepth)
 
@@ -46,13 +43,12 @@ case class Convolution( filters: Tensor4,
     val Array(filterXRange, filterYRange, filterZRange, filterFRange) = filters.dimension.ranges
     val values = for {
                    f <- filterFRange
-                   offsetY <- Range.inclusive(- pad.y, input.dimension.y + pad.y - filters.dimension.y, stride)
-                   offsetX <- Range.inclusive(- pad.x, input.dimension.x + pad.x - filters.dimension.x, stride)
+                   offsetY <- inputPlaneRanges.y
+                   offsetX <- inputPlaneRanges.x
                  } yield ( for (x <- filterXRange; y <- filterYRange; z <- filterZRange)
                            yield {
                             val (ix, iy) = (x + offsetX, y + offsetY)
-                            val inPaddedArea = !(inputXRange.contains(ix) && inputYRange.contains(iy))
-                            filters(x, y, z, f) * (if(inPaddedArea) 0 else input(ix, iy, z))
+                            filters(x, y, z, f) * (if(inPaddedArea(ix, iy)) 0 else input(ix, iy, z))
                           }).sum + bias(0, 0, f)
     Vol(outDimension, values)
   }
@@ -62,14 +58,10 @@ case class Convolution( filters: Tensor4,
     val Array(filterXRange, filterYRange, filterZRange, filterFRange) = filters.dimension.ranges
     val Array(outXRange, outYRange, outZRange) = outDimension.ranges
 
-    def outGradValue(x: Int, filterX: Int, y: Int, filterY: Int, filterF: Int): Double = {
-      val outX = (x - filterX + pad.x) / stride
-      val outY = (y - filterY + pad.y) / stride
-      if(outXRange.contains(outX) && outYRange.contains(outY))
-        outGradient.gradient(outX, outY, filterF)
-      else
-        0
-    }
+    def outGradValue(x: Int, filterX: Int, y: Int, filterY: Int, filterF: Int): Double =
+      mappedOutCoordinate(x, filterX, y, filterY).map {
+        case (outX, outY) => outGradient.gradient(outX, outY, filterF)
+      }.getOrElse(0)
 
     val inGradValues = for (z <- inputZRange; y <- inputYRange; x <- inputXRange)
                        yield ( for (fx <- filterXRange; fy <- filterYRange; ff <- filterFRange)
