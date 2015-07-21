@@ -1,5 +1,7 @@
 package glaux.nn
 
+import glaux.linalg.Dimension.ThreeD
+
 
 case class Rectangle(x: Int, y: Int) {
   def *(factor: Double) = Rectangle((x * factor).toInt, (y * factor).toInt)
@@ -8,6 +10,10 @@ case class Rectangle(x: Int, y: Int) {
   def -(toSubtract: Int): Rectangle = this.+(- toSubtract)
   def +(p: Rectangle) = Rectangle(x + p.x, y + p.y)
   def contains(tx: Int, ty: Int): Boolean = tx >= 0 && tx < x && ty >= 0 && ty < y
+}
+
+object Rectangle {
+  def planeSize(threeD: ThreeD) = Rectangle(threeD.x, threeD.y)
 }
 
 case class RectangleRange(x: Range, y: Range) {
