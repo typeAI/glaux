@@ -57,6 +57,10 @@ class ConvolutionSpec extends Specification {
         paraGrads.find(_.param.id == "bias").get.value === Vol(1,1, 3, Seq(3.4, 4.29, 3.39))
       }
 
+      "filter gradient" >> {
+        val expected = Tensor4( 3, 3, 2, 3, Seq(5.3, 17.2, 11.4, -3.5, 20.6, 4.1, 32, 23.6, 18.9, 2.5, 3.4, 4.1, 6.3, 5, 4.1, -6, 2.9, 3.9, 8.95, 16.97, 20.5, 21.55, 6.99, 12.8, 12.53, 27.77, 15.8, 3.39, 3.79, 3.5, 8.19, 9.99, 12.4, -0.21, 2.59, 2.8, -2, 13, 5, 29.38, 29.85, 9.87, -3.41, 5.95, 13.69, 2, 3, 4, 2.19, 3.39, 4.09, 23.19, 27.39, 4.09))
+        paraGrads.find(_.param.id == "filters").get.value === expected
+      }
     }
   }
 
@@ -122,4 +126,8 @@ class ConvolutionSpec extends Specification {
 
   l.biases.dw
 
+  var fd = [] //filter gradient in linear array
+  for(d = 0; d < 3 ; d ++ ) {
+    fd = fd.concat(linearGrad(l.filters[d]))
+  }
 */

@@ -4,6 +4,16 @@ import glaux.linalg.Dimension.{FourD, ThreeD, TwoD}
 import glaux.linalg.{Tensor4, RowVector, Vol, Matrix}
 import glaux.nn._
 
+/**
+ *
+ * @param filters a {@code Tensor4} to represent all filters
+ * @param bias
+ * @param stride
+ * @param pad
+ * @param inputSize
+ * @param filterRegularization
+ * @param id
+ */
 case class Convolution( filters: Tensor4,
                         bias: Vol,
                         stride: Int,
@@ -49,7 +59,7 @@ case class Convolution( filters: Tensor4,
 
   def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient]) = {
     val Array(inputXRange, inputYRange, inputZRange) = input.dimension.ranges
-    val Array(filterXRange, filterYRange, _, filterFRange) = filters.dimension.ranges
+    val Array(filterXRange, filterYRange, filterZRange, filterFRange) = filters.dimension.ranges
     val Array(outXRange, outYRange, outZRange) = outDimension.ranges
     val inGradValues = for (z <- inputZRange; y <- inputYRange; x <- inputXRange)
                        yield ( for (fx <- filterXRange; fy <- filterYRange; ff <- filterFRange)
@@ -63,10 +73,21 @@ case class Convolution( filters: Tensor4,
                                 }).sum
     val inGrad = Vol(inDimension, inGradValues)
 
+    val filtersGradValues = for (ff <- filterFRange; z <- filterZRange; fy <- filterYRange; fx <- filterXRange)
+                       yield ( for (y <- inputYRange; x <- inputXRange)
+                               yield {
+                                 val outX = (x - fx + pad.x) / stride
+                                 val outY = (y - fy + pad.y) / stride
+                                 if(outXRange.contains(outX) && outYRange.contains(outY))
+                                    input(x, y, z) * outGradient.gradient(outX, outY, ff)
+                                 else
+                                   0
+                               }).sum
+    val filtersGrad = Tensor4(filters.dimension, filtersGradValues)
     val biasGrad = Vol(1, 1, 3,
       for(f <- outZRange) yield (for(x <- outXRange; y <- outYRange) yield outGradient.gradient(x,y,f)).sum
     )
-    (inGrad, Seq(ParamGradient(biasParam, biasGrad)))
+    (inGrad, Seq(ParamGradient(biasParam, biasGrad), ParamGradient(filtersParam, filtersGrad)))
   }
 
   def updateParams(params: Iterable[LayerParam]): HiddenLayer = ???
