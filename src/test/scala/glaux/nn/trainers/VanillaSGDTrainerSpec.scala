@@ -38,7 +38,7 @@ class VanillaSGDTrainerSpec extends Specification {
   }
 
   "train summation" >> {
-    val batches = 0.until(30).map(_ => 1.until(3).map(_ => randomSample() ))
+    val batches = 0.until(50).map(_ => 1.until(3).map(_ => randomSample() ))
     val finalResult = batches.foldLeft(initResult){ (lastResult, batch) =>
       trainer.trainBatch(lastResult)(batch)
     }
