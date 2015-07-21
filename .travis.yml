@@ -1,5 +1,5 @@
 language: scala
-sudo: false
+sudo: true
 scala:
    - 2.11.5
 jdk:
@@ -9,5 +9,5 @@ services:
 cache:
   directories:
   - $HOME/.ivy2
-script: "sbt clean coverage test"
-after_success: "sbt coveralls"
+script: "sbt clean test"
+
