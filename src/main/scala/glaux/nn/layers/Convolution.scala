@@ -31,6 +31,9 @@ case class Convolution( filters: Tensor4,
 
   type Output = Vol
   type Input = Vol
+  private lazy val Array(inputXs, inputYs, inputZs) = inDimension.ranges
+  private lazy val Array(filterXs, filterYs, filterZs, filterFs) = filters.dimension.ranges
+  private lazy val Array(outXs, outYs, outZs) = outDimension.ranges
 
   def outDimension: OutDimension = ThreeD(outSize.x, outSize.y, filters.dimension.f)
 
@@ -39,42 +42,36 @@ case class Convolution( filters: Tensor4,
   def params: Seq[LayerParam] = Seq(filtersParam, biasParam)
 
   def forward(input: Input, isTraining: Boolean): Output = {
-    val Array(inputXRange, inputYRange, _) = input.dimension.ranges
-    val Array(filterXRange, filterYRange, filterZRange, filterFRange) = filters.dimension.ranges
     val values = for {
-                   f <- filterFRange
-                   offsetY <- inputPlaneRanges.y
-                   offsetX <- inputPlaneRanges.x
-                 } yield ( for (x <- filterXRange; y <- filterYRange; z <- filterZRange)
+                   f <- filterFs
+                   offsetYs <- inputPlaneRanges.ys
+                   offsetXs <- inputPlaneRanges.xs
+                 } yield ( for (x <- filterXs; y <- filterYs; z <- filterZs)
                            yield {
-                            val (ix, iy) = (x + offsetX, y + offsetY)
+                            val (ix, iy) = (x + offsetXs, y + offsetYs)
                             filters(x, y, z, f) * (if(inPaddedArea(ix, iy)) 0 else input(ix, iy, z))
                           }).sum + bias(0, 0, f)
     Vol(outDimension, values)
   }
 
   def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient]) = {
-    val Array(inputXRange, inputYRange, inputZRange) = input.dimension.ranges
-    val Array(filterXRange, filterYRange, filterZRange, filterFRange) = filters.dimension.ranges
-    val Array(outXRange, outYRange, outZRange) = outDimension.ranges
-
     def outGradValue(x: Int, filterX: Int, y: Int, filterY: Int, filterF: Int): Double =
       mappedOutCoordinate(x, filterX, y, filterY).map {
         case (outX, outY) => outGradient.gradient(outX, outY, filterF)
       }.getOrElse(0)
 
-    val inGradValues = for (z <- inputZRange; y <- inputYRange; x <- inputXRange)
-                       yield ( for (fx <- filterXRange; fy <- filterYRange; ff <- filterFRange)
+    val inGradValues = for (z <- inputZs; y <- inputYs; x <- inputXs)
+                       yield ( for (fx <- filterXs; fy <- filterYs; ff <- filterFs)
                                yield outGradValue(x, fx, y, fy, ff) * filters(fx, fy, z, ff)).sum
 
     val inGrad = Vol(inDimension, inGradValues)
 
-    val filtersGradValues = for (ff <- filterFRange; z <- filterZRange; fy <- filterYRange; fx <- filterXRange)
-                       yield ( for (y <- inputYRange; x <- inputXRange)
+    val filtersGradValues = for (ff <- filterFs; z <- filterZs; fy <- filterYs; fx <- filterXs)
+                       yield ( for (y <- inputYs; x <- inputXs)
                                yield outGradValue(x, fx, y, fy, ff) * input(x, y, z)).sum
     val filtersGrad = Tensor4(filters.dimension, filtersGradValues)
     val biasGrad = Vol(1, 1, 3,
-      for(f <- outZRange) yield (for(x <- outXRange; y <- outYRange) yield outGradient.gradient(x,y,f)).sum
+      for(f <- outZs) yield (for(x <- outXs; y <- outYs) yield outGradient.gradient(x,y,f)).sum
     )
     (inGrad, Seq(ParamGradient(biasParam, biasGrad), ParamGradient(filtersParam, filtersGrad)))
   }
@@ -103,8 +100,6 @@ object Convolution {
             stride: Int = 1,
             padding: Boolean = false,
             filterRegularization: RegularizationSetting = RegularizationSetting(0, 1)): Convolution = {
-    if(padding)
-      assert(filterSize.x % 2 == 1 && filterSize.y % 2 == 1, "filter dimension should be odd for the convenience of padding")
 
     val inputPlain = Rectangle(inputDimension.x, inputDimension.y)
     val pad: Rectangle = if(padding) (filterSize + (inputPlain * (stride - 1)) - stride) / 2  else Rectangle(0, 0)

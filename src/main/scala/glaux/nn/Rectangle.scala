@@ -16,6 +16,6 @@ object Rectangle {
   def planeSize(threeD: ThreeD) = Rectangle(threeD.x, threeD.y)
 }
 
-case class RectangleRange(x: Range, y: Range) {
-  def contains(tx: Int, ty: Int): Boolean = x.contains(tx) && y.contains(ty)
+case class RectangleRange(xs: Range, ys: Range) {
+  def contains(tx: Int, ty: Int): Boolean = xs.contains(tx) && ys.contains(ty)
 }
