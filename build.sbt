@@ -1,3 +1,5 @@
+import org.scoverage.coveralls.Imports.CoverallsKeys._
+
 
 name := """glaux"""
 
@@ -12,3 +14,7 @@ libraryDependencies ++= Dependencies.math ++ Dependencies.test
 scalacOptions in Test ++= Seq("-Yrangepos")
 
 lazy val glaux = project in file(".")
+
+
+
+coverallsToken := Some("unXzL1sDsWymqcb7JwJNqzAfBXSrLpgpA")

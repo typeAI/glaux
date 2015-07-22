@@ -9,5 +9,5 @@ services:
 cache:
   directories:
   - $HOME/.ivy2
-script: "sbt clean test"
-
+script: "sbt clean coverage test"
+after_success: "sbt coveralls"
