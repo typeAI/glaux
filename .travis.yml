@@ -1,13 +1,17 @@
 language: scala
 sudo: true
 scala:
-   - 2.11.5
+   - 2.11.6
 jdk:
    - oraclejdk8
+
 services:
    - mongodb
+
 cache:
   directories:
-  - $HOME/.ivy2
+  - $HOME/.ivy2/cache
+  - $HOME/.sbt/boot/
+
 script: "sbt clean coverage test"
 after_success: "sbt coveralls"
