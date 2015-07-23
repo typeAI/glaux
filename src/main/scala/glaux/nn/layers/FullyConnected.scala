@@ -1,36 +1,28 @@
 package glaux.nn.layers
 
 import glaux.linalg.Dimension.{Row, TwoD}
+import glaux.linalg.Tensor.TensorBuilder
 import glaux.linalg.{Tensor, RowVector, Matrix, Dimension}
 import glaux.nn._
 import glaux.nn.layers.FullyConnected.{Bias, Filter}
 
-
-case class FullyConnected(filter: Filter,
-                          bias: Bias,
-                          filterRegularization: RegularizationSetting = RegularizationSetting(0, 1),
-                          id: String = HiddenLayer.newId()) extends HiddenLayer {
-  val inDimension: InDimension = Dimension.Row(filter.dimension.x)
-  val outDimension: OutDimension = Dimension.Row(filter.dimension.y)
+case class FullyConnected[IT <: Tensor : TensorBuilder](filter: Filter,
+                                                                   bias: Bias,
+                                                                   filterRegularization: RegularizationSetting,
+                                                                   val inDimension: IT#Dimensionality,
+                                                                     id: String
+                                                                   ) extends HiddenLayer {
   private val biasRegularization = RegularizationSetting(0, 0)
   lazy val filterParam: LayerParam = LayerParam("filter", filter, filterRegularization)
   lazy val biasParam: LayerParam = LayerParam("bias", bias, biasRegularization)
+  type Output = RowVector
+  type Input = IT
+
+  val outDimension: OutDimension = Dimension.Row(filter.dimension.y)
+
   assert(bias.dimension == outDimension, s"bias dimension ${bias.dimension} must match out dimension $outDimension")
 
-  type Output = RowVector
-  type Input = RowVector
-
   def params = Seq(filterParam, biasParam)
-
-  def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient]) = {
-    val og = outGradient.gradient
-    val filterGradient: Matrix = input.T ** og
-    val biasGradient: RowVector = og
-    (og ** filter.T, Seq[ParamGradient](
-      ParamGradient(filterParam, filterGradient),
-      ParamGradient(biasParam, biasGradient))
-    )
-  }
 
   def updateParams(params: Iterable[LayerParam]): HiddenLayer = {
     val f = params.find(_.id == "filter").get.value.asInstanceOf[Matrix]
@@ -38,20 +30,45 @@ case class FullyConnected(filter: Filter,
     copy(f, b)
   }
 
-  def forward(input: Input, isTraining: Boolean = false): Output = {
-    assert(input.dimension == inDimension, s"incorrect input dimension ${input.dimension} vs ${inDimension}")
-    (input ** filter) + bias
+  def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient]) = {
+    val og = outGradient.gradient
+    val filterGradient: Matrix = input.toRowVector.T ** og
+    val biasGradient: RowVector = og
+    val inGradient: Input = toInputFormat(og ** filter.T)
+    ( inGradient, Seq[ParamGradient](
+      ParamGradient(filterParam, filterGradient),
+      ParamGradient(biasParam, biasGradient))
+    )
   }
 
+  def forward(input: Input, isTraining: Boolean = false): Output = {
+    assert(input.dimension == inDimension, s"incorrect input dimension ${input.dimension} vs ${inDimension}")
+    (input.toRowVector ** filter) + bias
+  }
+
+  def updateFilterBias(filter: Filter, bias: Bias): HiddenLayer = copy(filter, bias)
+
+  private def toInputFormat(vector: RowVector): Input = {
+    if(vector.dimension == inDimension) vector.asInstanceOf[Input] else (inDimension, vector.seqView)
+  }
 }
 
 object FullyConnected {
   type Filter = Matrix
   type Bias = RowVector
 
-  def apply(numOfFeatures: Int, numOfNeurons: Int): FullyConnected = {
-    val filter = Matrix.normalized(TwoD(numOfFeatures, numOfNeurons), numOfFeatures)
-    val bias = RowVector.fill(Row(numOfNeurons), 0)
-    FullyConnected(filter, bias)
-  }
+  private def bias(numOfNeurons: Int): Bias = RowVector.fill(Row(numOfNeurons), 0)
+  private  def filter(numOfFeatures: Int, numOfNeurons: Int): Filter = Matrix.normalized(TwoD(numOfFeatures, numOfNeurons), numOfFeatures)
+
+  def apply(numOfFeatures: Int, numOfNeurons: Int): FullyConnected[RowVector] =
+    FullyConnected(filter(numOfFeatures, numOfNeurons), bias(numOfNeurons))
+
+
+  def apply[T <: Tensor: TensorBuilder](inputDimension: T#Dimensionality, numOfNeurons: Int): FullyConnected[T] =
+    FullyConnected[T](filter(inputDimension.totalSize, numOfNeurons), bias(numOfNeurons), RegularizationSetting(0, 1), inputDimension, HiddenLayer.newId())
+
+
+ private[glaux] def apply(filter: Filter, bias: Bias): FullyConnected[RowVector] =
+   FullyConnected[RowVector](filter, bias, RegularizationSetting(0, 1), Row(filter.dimension.x), HiddenLayer.newId())
+
 }
