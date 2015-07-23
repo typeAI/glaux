@@ -34,7 +34,6 @@ case class Pool( filterSize: Rectangle,
   }
 
   def backward(input: Vol, outGradient: OutGradient): (InGradient, Seq[ParamGradient]) = {
-
     val inGradValues: Seq[Double] = for (z <- inputZs; y <- inputYs; x <- inputXs)
       yield ( for (filterX <- filterXs; filterY <- filterYs)
         yield {
