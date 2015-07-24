@@ -6,12 +6,11 @@ import glaux.linalg.{Tensor, RowVector, Matrix, Dimension}
 import glaux.nn._
 import glaux.nn.layers.FullyConnected.{Bias, Filter}
 
-case class FullyConnected[IT <: Tensor : TensorBuilder](filter: Filter,
-                                                                   bias: Bias,
-                                                                   filterRegularization: RegularizationSetting,
-                                                                   val inDimension: IT#Dimensionality,
-                                                                     id: String
-                                                                   ) extends HiddenLayer {
+case class FullyConnected[IT <: Tensor : TensorBuilder]( filter: Filter,
+                                                         bias: Bias,
+                                                         filterRegularization: RegularizationSetting,
+                                                         inDimension: IT#Dimensionality,
+                                                         id: String ) extends HiddenLayer {
   private val biasRegularization = RegularizationSetting(0, 0)
   lazy val filterParam: LayerParam = LayerParam("filter", filter, filterRegularization)
   lazy val biasParam: LayerParam = LayerParam("bias", bias, biasRegularization)
