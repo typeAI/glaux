@@ -70,7 +70,7 @@ case class Convolution( filters: Tensor4,
                        yield ( for (y <- inputYs; x <- inputXs)
                                yield outGradValue(x, fx, y, fy, ff) * input(x, y, z)).sum
     val filtersGrad = Tensor4(filters.dimension, filtersGradValues)
-    val biasGrad = Vol(1, 1, 3,
+    val biasGrad = Vol(bias.dimension,
       for(f <- outZs) yield (for(x <- outXs; y <- outYs) yield outGradient.gradient(x,y,f)).sum
     )
     (inGrad, Seq(ParamGradient(biasParam, biasGrad), ParamGradient(filtersParam, filtersGrad)))

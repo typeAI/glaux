@@ -16,7 +16,7 @@ trait Net {
   def validate(): Unit = {
     def assertUniqueness[T](seq: Seq[T], message: String): Unit = assert(seq.distinct.size == seq.size, message)
     allLayers.reduce { (lastLayer, thisLayer) =>
-      assert(lastLayer.outDimension == thisLayer.inDimension, "Some of the layers' dimensions do not match")
+      assert(lastLayer.outDimension == thisLayer.inDimension, s"${lastLayer.getClass.getSimpleName}'s output ${lastLayer.outDimension} doesn't match ${thisLayer.getClass.getSimpleName}'s input ${thisLayer.inDimension}")
       thisLayer
     }
     assertUniqueness(hiddenLayers.map(_.id), "Some hidden layers share the same id")

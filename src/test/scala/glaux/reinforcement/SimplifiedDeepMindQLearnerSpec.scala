@@ -40,7 +40,6 @@ class SimplifiedDeepMindQLearnerSpec extends Specification {
 
   "initial iterations" >> {
 
-
     val thirdIter = learner.iterate(init, Observation(lastAction = 1,
       reward = 1,
       recentHistory = Seq(TemporalState(RowVector(3, 2), start.plusMinutes(2))),
