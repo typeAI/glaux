@@ -115,6 +115,14 @@ case class SimpleQAgent(numOfActions: Int, historyLength: Int = 10) extends QAge
   protected def readingsToInput(readings: Seq[Double]): qLearner.Input = RowVector(readings :_*)
 
   val policy: Policy = (state, _) => Random.nextInt(numOfActions) //todo: implement a real policy
+}
 
+case class AdvancedQAgent(numOfActions: Int, historyLength: Int = 50) extends QAgent {
+  type Learner = DeepMindQLearner.ConvolutionBased
+  val trainer = VanillaSGD[Learner#Net](SGDSettings(learningRate = 0.05))
+  val qLearner = DeepMindQLearner.ConvolutionBased(historyLength = historyLength, batchSize = 20, trainer = trainer)
 
+  protected def readingsToInput(readings: Seq[Double]): qLearner.Input = RowVector(readings :_*)
+
+  val policy: Policy = (state, _) => Random.nextInt(numOfActions) //todo: implement a real policy
 }

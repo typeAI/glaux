@@ -1,0 +1,44 @@
+package glaux.reinforcement
+
+import glaux.reinforcement.Policy.DecisionContext
+import glaux.reinforcement.QLearner.State
+import glaux.statistics.Probability
+
+import scala.util.Random
+
+trait Policy[StateT <: State[_]] {
+  type Context <: DecisionContext
+  type QFunction = (StateT, Action) => Q
+  def numOfActions: Int
+
+  def decide(state: StateT, qFunction: QFunction, context: Context): (Action, Context)
+
+}
+
+
+object Policy {
+  trait DecisionContext
+  type NumberOfSteps = Int
+  case class Annealing[StateT <: State[_]]( numOfActions: Action,
+                                            minExploreProbability: Probability,
+                                            lengthOfExploration: NumberOfSteps ) extends Policy[StateT] {
+    type Context = AnnealingContext
+    def decide(state: StateT, qFunction: QFunction, context: Context): (Action, Context) = {
+      val explorationProbability = if(context.explorationProbability > minExploreProbability) {
+        context.explorationProbability - ((context.explorationProbability - minExploreProbability) / context.stepsLeftForExploration)
+      } else minExploreProbability
+
+      val action: Action = if(explorationProbability.nextBoolean())
+        Random.nextInt(numOfActions)
+      else
+        (0 until numOfActions).map(qFunction(state, _)).zipWithIndex.maxBy(_._1)._2
+
+      (action, AnnealingContext(explorationProbability, Math.max(context.stepsLeftForExploration - 1, 0)))
+    }
+  }
+
+  case class AnnealingContext(explorationProbability: Probability,
+                              stepsLeftForExploration: NumberOfSteps) extends DecisionContext
+
+
+}
