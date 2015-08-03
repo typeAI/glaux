@@ -12,7 +12,6 @@ trait Policy[StateT <: State[_]] {
   def numOfActions: Int
 
   def decide(state: StateT, qFunction: QFunction, context: Context): (Action, Context)
-
 }
 
 
@@ -20,21 +19,24 @@ object Policy {
   trait DecisionContext
   type NumberOfSteps = Int
   case class Annealing[StateT <: State[_]]( numOfActions: Action,
-                                            minExploreProbability: Probability,
-                                            lengthOfExploration: NumberOfSteps ) extends Policy[StateT] {
+                                            minExploreProbability: Probability ) extends Policy[StateT] {
     type Context = AnnealingContext
     def decide(state: StateT, qFunction: QFunction, context: Context): (Action, Context) = {
+
+      def actionWithMaxQ = (0 until numOfActions).map(qFunction(state, _)).zipWithIndex.maxBy(_._1)._2
+
       val explorationProbability = if(context.explorationProbability > minExploreProbability) {
         context.explorationProbability - ((context.explorationProbability - minExploreProbability) / context.stepsLeftForExploration)
       } else minExploreProbability
-
-      val action: Action = if(explorationProbability.nextBoolean())
+      val action = if(explorationProbability.nextBoolean())
         Random.nextInt(numOfActions)
       else
-        (0 until numOfActions).map(qFunction(state, _)).zipWithIndex.maxBy(_._1)._2
+        actionWithMaxQ
 
       (action, AnnealingContext(explorationProbability, Math.max(context.stepsLeftForExploration - 1, 0)))
     }
+
+    def init(lengthOfExploration: NumberOfSteps): AnnealingContext = AnnealingContext(Probability(1), lengthOfExploration)
   }
 
   case class AnnealingContext(explorationProbability: Probability,
