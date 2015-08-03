@@ -1,12 +1,10 @@
 language: scala
-sudo: true
+sudo: false
 scala:
    - 2.11.6
 jdk:
    - oraclejdk8
 
-services:
-   - mongodb
 
 cache:
   directories:
