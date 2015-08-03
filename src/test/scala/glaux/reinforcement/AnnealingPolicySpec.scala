@@ -7,7 +7,7 @@ import org.specs2.mutable.Specification
 import glaux.statistics.Probability
 
 class AnnealingPolicySpec extends Specification {
-  val policy = Annealing[State[RowVector]](4, 0.5)
+  val policy = Annealing[State[RowVector]](4, 0.5, 10000)
   import policy.QFunction
 
   val aState: State[RowVector] = State(Nil, false)
@@ -38,7 +38,7 @@ class AnnealingPolicySpec extends Specification {
   }
 
   "pick the action with Max Q when exploration rate is zero" >> {
-    val policy = Annealing[State[RowVector]](4, 0)
+    val policy = Annealing[State[RowVector]](4, 0d, 10000)
     val lastCtx = AnnealingContext(0d , 0)
     val pick3: QFunction = (_, a) => if(a == 3) 10 else 2
 

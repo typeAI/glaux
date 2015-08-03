@@ -6,6 +6,7 @@ import glaux.linalg.RowVector
 import glaux.nn.trainers.VanillaSGD
 import glaux.nn.trainers.SGD.SGDSettings
 import glaux.reinforcement.DeepMindQLearner.Simplified
+import glaux.reinforcement.Policy.DecisionContext
 import org.specs2.matcher.Scope
 import org.specs2.mutable.Specification
 
@@ -17,7 +18,14 @@ class QAgentSpec extends Specification {
       type Learner = DeepMindQLearner.Simplified
       val trainer = VanillaSGD[Simplified#Net](SGDSettings(learningRate = 0.05))
       val qLearner = DeepMindQLearner.Simplified(historyLength = 3, batchSize = 20, trainer = trainer)
-      val policy: Policy = (_, _) => fixedReturnAction
+      type Policy =  glaux.reinforcement.Policy[qLearner.State]
+
+      val policy: Policy = new glaux.reinforcement.Policy[qLearner.State]{
+        type Context = DecisionContext
+        def init: Context = new DecisionContext {}
+        def numOfActions: Action = numOfActions
+        def decide(state: qLearner.State, qFunction: QFunction, context: Context): (Action, Context) = (fixedReturnAction, init)
+      }
 
       protected def readingsToInput(readings: Seq[Reward]): RowVector =  RowVector(readings :_*)
     }

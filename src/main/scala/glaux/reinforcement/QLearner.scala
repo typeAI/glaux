@@ -4,7 +4,7 @@ package reinforcement
 import glaux.linalg.Tensor
 import glaux.nn.Loss
 import glaux.nn.trainers.BatchTrainer
-import glaux.reinforcement.QLearner.{History => QHistory, Transition, Observation => QObservation, State => QState}
+import glaux.reinforcement.QLearner.{History => QHistory, Observation => QObservation, State => QState, Transition}
 
 
 trait QLearner {
@@ -40,9 +40,9 @@ trait QLearner {
     lazy val actionQs: Map[Action, Q] = qMap(state)
     lazy val loss: Loss = trainingResult.lossInfo.cost
 
-    def stateActionQ(s: State = state): Action => Q = {
+    def stateActionQ(s: State = state, action: Action): Q = {
       assert(!s.isTerminal)
-      qMap(s).apply
+      qMap(s).apply(action)
     }
 
     private def qMap(s: State): Map[Action, Q] = if(state.isTerminal) Map.empty else net.predict(s).seqView.zipWithIndex.map(_.swap).toMap
@@ -103,6 +103,7 @@ trait QLearner {
 
 
 object QLearner {
+
   case class TemporalState[Input <: Tensor](readings: Input, time: Time)
 
   type History[Input <: Tensor] = Seq[TemporalState[Input]]

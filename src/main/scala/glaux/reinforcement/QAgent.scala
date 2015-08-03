@@ -3,7 +3,9 @@ package glaux.reinforcement
 import glaux.linalg.RowVector
 import glaux.nn.trainers.VanillaSGD
 import glaux.nn.trainers.SGD.SGDSettings
+import glaux.reinforcement
 import glaux.reinforcement.DeepMindQLearner.Simplified
+import glaux.reinforcement.Policy.DecisionContext
 import glaux.reinforcement.QAgent.{Session => QSession}
 import glaux.reinforcement.QLearner.{Observation, TemporalState}
 
@@ -15,11 +17,11 @@ trait QAgent {
 
   import qLearner.{Iteration, State}
 
-  type Policy = (State, State => Action => Q ) => Action
+  type Policy <: reinforcement.Policy[State]
 
   val numOfActions: Int
   val policy: Policy
-  type Session = QSession[Iteration]
+  type Session = QSession[Iteration, policy.Context]
 
   protected def readingsToInput(readings: Seq[Double]): qLearner.Input
 
@@ -35,7 +37,9 @@ trait QAgent {
     if(qLearner.canBuildStateFrom(initHistory))
       Right(QSession(iteration = previous.map(_.iteration).getOrElse(qLearner.init(initHistory, numOfActions)),
               currentReward = 0,
-              currentReadings = initReadings.toVector))
+              currentReadings = initReadings.toVector,
+              decisionContext = policy.init
+            ))
     else
       Left("Not enough initial history to start a session")
   }
@@ -54,13 +58,19 @@ trait QAgent {
     session.status match {
       case session.Status.ReadyToForward =>
         val newIteration = forward(session, false)
-        val action = policy(newIteration.state, newIteration.stateActionQ)
-        (action, QSession(newIteration, 0, Vector.empty, Some(action)))
+        val (action, decisionContext) = policy.decide(newIteration.state, newIteration.stateActionQ, session.decisionContext)
+        (action, QSession(newIteration, 0, Vector.empty, decisionContext, Some(action)))
+
       case session.Status.PendingFirstAction =>
-        val firstAction = policy(qLearner.stateFromHistory(currentHistory, false), session.iteration.stateActionQ)
-        (firstAction, session.copy(lastAction = Some(firstAction), currentReadings = Vector.empty))
+        val currentState = qLearner.stateFromHistory(currentHistory, false)
+        val (firstAction, decisionContext) = policy.decide(currentState, session.iteration.stateActionQ, session.decisionContext)
+        (firstAction, session.copy( lastAction = Some(firstAction),
+                                    currentReadings = Vector.empty,
+                                    decisionContext = decisionContext))
+
       case session.Status.PendingReadingAfterAction =>
         (session.lastAction.get, session)  //simply repeat the last action
+
       case _ => throw new NotImplementedError(s"request action not implemented for ${session.status}")
     }
   }
@@ -80,9 +90,12 @@ trait QAgent {
 }
 
 object QAgent {
-  case class Session[IterationT](iteration: IterationT,
+  case class Session[ IterationT <: QLearner#IterationLike,
+                      PolicyContextT <: Policy.DecisionContext]
+                                (iteration: IterationT,
                                  currentReward: Reward,
                                  currentReadings: Vector[Reading],
+                                 decisionContext: PolicyContextT,
                                  lastAction: Option[Action] = None,
                                  isClosed: Boolean = false) {
     def canForward: Boolean = !isClosed && lastAction.isDefined && !currentReadings.isEmpty
@@ -109,20 +122,27 @@ object QAgent {
 
 case class SimpleQAgent(numOfActions: Int, historyLength: Int = 10) extends QAgent {
   type Learner = DeepMindQLearner.Simplified
+
   val trainer = VanillaSGD[Simplified#Net](SGDSettings(learningRate = 0.05))
   val qLearner = DeepMindQLearner.Simplified(historyLength = historyLength, batchSize = 20, trainer = trainer)
 
+  import qLearner.State
+
+  type Policy = Policy.Annealing[State]
+
   protected def readingsToInput(readings: Seq[Double]): qLearner.Input = RowVector(readings :_*)
 
-  val policy: Policy = (state, _) => Random.nextInt(numOfActions) //todo: implement a real policy
+  val policy: Policy = Policy.Annealing[State](numOfActions, 0.05, 10000)
 }
 
 case class AdvancedQAgent(numOfActions: Int, historyLength: Int = 50) extends QAgent {
   type Learner = DeepMindQLearner.ConvolutionBased
   val trainer = VanillaSGD[Learner#Net](SGDSettings(learningRate = 0.05))
   val qLearner = DeepMindQLearner.ConvolutionBased(historyLength = historyLength, batchSize = 20, trainer = trainer)
+  import qLearner.State
+  type Policy = Policy.Annealing[State]
 
   protected def readingsToInput(readings: Seq[Double]): qLearner.Input = RowVector(readings :_*)
 
-  val policy: Policy = (state, _) => Random.nextInt(numOfActions) //todo: implement a real policy
+  val policy: Policy = Policy.Annealing[State](numOfActions, 0.05, 1000)
 }

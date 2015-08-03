@@ -1,6 +1,6 @@
 package glaux.reinforcement
 
-import glaux.reinforcement.Policy.DecisionContext
+import glaux.reinforcement.Policy.{AnnealingContext, DecisionContext}
 import glaux.reinforcement.QLearner.State
 import glaux.statistics.Probability
 
@@ -12,14 +12,19 @@ trait Policy[StateT <: State[_]] {
   def numOfActions: Int
 
   def decide(state: StateT, qFunction: QFunction, context: Context): (Action, Context)
+
+  def init: Context
+
 }
 
 
 object Policy {
   trait DecisionContext
   type NumberOfSteps = Int
+
   case class Annealing[StateT <: State[_]]( numOfActions: Action,
-                                            minExploreProbability: Probability ) extends Policy[StateT] {
+                                            minExploreProbability: Probability,
+                                            lengthOfExploration: NumberOfSteps ) extends Policy[StateT] {
     type Context = AnnealingContext
     def decide(state: StateT, qFunction: QFunction, context: Context): (Action, Context) = {
 
@@ -36,7 +41,7 @@ object Policy {
       (action, AnnealingContext(explorationProbability, Math.max(context.stepsLeftForExploration - 1, 0)))
     }
 
-    def init(lengthOfExploration: NumberOfSteps): AnnealingContext = AnnealingContext(Probability(1), lengthOfExploration)
+    def init: AnnealingContext = AnnealingContext(Probability(1), lengthOfExploration)
   }
 
   case class AnnealingContext(explorationProbability: Probability,
