@@ -18,7 +18,8 @@ trait DeepMindQLearner extends QLearner {
   val gamma: Double
   val batchSize: Int
   val targetNetUpdateFreq: Int //avg # of iterations before updating the target net
-
+  type Net = DefaultNet[NetInput]
+  type Trainer = VanillaSGD[Net]
   case class DeepMindIteration(targetNet: Net,
                                memory: Memory, //Seq because we need random access here
                                trainingResult: TrainingResult,
@@ -101,8 +102,7 @@ object DeepMindQLearner {
                           minMemorySizeBeforeTraining: Int = 100 ) extends DeepMindQLearner {
     type NetInput = RowVector
     type Input = RowVector
-    type Net = DefaultNet[NetInput]
-    type Trainer = VanillaSGD[Net]
+
 
     validate
 
@@ -131,8 +131,7 @@ object DeepMindQLearner {
                               minMemorySizeBeforeTraining: Int = 100 ) extends DeepMindQLearner {
     type NetInput = Vol
     type Input = RowVector
-    type Net = DefaultNet[NetInput]
-    type Trainer = VanillaSGD[Net]
+
 
     validate
     assert(historyLength > filterSize * 2, "too short history makes convolution useless")
