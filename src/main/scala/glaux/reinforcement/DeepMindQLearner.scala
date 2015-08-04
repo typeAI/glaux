@@ -6,7 +6,7 @@ import glaux.nn.trainers.VanillaSGD
 import glaux.nn.trainers.SGD.SGDSettings
 import glaux.nn.{Rectangle, InputLayer, Net}
 import Net.DefaultNet
-import glaux.nn.layers.{Convolution, Regression, Relu, FullyConnected}
+import glaux.nn.layers._
 import glaux.reinforcement.QLearner.Transition
 
 import scala.util.Random
@@ -151,6 +151,7 @@ object DeepMindQLearner {
         padding = true
       )
       val relu1 = Relu[Vol](conv1.outDimension)
+
       val conv2 = Convolution(
         numOfFilters = 10,
         filterSize = Rectangle(filterSize, 1),
@@ -159,9 +160,13 @@ object DeepMindQLearner {
       )
       val relu2 = Relu[Vol](conv2.outDimension)
       val fc1 = FullyConnected[Vol](conv2.outDimension, 30)
+      val relu3 = Relu[RowVector](fc1.outDimension)
+
       val fc2 = FullyConnected(30, numOfActions)
+      val relu4 = Relu[RowVector](fc2.outDimension)
+
       val lossLayer = Regression(numOfActions)
-      DefaultNet(inputLayer, Seq(conv1, relu1, conv2, relu2, fc1, fc2), lossLayer)
+      DefaultNet(inputLayer, Seq(conv1, relu1, conv2, relu2, fc1, relu3, fc2, relu4), lossLayer)
     }
 
     private def netInputDimension(inputDimension: Row): ThreeD = ThreeD(historyLength, 1, inputDimension.size)
