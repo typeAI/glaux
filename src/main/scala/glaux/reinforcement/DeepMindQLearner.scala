@@ -4,7 +4,7 @@ import glaux.linalg.Dimension.{ThreeD, Row}
 import glaux.linalg.{Vol, RowVector}
 import glaux.nn.trainers.VanillaSGD
 import glaux.nn.trainers.SGD.SGDSettings
-import glaux.nn.{Rectangle, InputLayer, Net}
+import glaux.nn.{HiddenLayer, Rectangle, InputLayer, Net}
 import Net.DefaultNet
 import glaux.nn.layers._
 import glaux.reinforcement.QLearner.Transition
@@ -127,11 +127,14 @@ object DeepMindQLearner {
                               filterSize: Int = 5,
                               gamma: Double = 0.95,
                               batchSize: Int = 20,
+                              numOfFilters: Int = 10,
+                              numOfFullyConnectedNeurons: Int = 30,
+                              numOfConvolutions: Int = 2,
+                              numOfFullyConnected: Int = 2,
                               targetNetUpdateFreq: Int = 10, //avg # of iterations before updating the target net
                               minMemorySizeBeforeTraining: Int = 100 ) extends DeepMindQLearner {
     type NetInput = Vol
     type Input = RowVector
-
 
     validate
     assert(historyLength > filterSize * 2, "too short history makes convolution useless")
@@ -140,33 +143,40 @@ object DeepMindQLearner {
       Vol(netInputDimension(state.fullHistory.head.readings.dimension), state.fullHistory.flatMap(_.readings.seqView))
     }
 
-
     protected def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net = {
       val netInputDim = netInputDimension(inputDimension)
       val inputLayer = InputLayer[Vol](netInputDim)
-      val conv1 = Convolution(
-        numOfFilters = 10,
-        filterSize = Rectangle(filterSize, 1),
-        inputDimension = netInputDim,
-        padding = true
-      )
-      val relu1 = Relu[Vol](conv1.outDimension)
 
-      val conv2 = Convolution(
-        numOfFilters = 10,
-        filterSize = Rectangle(filterSize, 1),
-        inputDimension = conv1.outDimension,
-        padding = true
-      )
-      val relu2 = Relu[Vol](conv2.outDimension)
-      val fc1 = FullyConnected[Vol](conv2.outDimension, 30)
-      val relu3 = Relu[RowVector](fc1.outDimension)
+      type VolLayers = HiddenLayer { type Input = Vol }
 
-      val fc2 = FullyConnected(30, numOfActions)
-      val relu4 = Relu[RowVector](fc2.outDimension)
+      val convolutions = (1 to numOfConvolutions).foldLeft(Vector.empty[HiddenLayer]) { (convs, _) =>
+        val iDim = convs.lastOption.map(_.outDimension.asInstanceOf[ThreeD]).getOrElse(netInputDim)
+        val conv = Convolution(
+          numOfFilters = numOfFilters,
+          filterSize = Rectangle(filterSize, 1),
+          inputDimension = iDim,
+          padding = true
+        )
+
+        val relu = Relu[Vol](conv.outDimension)
+        convs :+ conv :+ relu
+      }
+
+      val midFc = FullyConnected[Vol](convolutions.last.outDimension.asInstanceOf[ThreeD], numOfFullyConnectedNeurons)
+      val midRelu = Relu[RowVector](midFc.outDimension)
+
+
+      val fullyConnecteds = (1 to numOfFullyConnected).foldLeft(Vector[HiddenLayer](midFc, midRelu)) { (fcs, _) =>
+        val fc = FullyConnected(fcs.last.outDimension.asInstanceOf[Row].size, numOfFullyConnectedNeurons)
+        val relu = Relu[RowVector](fc.outDimension)
+        fcs :+ fc :+ relu
+      }
+
+      val lastFc = FullyConnected(fullyConnecteds.last.outDimension.totalSize, numOfActions)
+      val lastRelu = Relu[RowVector](lastFc.outDimension)
 
       val lossLayer = Regression(numOfActions)
-      DefaultNet(inputLayer, Seq(conv1, relu1, conv2, relu2, fc1, relu3, fc2, relu4), lossLayer)
+      DefaultNet(inputLayer, convolutions ++ fullyConnecteds :+ lastFc :+ lastRelu , lossLayer)
     }
 
     private def netInputDimension(inputDimension: Row): ThreeD = ThreeD(historyLength, 1, inputDimension.size)
