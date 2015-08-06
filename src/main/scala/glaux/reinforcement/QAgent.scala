@@ -128,10 +128,6 @@ trait DeepMindQAgent[LT <: DeepMindQLearner] extends QAgent {
   import qLearner.State
   implicit val updater: Net.Updater[LT#Net]
 
-<<<<<<< HEAD
-  val trainer = VanillaSGD[Learner#Net](SGDSettings(learningRate = 0.05))
-=======
->>>>>>> 34f089f3b1a4e1b7659d51cec2dc271a01d8b60d
 
   type Policy = Policy.Annealing[State]
   val policy: Policy = Policy.Annealing[State](numOfActions, 0.05, 10000)
@@ -139,11 +135,8 @@ trait DeepMindQAgent[LT <: DeepMindQLearner] extends QAgent {
 
 case class SimpleQAgent(numOfActions: Int, historyLength: Int = 10) extends DeepMindQAgent[DeepMindQLearner.Simplified] {
 
-<<<<<<< HEAD
-=======
   val trainer = VanillaSGD[Learner#Net](SGDSettings(learningRate = 0.05))
 
->>>>>>> 34f089f3b1a4e1b7659d51cec2dc271a01d8b60d
   val qLearner = DeepMindQLearner.Simplified(historyLength = historyLength, batchSize = 20, trainer = trainer)
 
   protected def readingsToInput(readings: Seq[Double]): qLearner.Input = RowVector(readings :_*)
@@ -151,11 +144,6 @@ case class SimpleQAgent(numOfActions: Int, historyLength: Int = 10) extends Deep
   implicit val updater = implicitly[Updater[DefaultNet[RowVector]]]
 }
 
-<<<<<<< HEAD
-case class AdvancedQAgent(numOfActions: Int, historyLength: Int = 50) extends DeepMindQAgent[DeepMindQLearner.ConvolutionBased] {
-
-  val qLearner = DeepMindQLearner.ConvolutionBased(historyLength = historyLength, batchSize = 20, trainer = trainer)
-=======
 case class AdvancedQAgent(numOfActions: Int,
                           learnerSettings: ConvolutionBased.Settings,
                           trainerSettings: SGDSettings) extends DeepMindQAgent[DeepMindQLearner.ConvolutionBased] {
@@ -163,7 +151,6 @@ case class AdvancedQAgent(numOfActions: Int,
   val trainer = VanillaSGD[Learner#Net](trainerSettings)
 
   val qLearner = ConvolutionBased(trainer, learnerSettings)
->>>>>>> 34f089f3b1a4e1b7659d51cec2dc271a01d8b60d
 
   protected def readingsToInput(readings: Seq[Double]): qLearner.Input = RowVector(readings :_*)
 
