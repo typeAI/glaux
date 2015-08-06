@@ -6,7 +6,7 @@ import glaux.nn.Net.{DefaultNet, Updater}
 import glaux.nn.trainers.VanillaSGD
 import glaux.nn.trainers.SGD.SGDSettings
 import glaux.reinforcement
-import glaux.reinforcement.DeepMindQLearner.Simplified
+import glaux.reinforcement.DeepMindQLearner.{ConvolutionBased, Simplified}
 import glaux.reinforcement.Policy.DecisionContext
 import glaux.reinforcement.QAgent.{Session => QSession}
 import glaux.reinforcement.QLearner.{Observation, TemporalState}
@@ -128,13 +128,14 @@ trait DeepMindQAgent[LT <: DeepMindQLearner] extends QAgent {
   import qLearner.State
   implicit val updater: Net.Updater[LT#Net]
 
-  val trainer = VanillaSGD[Learner#Net](SGDSettings(learningRate = 0.05))
 
   type Policy = Policy.Annealing[State]
   val policy: Policy = Policy.Annealing[State](numOfActions, 0.05, 10000)
 }
 
 case class SimpleQAgent(numOfActions: Int, historyLength: Int = 10) extends DeepMindQAgent[DeepMindQLearner.Simplified] {
+
+  val trainer = VanillaSGD[Learner#Net](SGDSettings(learningRate = 0.05))
 
   val qLearner = DeepMindQLearner.Simplified(historyLength = historyLength, batchSize = 20, trainer = trainer)
 
@@ -143,9 +144,13 @@ case class SimpleQAgent(numOfActions: Int, historyLength: Int = 10) extends Deep
   implicit val updater = implicitly[Updater[DefaultNet[RowVector]]]
 }
 
-case class AdvancedQAgent(numOfActions: Int, historyLength: Int = 50) extends DeepMindQAgent[DeepMindQLearner.ConvolutionBased] {
+case class AdvancedQAgent(numOfActions: Int,
+                          learnerSettings: ConvolutionBased.Settings,
+                          trainerSettings: SGDSettings) extends DeepMindQAgent[DeepMindQLearner.ConvolutionBased] {
 
-  val qLearner = DeepMindQLearner.ConvolutionBased(historyLength = historyLength, batchSize = 20, trainer = trainer)
+  val trainer = VanillaSGD[Learner#Net](trainerSettings)
+
+  val qLearner = ConvolutionBased(trainer, learnerSettings)
 
   protected def readingsToInput(readings: Seq[Double]): qLearner.Input = RowVector(readings :_*)
 

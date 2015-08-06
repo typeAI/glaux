@@ -23,7 +23,7 @@ trait QLearner {
 
   type InputDimension = Input#Dimensionality
 
-  val historyLength: Int
+  def historyLength: Int
 
   type Observation = QObservation[Input]
   type State = QState[Input]

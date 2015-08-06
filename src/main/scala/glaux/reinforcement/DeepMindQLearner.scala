@@ -15,11 +15,14 @@ import scala.util.Random
  * QLearner based on deepmind algorithm
  */
 trait DeepMindQLearner extends QLearner {
-  val gamma: Double
-  val batchSize: Int
-  val targetNetUpdateFreq: Int //avg # of iterations before updating the target net
+  def gamma: Double
+  def batchSize: Int
+  def targetNetUpdateFreq: Int //avg # of iterations before updating the target net
+  def minMemorySizeBeforeTraining: Int
+
   type Net = DefaultNet[NetInput]
   type Trainer = VanillaSGD[Net]
+
   case class DeepMindIteration(targetNet: Net,
                                memory: Memory, //Seq because we need random access here
                                trainingResult: TrainingResult,
@@ -34,7 +37,7 @@ trait DeepMindQLearner extends QLearner {
 
   type Iteration = DeepMindIteration
 
-  val minMemorySizeBeforeTraining: Int
+
 
   protected def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net
 
@@ -123,21 +126,19 @@ object DeepMindQLearner {
   }
 
   case class ConvolutionBased(override protected val trainer: ConvolutionBased#Trainer = VanillaSGD[ConvolutionBased#Net](SGDSettings()),
-                              historyLength: Int = 50,
-                              filterSize: Int = 5,
-                              gamma: Double = 0.95,
-                              batchSize: Int = 20,
-                              numOfFilters: Int = 10,
-                              numOfFullyConnectedNeurons: Int = 30,
-                              numOfConvolutions: Int = 2,
-                              numOfFullyConnected: Int = 2,
-                              targetNetUpdateFreq: Int = 10, //avg # of iterations before updating the target net
-                              minMemorySizeBeforeTraining: Int = 100 ) extends DeepMindQLearner {
+                               settings: ConvolutionBased.Settings) extends DeepMindQLearner {
     type NetInput = Vol
     type Input = RowVector
 
+    def gamma = settings.gamma
+    def historyLength = settings.historyLength
+    def batchSize = settings.batchSize
+    def targetNetUpdateFreq = settings.targetNetUpdateFreq
+    def minMemorySizeBeforeTraining = settings.minMemorySizeBeforeTraining
+
+
     validate
-    assert(historyLength > filterSize * 2, "too short history makes convolution useless")
+    assert(historyLength > settings.filterSize * 2, "too short history makes convolution useless")
 
     implicit def inputToNet(state: State): NetInput = {
       Vol(netInputDimension(state.fullHistory.head.readings.dimension), state.fullHistory.flatMap(_.readings.seqView))
@@ -149,11 +150,11 @@ object DeepMindQLearner {
 
       type VolLayers = HiddenLayer { type Input = Vol }
 
-      val convolutions = (1 to numOfConvolutions).foldLeft(Vector.empty[HiddenLayer]) { (convs, _) =>
+      val convolutions = (1 to settings.numOfConvolutions).foldLeft(Vector.empty[HiddenLayer]) { (convs, _) =>
         val iDim = convs.lastOption.map(_.outDimension.asInstanceOf[ThreeD]).getOrElse(netInputDim)
         val conv = Convolution(
-          numOfFilters = numOfFilters,
-          filterSize = Rectangle(filterSize, 1),
+          numOfFilters = settings.numOfFilters,
+          filterSize = Rectangle(settings.filterSize, 1),
           inputDimension = iDim,
           padding = true
         )
@@ -162,12 +163,12 @@ object DeepMindQLearner {
         convs :+ conv :+ relu
       }
 
-      val midFc = FullyConnected[Vol](convolutions.last.outDimension.asInstanceOf[ThreeD], numOfFullyConnectedNeurons)
+      val midFc = FullyConnected[Vol](convolutions.last.outDimension.asInstanceOf[ThreeD], settings.numOfFullyConnectedNeurons)
       val midRelu = Relu[RowVector](midFc.outDimension)
 
 
-      val fullyConnecteds = (1 to numOfFullyConnected).foldLeft(Vector[HiddenLayer](midFc, midRelu)) { (fcs, _) =>
-        val fc = FullyConnected(fcs.last.outDimension.asInstanceOf[Row].size, numOfFullyConnectedNeurons)
+      val fullyConnecteds = (1 until settings.numOfFullyConnected).foldLeft(Vector[HiddenLayer](midFc, midRelu)) { (fcs, _) =>
+        val fc = FullyConnected(fcs.last.outDimension.asInstanceOf[Row].size, settings.numOfFullyConnectedNeurons)
         val relu = Relu[RowVector](fc.outDimension)
         fcs :+ fc :+ relu
       }
@@ -182,4 +183,16 @@ object DeepMindQLearner {
     private def netInputDimension(inputDimension: Row): ThreeD = ThreeD(historyLength, 1, inputDimension.size)
   }
 
+  object ConvolutionBased {
+    case class Settings(historyLength: Int = 50,
+                        filterSize: Int = 5,
+                        gamma: Double = 0.95,
+                        batchSize: Int = 20,
+                        numOfFilters: Int = 10,
+                        numOfFullyConnectedNeurons: Int = 30,
+                        numOfConvolutions: Int = 2,
+                        numOfFullyConnected: Int = 2,
+                        targetNetUpdateFreq: Int = 10, //avg # of iterations before updating the target net
+                        minMemorySizeBeforeTraining: Int = 100 )
+  }
 }

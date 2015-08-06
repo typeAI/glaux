@@ -4,6 +4,7 @@ import java.time.{Clock, LocalTime, LocalDate, ZonedDateTime}
 
 import glaux.linalg.Dimension.Row
 import glaux.linalg.RowVector
+import glaux.reinforcement.DeepMindQLearner.ConvolutionBased
 import glaux.reinforcement.QLearner._
 import org.specs2.mutable.Specification
 
@@ -11,7 +12,7 @@ import scala.util.Random
 
 class ConvolutionBasedSpec extends Specification {
   val start = ZonedDateTime.of(2015, 2, 14, 14, 30, 0, 0, Clock.systemDefaultZone().getZone)
-  val learner = DeepMindQLearner.ConvolutionBased(historyLength = 10, filterSize = 3, batchSize = 3, minMemorySizeBeforeTraining = 10)
+  val learner = ConvolutionBased( settings = ConvolutionBased.Settings(historyLength = 10, filterSize = 3, batchSize = 3, minMemorySizeBeforeTraining = 10))
   val numOfAction = 3
   def mockHistory(from: ZonedDateTime, length: Int = 10, numOfReadings: Int = 5) = {
     def randomReading = RowVector((0 until numOfReadings).map(_ => Random.nextDouble()):_*)
