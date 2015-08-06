@@ -27,7 +27,6 @@ trait HiddenLayer extends Layer {
   def backward(input: Input, outGradient: OutGradient): (InGradient, Seq[ParamGradient])
   def updateParams(params: Iterable[LayerParam]): HiddenLayer //This should not change the unique id of the layer
   def params: Seq[LayerParam]
-
 }
 
 object HiddenLayer {

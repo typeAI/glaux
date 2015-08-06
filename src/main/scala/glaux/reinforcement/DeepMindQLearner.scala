@@ -4,7 +4,7 @@ import glaux.linalg.Dimension.{ThreeD, Row}
 import glaux.linalg.{Vol, RowVector}
 import glaux.nn.trainers.VanillaSGD
 import glaux.nn.trainers.SGD.SGDSettings
-import glaux.nn.{Rectangle, InputLayer, Net}
+import glaux.nn.{HiddenLayer, Rectangle, InputLayer, Net}
 import Net.DefaultNet
 import glaux.nn.layers._
 import glaux.reinforcement.QLearner.Transition
@@ -15,11 +15,15 @@ import scala.util.Random
  * QLearner based on deepmind algorithm
  */
 trait DeepMindQLearner extends QLearner {
-  val gamma: Double
-  val batchSize: Int
-  val targetNetUpdateFreq: Int //avg # of iterations before updating the target net
+
+  def gamma: Double
+  def batchSize: Int
+  def targetNetUpdateFreq: Int //avg # of iterations before updating the target net
+  def minMemorySizeBeforeTraining: Int
+
   type Net = DefaultNet[NetInput]
   type Trainer = VanillaSGD[Net]
+
   case class DeepMindIteration(targetNet: Net,
                                memory: Memory, //Seq because we need random access here
                                trainingResult: TrainingResult,
@@ -34,7 +38,7 @@ trait DeepMindQLearner extends QLearner {
 
   type Iteration = DeepMindIteration
 
-  val minMemorySizeBeforeTraining: Int
+
 
   protected def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net
 
@@ -123,53 +127,73 @@ object DeepMindQLearner {
   }
 
   case class ConvolutionBased(override protected val trainer: ConvolutionBased#Trainer = VanillaSGD[ConvolutionBased#Net](SGDSettings()),
-                              historyLength: Int = 50,
-                              filterSize: Int = 5,
-                              gamma: Double = 0.95,
-                              batchSize: Int = 20,
-                              targetNetUpdateFreq: Int = 10, //avg # of iterations before updating the target net
-                              minMemorySizeBeforeTraining: Int = 100 ) extends DeepMindQLearner {
+                               settings: ConvolutionBased.Settings) extends DeepMindQLearner {
     type NetInput = Vol
     type Input = RowVector
 
+    def gamma = settings.gamma
+    def historyLength = settings.historyLength
+    def batchSize = settings.batchSize
+    def targetNetUpdateFreq = settings.targetNetUpdateFreq
+    def minMemorySizeBeforeTraining = settings.minMemorySizeBeforeTraining
+
 
     validate
-    assert(historyLength > filterSize * 2, "too short history makes convolution useless")
+    assert(historyLength > settings.filterSize * 2, "too short history makes convolution useless")
 
     implicit def inputToNet(state: State): NetInput = {
       Vol(netInputDimension(state.fullHistory.head.readings.dimension), state.fullHistory.flatMap(_.readings.seqView))
     }
 
-
     protected def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net = {
       val netInputDim = netInputDimension(inputDimension)
       val inputLayer = InputLayer[Vol](netInputDim)
-      val conv1 = Convolution(
-        numOfFilters = 10,
-        filterSize = Rectangle(filterSize, 1),
-        inputDimension = netInputDim,
-        padding = true
-      )
-      val relu1 = Relu[Vol](conv1.outDimension)
 
-      val conv2 = Convolution(
-        numOfFilters = 10,
-        filterSize = Rectangle(filterSize, 1),
-        inputDimension = conv1.outDimension,
-        padding = true
-      )
-      val relu2 = Relu[Vol](conv2.outDimension)
-      val fc1 = FullyConnected[Vol](conv2.outDimension, 30)
-      val relu3 = Relu[RowVector](fc1.outDimension)
+      type VolLayers = HiddenLayer { type Input = Vol }
 
-      val fc2 = FullyConnected(30, numOfActions)
-      val relu4 = Relu[RowVector](fc2.outDimension)
+      val convolutions = (1 to settings.numOfConvolutions).foldLeft(Vector.empty[HiddenLayer]) { (convs, _) =>
+        val iDim = convs.lastOption.map(_.outDimension.asInstanceOf[ThreeD]).getOrElse(netInputDim)
+        val conv = Convolution(
+          numOfFilters = settings.numOfFilters,
+          filterSize = Rectangle(settings.filterSize, 1),
+          inputDimension = iDim,
+          padding = true
+        )
+
+        val relu = Relu[Vol](conv.outDimension)
+        convs :+ conv :+ relu
+      }
+
+      val midFc = FullyConnected[Vol](convolutions.last.outDimension.asInstanceOf[ThreeD], settings.numOfFullyConnectedNeurons)
+      val midRelu = Relu[RowVector](midFc.outDimension)
+
+
+      val fullyConnecteds = (1 until settings.numOfFullyConnected).foldLeft(Vector[HiddenLayer](midFc, midRelu)) { (fcs, _) =>
+        val fc = FullyConnected(fcs.last.outDimension.asInstanceOf[Row].size, settings.numOfFullyConnectedNeurons)
+        val relu = Relu[RowVector](fc.outDimension)
+        fcs :+ fc :+ relu
+      }
+
+      val lastFc = FullyConnected(fullyConnecteds.last.outDimension.totalSize, numOfActions)
+      val lastRelu = Relu[RowVector](lastFc.outDimension)
 
       val lossLayer = Regression(numOfActions)
-      DefaultNet(inputLayer, Seq(conv1, relu1, conv2, relu2, fc1, relu3, fc2, relu4), lossLayer)
+      DefaultNet(inputLayer, convolutions ++ fullyConnecteds :+ lastFc :+ lastRelu , lossLayer)
     }
 
     private def netInputDimension(inputDimension: Row): ThreeD = ThreeD(historyLength, 1, inputDimension.size)
   }
 
+  object ConvolutionBased {
+    case class Settings(historyLength: Int = 50,
+                        filterSize: Int = 5,
+                        gamma: Double = 0.95,
+                        batchSize: Int = 20,
+                        numOfFilters: Int = 10,
+                        numOfFullyConnectedNeurons: Int = 30,
+                        numOfConvolutions: Int = 2,
+                        numOfFullyConnected: Int = 2,
+                        targetNetUpdateFreq: Int = 10, //avg # of iterations before updating the target net
+                        minMemorySizeBeforeTraining: Int = 100 )
+  }
 }
