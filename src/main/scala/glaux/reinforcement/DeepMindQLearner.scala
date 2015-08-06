@@ -148,37 +148,38 @@ object DeepMindQLearner {
     protected def buildNet(inputDimension: Input#Dimensionality, numOfActions: Int): Net = {
       val netInputDim = netInputDimension(inputDimension)
       val inputLayer = InputLayer[Vol](netInputDim)
+      type ConvLayerCombo = (Convolution, Relu[Vol])
+      type FullyConnectedLayerCombo = (FullyConnected[_], Relu[RowVector])
 
-      type VolLayers = HiddenLayer { type Input = Vol }
+      def flatten(seq: Seq[(HiddenLayer, HiddenLayer)]): Seq[HiddenLayer] = seq.flatMap(p => Seq(p._1, p._2))
 
-      val convolutions = (1 to settings.numOfConvolutions).foldLeft(Vector.empty[HiddenLayer]) { (convs, _) =>
-        val iDim = convs.lastOption.map(_.outDimension.asInstanceOf[ThreeD]).getOrElse(netInputDim)
+      val convolutions = (1 to settings.numOfConvolutions).foldLeft(Vector.empty[ConvLayerCombo]) { (convs, _) =>
+        val iDim: ThreeD = convs.lastOption.map(_._2.outDimension).getOrElse(netInputDim)
         val conv = Convolution(
           numOfFilters = settings.numOfFilters,
           filterSize = Rectangle(settings.filterSize, 1),
           inputDimension = iDim,
           padding = true
         )
-
         val relu = Relu[Vol](conv.outDimension)
-        convs :+ conv :+ relu
+        convs :+ (conv, relu)
       }
 
-      val midFc = FullyConnected[Vol](convolutions.last.outDimension.asInstanceOf[ThreeD], settings.numOfFullyConnectedNeurons)
+      val midFc = FullyConnected[Vol](convolutions.last._2.outDimension, settings.numOfFullyConnectedNeurons)
       val midRelu = Relu[RowVector](midFc.outDimension)
 
 
-      val fullyConnecteds = (1 until settings.numOfFullyConnected).foldLeft(Vector[HiddenLayer](midFc, midRelu)) { (fcs, _) =>
-        val fc = FullyConnected(fcs.last.outDimension.asInstanceOf[Row].size, settings.numOfFullyConnectedNeurons)
+      val fullyConnecteds = (1 until settings.numOfFullyConnected).foldLeft(Vector[FullyConnectedLayerCombo]((midFc, midRelu))) { (fcs, _) =>
+        val fc = FullyConnected(fcs.last._2.outDimension.size, settings.numOfFullyConnectedNeurons)
         val relu = Relu[RowVector](fc.outDimension)
-        fcs :+ fc :+ relu
+        fcs :+ (fc, relu)
       }
 
-      val lastFc = FullyConnected(fullyConnecteds.last.outDimension.totalSize, numOfActions)
+      val lastFc = FullyConnected(fullyConnecteds.last._2.outDimension.totalSize, numOfActions)
       val lastRelu = Relu[RowVector](lastFc.outDimension)
 
       val lossLayer = Regression(numOfActions)
-      DefaultNet(inputLayer, convolutions ++ fullyConnecteds :+ lastFc :+ lastRelu , lossLayer)
+      DefaultNet(inputLayer, flatten(convolutions) ++ flatten(fullyConnecteds :+ (lastFc, lastRelu)), lossLayer)
     }
 
     private def netInputDimension(inputDimension: Row): ThreeD = ThreeD(historyLength, 1, inputDimension.size)
