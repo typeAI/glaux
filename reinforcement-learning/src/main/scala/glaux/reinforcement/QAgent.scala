@@ -126,22 +126,23 @@ object QAgent {
 trait DeepMindQAgent[LT <: DeepMindQLearner] extends QAgent {
   type Learner = LT
   import qLearner.State
-  implicit val updater: Net.Updater[LT#Net]
+
 
 
   type Policy = Policy.Annealing[State]
   val policy: Policy = Policy.Annealing[State](numOfActions, 0.05, 10000)
+  implicit val updater: Net.Updater[LT#Net]
 }
 
 case class SimpleQAgent(numOfActions: Int, historyLength: Int = 10) extends DeepMindQAgent[DeepMindQLearner.Simplified] {
 
-  implicit lazy val updater = implicitly[Updater[DefaultNet[RowVector]]]
 
   val trainer = VanillaSGD[Learner#Net](SGDSettings(learningRate = 0.05))
 
   val qLearner = DeepMindQLearner.Simplified(historyLength = historyLength, batchSize = 20, trainer = trainer)
 
   protected def readingsToInput(readings: Seq[Double]): qLearner.Input = RowVector(readings :_*)
+  implicit lazy val updater = implicitly[Updater[DefaultNet[RowVector]]]
 
 
 }
@@ -149,12 +150,12 @@ case class SimpleQAgent(numOfActions: Int, historyLength: Int = 10) extends Deep
 case class AdvancedQAgent(numOfActions: Int,
                           learnerSettings: ConvolutionBased.Settings,
                           trainerSettings: SGDSettings) extends DeepMindQAgent[DeepMindQLearner.ConvolutionBased] {
-  implicit lazy val updater = implicitly[Updater[DefaultNet[Vol]]]
 
   val trainer = VanillaSGD[Learner#Net](trainerSettings)
 
   val qLearner = ConvolutionBased(trainer, learnerSettings)
 
   protected def readingsToInput(readings: Seq[Double]): qLearner.Input = RowVector(readings :_*)
+  implicit lazy val updater = implicitly[Updater[DefaultNet[Vol]]]
 
 }

@@ -6,6 +6,8 @@ scala:
 jdk:
    - oraclejdk8
 
+services:
+  - mongodb
 
 cache:
   directories:
