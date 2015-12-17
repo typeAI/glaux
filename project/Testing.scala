@@ -7,6 +7,4 @@ object Testing {
   lazy val settings = Seq(
       scalacOptions in Test ++= Seq("-Yrangepos")
     )
-  coverallsToken := Some("unXzL1sDsWymqcb7JwJNqzAfBXSrLpgpA")
-
 }
