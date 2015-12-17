@@ -13,6 +13,7 @@ import org.specs2.mutable.Specification
 class QAgentSpec extends Specification {
   trait QAgentScope extends Scope {
     case class TestAgent(numOfActions: Int, fixedReturnAction: Int) extends QAgent {
+      self ⇒
       type Learner = DeepMindQLearner.Simplified
       val trainer = VanillaSGD[Simplified#Net](SGDSettings(learningRate = 0.05))
       val qLearner = DeepMindQLearner.Simplified(historyLength = 3, batchSize = 20, trainer = trainer)
@@ -21,7 +22,7 @@ class QAgentSpec extends Specification {
       val policy: Policy = new glaux.reinforcementlearning.Policy[qLearner.State] {
         type Context = DecisionContext
         def init: Context = new DecisionContext {}
-        def numOfActions: Action = numOfActions
+        def numOfActions: Action = self.numOfActions
         def decide(state: qLearner.State, qFunction: QFunction, context: Context): (Action, Context) = (fixedReturnAction, init)
       }
 
