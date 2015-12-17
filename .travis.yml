@@ -1,7 +1,8 @@
 language: scala
-sudo: false
+
 scala:
-   - 2.11.6
+   - 2.11.7
+
 jdk:
    - oraclejdk8
 
@@ -11,9 +12,8 @@ cache:
   - $HOME/.ivy2/cache
   - $HOME/.sbt/boot/
 
-before_script:
-  - mkdir -p $HOME/.sbt/launchers/0.13.8/
-  - curl -L -o $HOME/.sbt/launchers/0.13.8/sbt-launch.jar https://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/sbt-launch/0.13.8/sbt-launch.jar
-
-script: "sbt clean coverage test"
-after_success: "sbt coveralls"
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION -jvm-opts .jvmopts clean test &&
+    sbt coverageAggregate
+after_success:
+  - sbt coveralls
