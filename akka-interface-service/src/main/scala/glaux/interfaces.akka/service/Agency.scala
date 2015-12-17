@@ -1,23 +1,22 @@
 package glaux.interfaces.akka
 package service
 
-import api._
 import Protocols.Agency._
 
 import akka.actor._
 import glaux.interfaces.akka.service.Agency.AgentCreated
-import glaux.interfaces.akka.api.Protocols.{ Confirmed, Rejected }
-import glaux.interfaces.akka.api.domain._
-import glaux.persistence.mongodb.AgentSettingsRepo
-import glaux.persistence.mongodb.AgentSettingsRepo
+import Protocols.{ Confirmed, Rejected }
+import glaux.interfaces.api.domain._
+import glaux.interfaces.api.persistence._
 import glaux.reinforcementlearning.{ AdvancedQAgent, QAgent, SimpleQAgent }
-import glaux.persistence.mongodb.QSessionHandler._
 
 import scala.concurrent.Future
 
-class Agency(repo: AgentSettingsRepo) extends Actor with ActorLogging {
+class Agency(persistenceImpl: PersistenceImpl) extends Actor with ActorLogging {
   import Agency.AgentActor
   import context.dispatcher
+
+  val settingsRepo = persistenceImpl.agentSettingsPersistence
 
   def receive = running(Map.empty)
 
@@ -50,15 +49,17 @@ class Agency(repo: AgentSettingsRepo) extends Actor with ActorLogging {
 
     case CreateAgentSettings(settings) ⇒
       val replyTo = sender
-      repo.upsert(settings).map[Any](_ ⇒ Confirmed).recover { case _ ⇒ Rejected }.foreach { replyMsg ⇒
+      settingsRepo.upsert(settings).map[Any](_ ⇒ Confirmed).recover { case _ ⇒ Rejected }.foreach { replyMsg ⇒
         replyTo ! replyMsg
       }
 
   }
 
   def createAgentForUser(sessionId: SessionId): Future[Option[ActorRef]] = {
-    repo.get(sessionId.agentName).map(_.map {
-      case AdvancedAgentSettings(_, na, ls, ts) ⇒ AgentForUser.props(AdvancedQAgent(na, ls, ts), sessionId)
+    settingsRepo.get(sessionId.agentName).map(_.map {
+      case AdvancedAgentSettings(_, na, ls, ts) ⇒
+        val agent: AdvancedQAgent = AdvancedQAgent(na, ls, ts)
+        AgentForUser.props(agent, sessionId)(persistenceImpl.advanceQAgentSessionPersistence)
     }.map { agentProps ⇒
       val agent = context.actorOf(agentProps)
       context watch agent
@@ -71,7 +72,7 @@ class Agency(repo: AgentSettingsRepo) extends Actor with ActorLogging {
 object Agency {
   type AgentActor = ActorRef
 
-  def props(repo: AgentSettingsRepo = AgentSettingsRepo.apply): Props = Props(new Agency(repo))
+  def props(implicit p: PersistenceImpl): Props = Props(new Agency(p))
 
   private case class AgentCreated(sessionId: SessionId, agentActor: AgentActor, replyTo: ActorRef)
 }

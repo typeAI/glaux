@@ -11,10 +11,16 @@ object Dependencies {
 
   val shapeless = Seq("com.chuusai" %% "shapeless" % "2.2.5")
   val cat = Seq("org.spire-math" %% "cats" % "0.3.0")
-  val test = Seq(
-    "org.specs2" %% "specs2-core" % Versions.specs2 % "test",
-    "org.specs2" %% "specs2-mock" % Versions.specs2 % "test"
-  )
+
+  val (test, integration) = {
+    val specs = Seq(
+      "org.specs2" %% "specs2-core" % Versions.specs2,
+      "org.specs2" %% "specs2-mock" % Versions.specs2,
+      "org.specs2" %% "specs2-scalacheck" % Versions.specs2
+    )
+
+    (specs.map(_ % "test"), specs.map(_ % "integration"))
+  }
 
   val nd4j = Seq (
     //tobble between the following 2 lines to use GPU
@@ -34,7 +40,7 @@ object Dependencies {
   )
 
   val mongodb = Seq (
-    "org.reactivemongo" %% "reactivemongo" % "0.11.3",
+    "org.reactivemongo" %% "reactivemongo" % "0.11.7",
     "com.typesafe.play" %% "play-functional" % "2.4.2"
   )
 
@@ -53,12 +59,9 @@ object Dependencies {
     )
   )
 
-  val testSettings = commonSettings ++ Seq(
-    libraryDependencies ++= test
+  val coreModuleSettings = commonSettings ++ Seq(
+    libraryDependencies ++= shapeless ++ cat ++ test
   )
 
-  val coreModuleSettings = commonSettings ++ testSettings ++ Seq(
-    libraryDependencies ++= shapeless ++ cat
-  )
 
 }

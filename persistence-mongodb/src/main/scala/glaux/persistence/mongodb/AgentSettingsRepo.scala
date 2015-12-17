@@ -1,23 +1,16 @@
 package glaux.persistence.mongodb
 
-import glaux.interfaces.akka.api.domain.{ AgentName, AgentSettings }
+import glaux.interfaces.api.domain.{ AgentName, AgentSettings }
+import glaux.interfaces.api.persistence.{ AgentSettingsPersistence, Persistence }
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.api.indexes.{ IndexType, Index }
 import reactivemongo.bson.BSONDocument
 import scala.concurrent.ExecutionContext.Implicits.global
-import ShifuHandlers._
+import InterfaceHandlers._
 
 import scala.concurrent.Future
 
-trait AgentSettingsRepo {
-
-  def get(name: AgentName): Future[Option[AgentSettings]]
-
-  def upsert(settings: AgentSettings): Future[Unit]
-
-}
-
-case class AgentSettingsRepoImpl(collection: BSONCollection) extends AgentSettingsRepo with Repository {
+case class AgentSettingsRepoImpl(collection: BSONCollection) extends Persistence[AgentSettings, AgentName] with Repository {
 
   collection.indexesManager.ensure(Index(Seq(("name", IndexType.Ascending)), name = Some("agentTypeName")))
 
@@ -34,7 +27,7 @@ case class AgentSettingsRepoImpl(collection: BSONCollection) extends AgentSettin
 
 object AgentSettingsRepo {
 
-  def apply: AgentSettingsRepo = {
+  def apply(): AgentSettingsPersistence = {
     AgentSettingsRepoImpl(Repository.collectionOf("session"))
   }
 }

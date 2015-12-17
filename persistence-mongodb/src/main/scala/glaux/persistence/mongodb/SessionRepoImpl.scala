@@ -1,18 +1,31 @@
 package glaux.persistence.mongodb
 
-import glaux.interfaces.akka.api.domain.SessionId
+import glaux.interfaces.api.domain.SessionId
+import glaux.interfaces.api.persistence.SessionPersistence
 import glaux.persistence.mongodb.GeneralHandlers.Handler
 import glaux.reinforcementlearning.QAgent
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson.{BSONDocument, Macros}
+import sun.management.resources.agent
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import ShifuHandlers._
+import InterfaceHandlers._
 
-case class SessionRepo[Session <: QAgent.Session[_, _]: Handler](collection: BSONCollection) extends Repository {
+trait QAgentSessionPersistence[A <: QAgent] extends SessionPersistence[A] {
+
+  implicit def sessionHandler(implicit agent: A): Handler[agent.Session]
+
+  def repo(implicit agent: A) = SessionRepoImpl(agent) //todo: this is obviously not performance friendly, use AUX to solve the dependent type problem will help solve this design.   
+
+  def get(agent: A, id: SessionId): Future[Option[agent.Session]] = repo(agent).get(id)
+
+  def upsert(agent: A, id: SessionId)(session: agent.Session): Future[Unit] = repo(agent).upsert(id, session)
+}
+
+case class SessionRepoImpl[Session <: QAgent.Session[_, _]: Handler](collection: BSONCollection) extends Repository {
 
   collection.indexesManager.ensure(Index(Seq(
     ("id.profileId", IndexType.Ascending),
@@ -34,12 +47,9 @@ case class SessionRepo[Session <: QAgent.Session[_, _]: Handler](collection: BSO
 }
 
 
-object SessionRepo {
-
-
-  def apply[AT <: QAgent](qAgent: AT)(implicit f: QSessionHandler.Factory[AT]): SessionRepo[qAgent.Session] = {
-    implicit val handler = f(qAgent)
-    SessionRepo[qAgent.Session](collection)
+object SessionRepoImpl {
+  def apply[AT <: QAgent](qAgent: AT)(implicit h: Handler[qAgent.Session]): SessionRepoImpl[qAgent.Session] = {
+    SessionRepoImpl[qAgent.Session](collection)
   }
 
   private[glaux] def removeAll(): Future[WriteResult] = collection.remove(BSONDocument.empty)

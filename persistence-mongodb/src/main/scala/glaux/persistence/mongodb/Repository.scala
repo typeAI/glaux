@@ -1,6 +1,6 @@
 package glaux.persistence.mongodb
 
-import glaux.interfaces.akka.api.domain._
+import glaux.interfaces.api.domain._
 import glaux.persistence.mongodb.GeneralHandlers.Handler
 import reactivemongo.api.MongoDriver
 import reactivemongo.api.collections.bson.BSONCollection

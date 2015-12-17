@@ -1,4 +1,4 @@
-package glaux.interfaces.akka.api
+package glaux.interfaces.api
 package domain
 
 import glaux.neuralnetwork.trainers.SGD.SGDSettings
