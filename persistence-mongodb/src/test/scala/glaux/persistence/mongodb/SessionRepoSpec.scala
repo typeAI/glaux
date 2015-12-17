@@ -35,7 +35,7 @@ class SessionRepoSpec extends Specification with AfterEach with AfterAll {
       val agentId = SessionId("a Test", "111")
       repo.insert(agentId, session)
 
-      repo.get(agentId) must beSome(session).await.eventually(retries = 50, sleep = 200.milliseconds)
+      repo.get(agentId) must beSome(session).await.eventually(retries = 100, sleep = 200.milliseconds)
     }
 
     "upsert add new record" in { implicit ee: ExecutionEnv ⇒
