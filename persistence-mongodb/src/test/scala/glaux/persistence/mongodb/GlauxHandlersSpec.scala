@@ -2,7 +2,7 @@ package glaux.persistence.mongodb
 
 import java.time.{ Clock, LocalTime, LocalDate, ZonedDateTime }
 
-import glaux.interfaces.akka.api.domain.Action
+import glaux.interfaces.api.domain.Action
 import glaux.linearalgebra.Dimension._
 import glaux.linearalgebra._
 import glaux.neuralnetwork.Net.DefaultNet

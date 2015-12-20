@@ -2,7 +2,7 @@ package glaux.persistence.mongodb
 
 import java.time.ZonedDateTime
 
-import glaux.interfaces.akka.api.domain._
+import glaux.interfaces.api.domain._
 import glaux.persistence.mongodb.GeneralHandlers._
 import org.specs2.mutable.Specification
 import reactivemongo.bson._

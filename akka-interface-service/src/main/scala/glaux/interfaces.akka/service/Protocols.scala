@@ -1,9 +1,7 @@
-package glaux.interfaces.akka
-package api
+package glaux.interfaces.akka.service
 
 import akka.actor.ActorRef
-import domain._
-import glaux.neuralnetwork.trainers.BatchTrainer.LossInfo
+import glaux.interfaces.api.domain._
 
 object Protocols {
   

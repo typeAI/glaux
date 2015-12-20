@@ -1,6 +1,6 @@
 package glaux.persistence.mongodb
 
-import glaux.interfaces.akka.api.domain.{SessionId}
+import glaux.interfaces.api.domain.{SessionId}
 import glaux.linearalgebra.Tensor.TensorBuilder
 import glaux.linearalgebra._
 import Dimension._
@@ -150,14 +150,12 @@ object GlauxHandlers {
 
   implicit val ach =  Macros.handler[AnnealingContext]
 
-  implicit def agentSessionH(agent: SimpleQAgent): Handler[agent.Session] = {
+  implicit def agentSessionH(implicit agent: SimpleQAgent): Handler[agent.Session] = {
     implicit val iH = learnerIterationH(agent.qLearner)
     sessionH[agent.qLearner.Iteration, agent.policy.Context]
   }
 
-
-
-  implicit def agentSessionH(agent: AdvancedQAgent): Handler[agent.Session] = {
+  implicit def agentSessionH(implicit agent: AdvancedQAgent): Handler[agent.Session] = {
     implicit val iH = learnerIterationH(agent.qLearner)
     sessionH[agent.qLearner.Iteration, agent.policy.Context]
   }

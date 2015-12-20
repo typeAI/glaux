@@ -2,21 +2,22 @@ package glaux.interfaces.akka
 package service
 
 import akka.actor.{Props, Actor, ActorLogging}
-import glaux.interfaces.akka.api.Protocols.{Response, Confirmed}
-import glaux.interfaces.akka.api.domain.{SessionId, ProfileId, Reading}
-import api.Protocols.Agent._
-import glaux.persistence.mongodb.{SessionRepo, QSessionHandler}
+import Protocols.{Response, Confirmed}
+import glaux.interfaces.api.domain.{SessionId, ProfileId, Reading}
+import Protocols.Agent._
+import glaux.interfaces.api.persistence.SessionPersistence
 import glaux.reinforcementlearning._
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class AgentForUser[AT <: QAgent: QSessionHandler.Factory](qAgent: AT, sessionId: SessionId) extends Actor with ActorLogging {
-  
+class AgentForUser[AT <: QAgent : SessionPersistence](qAgent: AT, sessionId: SessionId) extends Actor with ActorLogging {
+
   import qAgent.Session
+
+  private val repo = implicitly[SessionPersistence[AT]] //todo: use cached implicit from shapeless here.
   import context.dispatcher
 
-  private val repo = SessionRepo(qAgent)
-  private lazy val previousSessionF: Future[Option[Session]] = repo.get(sessionId)
+  private lazy val previousSessionF: Future[Option[Session]] = repo.get(qAgent, sessionId)
 
   def receive: Receive = initializing(Vector.empty)
 
@@ -84,11 +85,13 @@ class AgentForUser[AT <: QAgent: QSessionHandler.Factory](qAgent: AT, sessionId:
 
   }
 
-  private def storeSession(session: Session): Future[Unit] = repo.upsert(sessionId, session)
+  private def storeSession(session: Session): Future[Unit] = repo.upsert(qAgent, sessionId)(session)
 
 }
 
 object AgentForUser {
-  def props[AT <: QAgent: QSessionHandler.Factory](qAgent: AT, sessionId: SessionId): Props = Props(new AgentForUser(qAgent, sessionId))
+  def props[AT <: QAgent : SessionPersistence](qAgent: AT, sessionId: SessionId): Props =
+
+    Props(new AgentForUser(qAgent, sessionId))
 
 }

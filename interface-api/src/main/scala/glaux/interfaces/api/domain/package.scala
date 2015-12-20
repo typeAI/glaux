@@ -1,4 +1,4 @@
-package glaux.interfaces.akka.api
+package glaux.interfaces.api
 
 package object domain {
 

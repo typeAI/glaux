@@ -4,18 +4,18 @@ import java.time.ZonedDateTime
 
 import akka.actor._
 import akka.testkit.{ TestProbe, ImplicitSender, TestKit }
-import glaux.interfaces.akka.api.Protocols.Agent._
-import glaux.interfaces.akka.api.Protocols.{ Confirmed, Response }
-import glaux.persistence.mongodb.SessionRepo
-import glaux.reinforcementlearning.{ Reading, Reward, SimpleQAgent }
+import Protocols.Agent._
+import Protocols.{ Confirmed, Response }
+import glaux.interfaces.api.domain.SessionId
+import glaux.reinforcementlearning.{ QAgent, Reading, Reward, SimpleQAgent }
 import org.specs2.mutable.Specification
 import org.specs2.specification.{ AfterEach, Scope, AfterAll }
 
-import scala.concurrent.Await
+import scala.concurrent.{ Future, Await }
 import scala.util.Random
 import scala.concurrent.duration._
 
-class AgentSpec extends Specification with AfterAll with AfterEach {
+class AgentSpec extends Specification with AfterAll {
   sequential
   implicit lazy val system = ActorSystem()
 
@@ -100,20 +100,19 @@ class AgentSpec extends Specification with AfterAll with AfterEach {
     }
   }
 
-  def after: Any =
-    Await.result(SessionRepo.removeAll(), 5.seconds)
-
   def afterAll(): Unit = {
     system.terminate()
   }
 }
 
 class withAkka(implicit system: ActorSystem) extends TestKit(system) with ImplicitSender with Scope {
-  import glaux.interfaces.akka.api.domain.SessionId
+
+  import glaux.interfaces.api.domain.SessionId
 
   def randomReading = (Seq[Double](Random.nextDouble(), Random.nextDouble(), Random.nextDouble()), ZonedDateTime.now)
-
-  lazy val agentProps = AgentForUser.props(SimpleQAgent(8, historyLength = 3), SessionId("atest", Random.nextString(3)))
+  val sa = SimpleQAgent(8, historyLength = 3)
+  import MockPersistence._
+  lazy val agentProps = AgentForUser.props(sa, SessionId("atest", Random.nextString(3)))
 
   lazy val agent = system.actorOf(agentProps)
 
