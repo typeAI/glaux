@@ -32,11 +32,11 @@ class SessionRepoImplIntegration extends Specification with AfterEach with After
 
     "Insert and retrieve" in { implicit ee: ExecutionEnv ⇒
 
-      val agentId = SessionId("a Test", "111")
+      val sessionId = SessionId("a Test", "111")
 
-      repo.insert(agentId, session) must be_==(()).await
+      repo.insert(sessionId, session) must be_==(()).await
 
-      repo.get(agentId) must beSome(session).await.eventually
+      repo.get(sessionId) must beSome(session).await.eventually
     }
 
     "upsert add new record" in { implicit ee: ExecutionEnv ⇒
