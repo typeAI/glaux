@@ -18,7 +18,7 @@ trait QAgentSessionPersistence[A <: QAgent] extends SessionPersistence[A] {
 
   implicit def sessionHandler(implicit agent: A): Handler[agent.Session]
 
-  def repo(implicit agent: A) = SessionRepoImpl(agent) //todo: this is obviously not performance friendly, use AUX to solve the dependent type problem will help solve this design.   
+  def repo(implicit agent: A) = SessionRepoImpl(agent) //todo: this is obviously not performance friendly, use AUX to solve the dependent type problem will help solve this design.
 
   def get(agent: A, id: SessionId): Future[Option[agent.Session]] = repo(agent).get(id)
 
