@@ -12,8 +12,8 @@ trait QLearner {
   type Input <: Tensor
   type Net <: neuralnetwork.Net { type Input = NetInput } //Need to fix input to the type level
 
-  type NetOutput = Net#Output
   type Trainer <: BatchTrainer[Net, _]
+  type NetOutput = Net#Output
 
   protected val trainer: Trainer
 
