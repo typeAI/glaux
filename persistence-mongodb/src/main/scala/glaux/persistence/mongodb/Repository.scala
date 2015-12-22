@@ -34,7 +34,7 @@ object Repository {
   def collectionOf(name: String): BSONCollection = {
     val driver = new MongoDriver
     val connection = driver.connection(List("localhost"))
-    val db = connection("shifu")
+    val db = connection("glaux")
     db(name)
   }
 }

@@ -61,8 +61,10 @@ class AgencySpec extends Specification with AfterAll {
       agent ! PoisonPill
       expectTerminated(agent)
 
-      agency ! GetAgentForUser(agentId)
-      expectMsgType[AgentRef].ref !== agent
+      {
+        agency ! GetAgentForUser(agentId)
+        expectMsgType[AgentRef].ref
+      } must be_!=(agent).eventually
     }
 
   }
