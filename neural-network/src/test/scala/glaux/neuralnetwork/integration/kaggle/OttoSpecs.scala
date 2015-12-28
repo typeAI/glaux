@@ -1,12 +1,12 @@
 package glaux.neuralnetwork.integration.kaggle
 
-import glaux.linearalgebra.Dimension.{ TwoD, Row }
-import glaux.linearalgebra.{ Matrix, RowVector }
+import glaux.linearalgebra.Dimension.{TwoD, Row}
+import glaux.linearalgebra.{Matrix, RowVector}
 import glaux.neuralnetwork.InputLayer
 import glaux.neuralnetwork.Net.DefaultNet
-import glaux.neuralnetwork.layers.{ Relu, Softmax, FullyConnected }
+import glaux.neuralnetwork.layers.{Relu, Softmax, FullyConnected}
 import glaux.neuralnetwork.trainers.MomentumSGD.Settings
-import glaux.neuralnetwork.trainers.{ SGD, MomentumSGD }
+import glaux.neuralnetwork.trainers.{SGD, MomentumSGD}
 import SGD.SGDSettings
 import org.specs2.mutable.Specification
 

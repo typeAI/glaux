@@ -1,17 +1,17 @@
 package glaux.persistence.mongodb
 
-import java.time.{ Clock, LocalTime, LocalDate, ZonedDateTime }
+import java.time.{Clock, LocalTime, LocalDate, ZonedDateTime}
 
 import glaux.interfaces.api.domain.Action
 import glaux.linearalgebra.Dimension._
 import glaux.linearalgebra._
 import glaux.neuralnetwork.Net.DefaultNet
-import glaux.neuralnetwork.trainers.BatchTrainer.{ BatchResult, LossInfo }
+import glaux.neuralnetwork.trainers.BatchTrainer.{BatchResult, LossInfo}
 import glaux.neuralnetwork.trainers.SGD.SGDSettings
-import glaux.neuralnetwork.{ Rectangle, LossLayer, HiddenLayer, InputLayer }
+import glaux.neuralnetwork.{Rectangle, LossLayer, HiddenLayer, InputLayer}
 import glaux.neuralnetwork.layers._
 import glaux.reinforcementlearning.DeepMindQLearner.ConvolutionBased
-import glaux.reinforcementlearning.QLearner.{ Observation, State, TemporalState }
+import glaux.reinforcementlearning.QLearner.{Observation, State, TemporalState}
 import glaux.reinforcementlearning._
 import org.specs2.mutable.Specification
 import GlauxHandlers._

@@ -14,11 +14,11 @@ object Dimension {
 
   trait DimensionFactory[DT <: Dimension] {
     val createFunction: PartialFunction[Shape, DT]
-    lazy val tryCreate: Shape => Option[DT] = createFunction.lift
+    lazy val tryCreate: Shape ⇒ Option[DT] = createFunction.lift
     def create(shape: Shape): DT = tryCreate(shape).getOrElse(throw unsupported(shape))
   }
 
-  private def unsupported(shape: Shape):Exception = new UnsupportedOperationException(s"unrecognized INDArray shape (${shape.mkString(",")})")
+  private def unsupported(shape: Shape): Exception = new UnsupportedOperationException(s"unrecognized INDArray shape (${shape.mkString(",")})")
 
   def ofSpecific[DT <: Dimension](shape: Shape)(implicit df: DimensionFactory[DT]): DT = {
     df.tryCreate(shape).getOrElse(throw unsupported(shape))
@@ -29,7 +29,7 @@ object Dimension {
     val df3d = implicitly[DimensionFactory[ThreeD]]
     val df2d = implicitly[DimensionFactory[TwoD]]
     val df1d = implicitly[DimensionFactory[Row]]
-    (Seq(df4d, df3d, df2d, df1d).foldLeft[Option[Dimension]](None) { (lr, f) => lr orElse f.tryCreate(shape) }).getOrElse(throw unsupported(shape))
+    (Seq(df4d, df3d, df2d, df1d).foldLeft[Option[Dimension]](None) { (lr, f) ⇒ lr orElse f.tryCreate(shape) }).getOrElse(throw unsupported(shape))
   }
 
   case class FourD(x: Int, y: Int, z: Int, f: Int) extends Dimension {
@@ -56,27 +56,26 @@ object Dimension {
     val dimIndexOfData: Int = 1
 
     val createFunction: PartialFunction[Shape, Row] = {
-      case Array(1, size) => Row(size)
+      case Array(1, size) ⇒ Row(size)
     }
   }
 
   implicit object TwoD extends DimensionFactory[TwoD] {
     val createFunction: PartialFunction[Shape, TwoD] = {
-      case Array(x, y) if x > 1 => TwoD(x,y)
+      case Array(x, y) if x > 1 ⇒ TwoD(x, y)
     }
   }
 
   implicit object ThreeD extends DimensionFactory[ThreeD] {
     val createFunction: PartialFunction[Shape, ThreeD] = {
-      case Array(x, y, z) => ThreeD(x,y,z)
+      case Array(x, y, z) ⇒ ThreeD(x, y, z)
     }
   }
 
   implicit object FourD extends DimensionFactory[FourD] {
     val createFunction: PartialFunction[Shape, FourD] = {
-      case Array(x, y, z, f) => FourD(x,y,z,f)
+      case Array(x, y, z, f) ⇒ FourD(x, y, z, f)
     }
   }
-
 
 }

@@ -1,10 +1,10 @@
 package glaux.neuralnetwork.trainers
 
-import glaux.linearalgebra.{ Matrix, RowVector, Dimension }
-import Dimension.{ TwoD, Row }
+import glaux.linearalgebra.{Matrix, RowVector, Dimension}
+import Dimension.{TwoD, Row}
 import glaux.neuralnetwork.Net.DefaultNet
-import glaux.neuralnetwork.layers.{ Regression, FullyConnected }
-import glaux.neuralnetwork.{ InputLayer, Net }
+import glaux.neuralnetwork.layers.{Regression, FullyConnected}
+import glaux.neuralnetwork.{InputLayer, Net}
 import glaux.statistics
 import org.specs2.mutable.Specification
 import glaux.neuralnetwork.trainers.SGD.SGDSettings

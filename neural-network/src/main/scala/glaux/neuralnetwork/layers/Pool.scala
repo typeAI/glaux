@@ -2,7 +2,7 @@ package glaux.neuralnetwork.layers
 
 import glaux.linearalgebra.Dimension.ThreeD
 import glaux.linearalgebra.Vol
-import glaux.neuralnetwork.{ ParamGradient, LayerParam, Rectangle, HiddenLayer }
+import glaux.neuralnetwork.{ParamGradient, LayerParam, Rectangle, HiddenLayer}
 
 case class Pool(
   filterSize:  Rectangle,

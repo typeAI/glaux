@@ -1,13 +1,13 @@
 package glaux.reinforcementlearning.integration
 
-import java.time.{ Clock, LocalTime, LocalDate, ZonedDateTime }
+import java.time.{Clock, LocalTime, LocalDate, ZonedDateTime}
 
 import glaux.linearalgebra.RowVector
 import glaux.neuralnetwork.trainers.VanillaSGD
 import glaux.neuralnetwork.trainers.SGD.SGDSettings
 import glaux.reinforcementlearning.DeepMindQLearner.Simplified
 import glaux.reinforcementlearning.QLearner._
-import glaux.reinforcementlearning.{ Time, Action, DeepMindQLearner }
+import glaux.reinforcementlearning.{Time, Action, DeepMindQLearner}
 import org.specs2.mutable.Specification
 
 import scala.util.Random
@@ -18,7 +18,7 @@ class SimplifiedIntegration extends Specification {
   //  val trainer = MomentumSGD[Simplified#Net](MomentumSGDOptions(SGDOptions(learningRate = 0.005), momentum = 0.9))
   val trainer = VanillaSGD[Simplified#Net](SGDSettings(learningRate = 0.05))
   val learner = DeepMindQLearner.Simplified(historyLength = 2, batchSize = 20, trainer = trainer)
-  import learner.{ State, History }
+  import learner.{State, History}
 
   def randomBinary = if (Random.nextBoolean) 1 else 0
   def randomReading = RowVector(randomBinary, randomBinary, randomBinary)

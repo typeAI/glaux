@@ -1,9 +1,9 @@
 package glaux.persistence.mongodb
 
-import glaux.interfaces.api.domain.{ AgentName, AgentSettings }
-import glaux.interfaces.api.persistence.{ AgentSettingsPersistence, Persistence }
+import glaux.interfaces.api.domain.{AgentName, AgentSettings}
+import glaux.interfaces.api.persistence.{AgentSettingsPersistence, Persistence}
 import reactivemongo.api.collections.bson.BSONCollection
-import reactivemongo.api.indexes.{ IndexType, Index }
+import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson.BSONDocument
 import scala.concurrent.ExecutionContext.Implicits.global
 import InterfaceHandlers._

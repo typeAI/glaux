@@ -1,7 +1,7 @@
 package glaux.neuralnetwork.layers
 
-import glaux.linearalgebra.Dimension.{ FourD, ThreeD, TwoD }
-import glaux.linearalgebra.{ Tensor4, RowVector, Vol, Matrix }
+import glaux.linearalgebra.Dimension.{FourD, ThreeD, TwoD}
+import glaux.linearalgebra.{Tensor4, RowVector, Vol, Matrix}
 import glaux.neuralnetwork._
 
 /**

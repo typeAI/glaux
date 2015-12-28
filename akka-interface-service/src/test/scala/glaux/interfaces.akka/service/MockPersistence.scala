@@ -9,7 +9,7 @@ import scala.concurrent.Future
 trait MockPersistence extends PersistenceImpl {
   case class MapBasedMockPersistence[T, K](getKey: T ⇒ K) extends Persistence[T, K] {
     @volatile
-    var store : Map[K, T] = Map()
+    var store: Map[K, T] = Map()
 
     def get(id: K): Future[Option[T]] = Future.successful(store.get(id))
 
@@ -21,7 +21,7 @@ trait MockPersistence extends PersistenceImpl {
 
   class MockSessionPersistence[A <: QAgent] extends SessionPersistence[A] {
     @volatile
-    var store : Map[SessionId, QAgent.Session[_,_]] = Map()
+    var store: Map[SessionId, QAgent.Session[_, _]] = Map()
 
     def get(agent: A, id: SessionId): Future[Option[agent.Session]] =
       Future.successful(store.get(id).map(_.asInstanceOf[agent.Session]))
@@ -38,6 +38,5 @@ trait MockPersistence extends PersistenceImpl {
 
   implicit def simpleQAgentSessionPersistence: SessionPersistence[SimpleQAgent] = new MockSessionPersistence[SimpleQAgent]
 }
-
 
 object MockPersistence extends MockPersistence

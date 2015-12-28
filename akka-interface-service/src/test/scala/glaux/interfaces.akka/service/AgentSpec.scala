@@ -3,15 +3,15 @@ package glaux.interfaces.akka.service
 import java.time.ZonedDateTime
 
 import akka.actor._
-import akka.testkit.{ TestProbe, ImplicitSender, TestKit }
+import akka.testkit.{TestProbe, ImplicitSender, TestKit}
 import Protocols.Agent._
-import Protocols.{ Confirmed, Response }
+import Protocols.{Confirmed, Response}
 import glaux.interfaces.api.domain.SessionId
-import glaux.reinforcementlearning.{ QAgent, Reading, Reward, SimpleQAgent }
+import glaux.reinforcementlearning.{QAgent, Reading, Reward, SimpleQAgent}
 import org.specs2.mutable.Specification
-import org.specs2.specification.{ AfterEach, Scope, AfterAll }
+import org.specs2.specification.{AfterEach, Scope, AfterAll}
 
-import scala.concurrent.{ Future, Await }
+import scala.concurrent.{Future, Await}
 import scala.util.Random
 import scala.concurrent.duration._
 

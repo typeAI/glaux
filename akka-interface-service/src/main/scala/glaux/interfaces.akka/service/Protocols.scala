@@ -4,7 +4,7 @@ import akka.actor.ActorRef
 import glaux.interfaces.api.domain._
 
 object Protocols {
-  
+
   sealed trait Response
   sealed trait Request[T <: Response]
   sealed trait Request2[T1 <: Response, T2 <: Response]
@@ -24,7 +24,7 @@ object Protocols {
     case class CreateAgentSettings(settings: AgentSettings) extends RequestWithConfirmation
 
   }
-  
+
   object Agent {
 
     case class Report(reading: Reading, reward: Reward) extends Request3[ActionsAvailable.type, PendingMoreReadings.type, Initializing.type]
@@ -32,7 +32,7 @@ object Protocols {
     case class ReportTermination(reading: Reading, reward: Reward) extends RequestWithConfirmation
 
     case object RequestAction extends Request3[ActionResult, PendingMoreReadings.type, Initializing.type]
-    
+
     case class ActionResult(action: Action) extends Response
 
     case object QueryStatus extends Request2[AgentStatus, Initializing.type]

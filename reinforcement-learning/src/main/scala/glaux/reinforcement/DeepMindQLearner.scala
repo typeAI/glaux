@@ -1,10 +1,10 @@
 package glaux.reinforcementlearning
 
-import glaux.linearalgebra.Dimension.{ ThreeD, Row }
-import glaux.linearalgebra.{ Vol, RowVector }
+import glaux.linearalgebra.Dimension.{ThreeD, Row}
+import glaux.linearalgebra.{Vol, RowVector}
 import glaux.neuralnetwork.trainers.VanillaSGD
 import glaux.neuralnetwork.trainers.SGD.SGDSettings
-import glaux.neuralnetwork.{ HiddenLayer, Rectangle, InputLayer, Net }
+import glaux.neuralnetwork.{HiddenLayer, Rectangle, InputLayer, Net}
 import Net.DefaultNet
 import glaux.neuralnetwork.layers._
 import glaux.reinforcementlearning.QLearner.Transition

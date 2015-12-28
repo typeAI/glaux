@@ -1,8 +1,8 @@
 package glaux.neuralnetwork.layers
 
-import glaux.linearalgebra.Dimension.{ TwoD, Row, ThreeD }
-import glaux.linearalgebra.{ Vol, Matrix, RowVector }
-import glaux.neuralnetwork.{ HiddenLayer, RegularizationSetting, Gradient }
+import glaux.linearalgebra.Dimension.{TwoD, Row, ThreeD}
+import glaux.linearalgebra.{Vol, Matrix, RowVector}
+import glaux.neuralnetwork.{HiddenLayer, RegularizationSetting, Gradient}
 import org.specs2.mutable.Specification
 
 class FullyConnectedSpec extends Specification {

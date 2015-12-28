@@ -1,18 +1,18 @@
 package glaux.persistence.mongodb
 
-import java.time.{ Clock, ZonedDateTime }
+import java.time.{Clock, ZonedDateTime}
 
 import glaux.interfaces.api.domain.SessionId
 import glaux.linearalgebra.RowVector
 import glaux.neuralnetwork.trainers.SGD.SGDSettings
-import glaux.neuralnetwork.trainers.{ SGD, VanillaSGD }
+import glaux.neuralnetwork.trainers.{SGD, VanillaSGD}
 import glaux.persistence.mongodb.GeneralHandlers._
 import glaux.reinforcementlearning.DeepMindQLearner.ConvolutionBased
-import glaux.reinforcementlearning.QLearner.{ Observation, TemporalState }
+import glaux.reinforcementlearning.QLearner.{Observation, TemporalState}
 import glaux.reinforcementlearning._
 import org.specs2.mutable.Specification
 import org.specs2.concurrent.ExecutionEnv
-import org.specs2.specification.{ AfterAll, AfterEach }
+import org.specs2.specification.{AfterAll, AfterEach}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
