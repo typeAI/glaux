@@ -1,6 +1,6 @@
 package glaux.linearalgebra
 
-import glaux.linearalgebra.Dimension.{ Row, ThreeD, TwoD }
+import glaux.linearalgebra.Dimension.{Row, ThreeD, TwoD}
 import org.specs2.mutable.Specification
 
 class TensorSpec

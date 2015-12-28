@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/typeAI/glaux.svg)](https://travis-ci.org/typeAI/glaux)
-[![Coverage Status](https://coveralls.io/repos/typeAI/glaux/badge.svg?branch=master&service=github)](https://coveralls.io/github/typeAI/glaux?branch=master)
+[![Codacy Badge](https://api.codacy.com/project/badge/grade/606a8cedadf9441a8f894bc6e1bf22eb)](https://www.codacy.com/app/kailuo-wang/glaux)
+[![Codacy Badge](https://api.codacy.com/project/badge/coverage/606a8cedadf9441a8f894bc6e1bf22eb)](https://www.codacy.com/app/kailuo-wang/glaux)
 [![Stories in Ready](https://badge.waffle.io/typeAI/glaux.svg?label=ready&title=Ready)](http://waffle.io/typeAI/glaux)
 
 

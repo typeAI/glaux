@@ -1,7 +1,7 @@
 package glaux.reinforcementlearning
 
 import glaux.linearalgebra.RowVector
-import glaux.reinforcementlearning.Policy.{ AnnealingContext, Annealing }
+import glaux.reinforcementlearning.Policy.{AnnealingContext, Annealing}
 import glaux.reinforcementlearning.QLearner.State
 import org.specs2.mutable.Specification
 import glaux.statistics.Probability

@@ -13,7 +13,7 @@ trait Layer {
   type OutGradient = Gradient[Output]
   def inDimension: InDimension
   def outDimension: OutDimension
-  
+
   def forward(input: Input, isTraining: Boolean): Output
 
 }
@@ -30,7 +30,7 @@ trait HiddenLayer extends Layer {
 }
 
 object HiddenLayer {
-  def newId(): String = java.util.UUID.randomUUID.toString 
+  def newId(): String = java.util.UUID.randomUUID.toString
 }
 
 trait LossLayer extends Layer {
@@ -45,7 +45,6 @@ case class InputLayer[I <: Tensor](inDimension: I#Dimensionality) extends Layer 
   def outDimension: OutDimension = inDimension
   def forward(input: Input, isTraining: Boolean) = input
 }
-
 
 case class LayerParam(id: String, value: Tensor, regularizationSetting: RegularizationSetting)
 case class LayerData[L <: Layer](in: L#Input, out: L#Output, layer: L)

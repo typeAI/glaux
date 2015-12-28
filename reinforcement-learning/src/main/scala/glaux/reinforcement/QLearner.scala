@@ -4,8 +4,7 @@ package reinforcementlearning
 import glaux.linearalgebra.Tensor
 import glaux.neuralnetwork.Loss
 import glaux.neuralnetwork.trainers.BatchTrainer
-import glaux.reinforcementlearning.QLearner.{History => QHistory, Observation => QObservation, State => QState, Transition}
-
+import glaux.reinforcementlearning.QLearner.{History ⇒ QHistory, Observation ⇒ QObservation, State ⇒ QState, Transition}
 
 trait QLearner {
   type NetInput <: Tensor
@@ -45,7 +44,7 @@ trait QLearner {
       qMap(s).apply(action)
     }
 
-    private def qMap(s: State): Map[Action, Q] = if(state.isTerminal) Map.empty else net.predict(s).seqView.zipWithIndex.map(_.swap).toMap
+    private def qMap(s: State): Map[Action, Q] = if (state.isTerminal) Map.empty else net.predict(s).seqView.zipWithIndex.map(_.swap).toMap
 
   }
 
@@ -54,10 +53,12 @@ trait QLearner {
   implicit protected def inputToNet(state: State): NetInput
 
   def iterate(lastIteration: Iteration, observation: Observation): Iteration = {
-    assert(observation.recentHistory.forall(_.readings.dimension == lastIteration.state.inputDimension),
-      s"input readings doesn't conform to preset reading dimension ${lastIteration.state.inputDimension}")
+    assert(
+      observation.recentHistory.forall(_.readings.dimension == lastIteration.state.inputDimension),
+      s"input readings doesn't conform to preset reading dimension ${lastIteration.state.inputDimension}"
+    )
 
-    val relevantHistory = if(lastIteration.isTerminal) observation.recentHistory else concat(lastIteration.state.fullHistory, observation.recentHistory)
+    val relevantHistory = if (lastIteration.isTerminal) observation.recentHistory else concat(lastIteration.state.fullHistory, observation.recentHistory)
 
     val currentState = stateFromHistory(relevantHistory, observation.isTerminal)
 
@@ -75,7 +76,6 @@ trait QLearner {
   def init(initHistory: History, numOfActions: Int): Iteration =
     doInit(stateFromHistory(initHistory, false), numOfActions, inputDimensionOfHistory(initHistory).get)
 
-
   protected def doInit(initState: State, numOfActions: Action, inputDim: InputDimension): Iteration
 
   protected def concat(previous: History, newHistory: History): History = {
@@ -84,7 +84,7 @@ trait QLearner {
   }
 
   protected def inputDimensionOfHistory(history: History): Option[InputDimension] =
-    history.headOption.flatMap { head =>
+    history.headOption.flatMap { head ⇒
       val inputDim = head.readings.dimension
       if (history.map(_.readings).exists(_.dimension != inputDim)) None else Some(inputDim)
     }
@@ -101,33 +101,34 @@ trait QLearner {
 
 }
 
-
 object QLearner {
 
   case class TemporalState[Input <: Tensor](readings: Input, time: Time)
 
   type History[Input <: Tensor] = Seq[TemporalState[Input]]
 
-  case class Observation[Input <: Tensor]( lastAction: Action,
-                                  reward: Reward,
-                                  recentHistory: History[Input],
-                                  isTerminal: Boolean) {
+  case class Observation[Input <: Tensor](
+    lastAction:    Action,
+    reward:        Reward,
+    recentHistory: History[Input],
+    isTerminal:    Boolean
+  ) {
     assert(!recentHistory.isEmpty, "Cannot create an observation without recent history")
     def startTime = recentHistory.head.time
 
   }
 
-  case class State[Input <: Tensor ](fullHistory: History[Input], isTerminal: Boolean) {
+  case class State[Input <: Tensor](fullHistory: History[Input], isTerminal: Boolean) {
     def endTime = fullHistory.last.time
     lazy val inputDimension: Input#Dimensionality = fullHistory.head.readings.dimension
   }
 
-  case class Transition[Input <: Tensor] (before: State[Input],
-                                          action: Action,
-                                          reward: Reward,
-                                          after: State[Input])
-
+  case class Transition[Input <: Tensor](
+    before: State[Input],
+    action: Action,
+    reward: Reward,
+    after:  State[Input]
+  )
 
 }
-
 

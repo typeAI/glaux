@@ -2,7 +2,7 @@ package glaux.neuralnetwork.layers
 
 import glaux.linearalgebra._
 import Tensor._
-import glaux.neuralnetwork.{ Loss, LossLayer }
+import glaux.neuralnetwork.{Loss, LossLayer}
 
 case class Softmax(inDimension: Dimension.Row) extends LossLayer {
 

@@ -1,7 +1,7 @@
 package glaux.neuralnetwork.layers
 
 import glaux.linearalgebra.Dimension.Row
-import glaux.linearalgebra.{ RowVector, Matrix }
+import glaux.linearalgebra.{RowVector, Matrix}
 import org.specs2.mutable.Specification
 
 class SoftmaxSpec extends Specification {

@@ -1,6 +1,6 @@
 package glaux.reinforcementlearning
 
-import java.time.{ Clock, LocalTime, LocalDate, ZonedDateTime }
+import java.time.{Clock, LocalTime, LocalDate, ZonedDateTime}
 
 import glaux.linearalgebra.Dimension.Row
 import glaux.linearalgebra.RowVector

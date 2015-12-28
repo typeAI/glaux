@@ -1,7 +1,7 @@
 package glaux.neuralnetwork.layers
 
-import glaux.linearalgebra.{ RowVector, Dimension }
-import glaux.neuralnetwork.{ Gradient, ParamGradient }
+import glaux.linearalgebra.{RowVector, Dimension}
+import glaux.neuralnetwork.{Gradient, ParamGradient}
 import org.specs2.mutable.Specification
 
 class ReluSpec extends Specification {

@@ -1,7 +1,7 @@
 package glaux.statistics.impl.apache
 
-import glaux.statistics.{ RealDistribution, DistributionImplementations }
-import org.apache.commons.math3.distribution.{ RealDistribution ⇒ ApacheDistribution, UniformRealDistribution, NormalDistribution }
+import glaux.statistics.{RealDistribution, DistributionImplementations}
+import org.apache.commons.math3.distribution.{RealDistribution ⇒ ApacheDistribution, UniformRealDistribution, NormalDistribution}
 
 object ApacheImplementations extends DistributionImplementations {
   implicit class ApacheBackedRealDist(ad: ApacheDistribution) extends RealDistribution {

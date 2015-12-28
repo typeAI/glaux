@@ -2,7 +2,7 @@ package glaux.neuralnetwork.layers
 
 import glaux.linearalgebra.Dimension.ThreeD
 import glaux.linearalgebra.Vol
-import glaux.neuralnetwork.{ Gradient, Rectangle }
+import glaux.neuralnetwork.{Gradient, Rectangle}
 import org.specs2.mutable.Specification
 
 class PoolSpec extends Specification {

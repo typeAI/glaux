@@ -10,7 +10,7 @@ import glaux.reinforcementlearning._
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class AgentForUser[AT <: QAgent : SessionPersistence](qAgent: AT, sessionId: SessionId) extends Actor with ActorLogging {
+class AgentForUser[AT <: QAgent: SessionPersistence](qAgent: AT, sessionId: SessionId) extends Actor with ActorLogging {
 
   import qAgent.Session
 
@@ -22,16 +22,16 @@ class AgentForUser[AT <: QAgent : SessionPersistence](qAgent: AT, sessionId: Ses
   def receive: Receive = initializing(Vector.empty)
 
   def initializing(initReadings: Vector[Reading]): Receive = {
-    case Report(reading, _) =>
+    case Report(reading, _) ⇒
       val (newContext, response) = tryStart(initReadings :+ reading)
       sender ! response
       context become newContext
 
-    case m @ (RequestAction | QueryStatus)  => tryStart(initReadings) match {
-      case (newContext, ActionsAvailable) =>
+    case m @ (RequestAction | QueryStatus) ⇒ tryStart(initReadings) match {
+      case (newContext, ActionsAvailable) ⇒
         self forward m
         context become newContext
-      case (newContext, response) =>
+      case (newContext, response) ⇒
         sender ! response
         context become newContext
     }
@@ -39,27 +39,27 @@ class AgentForUser[AT <: QAgent : SessionPersistence](qAgent: AT, sessionId: Ses
   }
 
   def inSession(session: Session): Receive = {
-    case Report(reading, reward) =>
+    case Report(reading, reward) ⇒
       context become inSession(qAgent.report(reading, reward, session))
       sender ! ActionsAvailable
 
-    case RequestAction =>
+    case RequestAction ⇒
       val (action, newSession) = qAgent.requestAction(session)
       sender ! ActionResult(action)
       context become inSession(newSession)
 
-    case ReportTermination(reading, reward) =>
+    case ReportTermination(reading, reward) ⇒
       val newS = qAgent.report(reading, reward, session)
       val closed = qAgent.close(newS)
       val replyTo = sender
-      storeSession(closed).map { _ =>
+      storeSession(closed).map { _ ⇒
         replyTo ! Confirmed
       }.onFailure {
-        case e: Throwable => throw e
+        case e: Throwable ⇒ throw e
       }
       context stop self
 
-    case QueryStatus =>
+    case QueryStatus ⇒
       sender ! AgentStatus(session.iteration.memory.size, session.iteration.loss)
   }
 
@@ -67,19 +67,19 @@ class AgentForUser[AT <: QAgent : SessionPersistence](qAgent: AT, sessionId: Ses
 
     def startAgent(previousSession: Option[Session]): (Receive, Response) =
       qAgent.start(readings, previousSession) match {
-        case Left(m) =>
+        case Left(m) ⇒
           (initializing(readings), PendingMoreReadings)
 
-        case Right(session) =>
+        case Right(session) ⇒
           (inSession(session), ActionsAvailable)
       }
 
     previousSessionF.value match {
-      case Some(Success(previousSession)) =>
+      case Some(Success(previousSession)) ⇒
         startAgent(previousSession)
-      case Some(Failure(e)) =>
+      case Some(Failure(e)) ⇒
         throw e
-      case None => //future not completed yet
+      case None ⇒ //future not completed yet
         (initializing(readings), Initializing)
     }
 
@@ -90,7 +90,7 @@ class AgentForUser[AT <: QAgent : SessionPersistence](qAgent: AT, sessionId: Ses
 }
 
 object AgentForUser {
-  def props[AT <: QAgent : SessionPersistence](qAgent: AT, sessionId: SessionId): Props =
+  def props[AT <: QAgent: SessionPersistence](qAgent: AT, sessionId: SessionId): Props =
 
     Props(new AgentForUser(qAgent, sessionId))
 

@@ -35,12 +35,11 @@ case class SessionRepoImpl[Session <: QAgent.Session[_, _]: Handler](collection:
 
   def upsert(id: SessionId, session: Session): Future[Unit] = upsert(idSelector(id), SessionRecord(id, session))
 
-  private def idSelector(id: SessionId) : BSONDocument = BSONDocument("id.profileId" -> id.profileId, "id.agentName" -> id.agentName )
+  private def idSelector(id: SessionId): BSONDocument = BSONDocument("id.profileId" → id.profileId, "id.agentName" → id.agentName)
 
 }
 
 private[mongodb] case class SessionRecord[Session <: QAgent.Session[_, _]: Handler](id: SessionId, session: Session)
-
 
 object SessionRepoImpl {
 
@@ -54,7 +53,8 @@ object SessionRepoImpl {
     val col = Repository.collectionOf("session")
     col.indexesManager.ensure(Index(Seq(
       ("id.profileId", IndexType.Ascending),
-      ("id.agentName", IndexType.Ascending)), name = Some("agentId_index")))
+      ("id.agentName", IndexType.Ascending)
+    ), name = Some("agentId_index")))
     col
   }
 

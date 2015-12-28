@@ -1,4 +1,3 @@
-import org.scoverage.coveralls.Imports.CoverallsKeys._
 import sbt._
 import sbt.Keys._
 

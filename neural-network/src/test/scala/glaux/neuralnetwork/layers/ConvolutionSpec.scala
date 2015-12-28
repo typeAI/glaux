@@ -2,7 +2,7 @@ package glaux.neuralnetwork.layers
 
 import glaux.linearalgebra._
 import Dimension._
-import glaux.neuralnetwork.{ Gradient, Rectangle }
+import glaux.neuralnetwork.{Gradient, Rectangle}
 import org.specs2.mutable.Specification
 class ConvolutionSpec extends Specification {
   "creation" >> {

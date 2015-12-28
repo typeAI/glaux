@@ -1,6 +1,6 @@
 package glaux.neuralnetwork.layers
 
-import glaux.linearalgebra.{ RowVector, Dimension }
+import glaux.linearalgebra.{RowVector, Dimension}
 import org.specs2.mutable.Specification
 
 class RegressSpec extends Specification {

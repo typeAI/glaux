@@ -5,10 +5,10 @@ import Protocols.Agency._
 
 import akka.actor._
 import glaux.interfaces.akka.service.Agency.AgentCreated
-import Protocols.{ Confirmed, Rejected }
+import Protocols.{Confirmed, Rejected}
 import glaux.interfaces.api.domain._
 import glaux.interfaces.api.persistence._
-import glaux.reinforcementlearning.{ AdvancedQAgent, QAgent, SimpleQAgent }
+import glaux.reinforcementlearning.{AdvancedQAgent, QAgent, SimpleQAgent}
 
 import scala.concurrent.Future
 

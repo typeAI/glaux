@@ -2,8 +2,8 @@ package glaux.persistence.mongodb
 import GeneralHandlers._
 import GlauxHandlers._
 import glaux.interfaces.api.domain.SessionId
-import glaux.interfaces.api.persistence.{ AgentSettingsPersistence, SessionPersistence, PersistenceImpl }
-import glaux.reinforcementlearning.{ AdvancedQAgent, QAgent, SimpleQAgent }
+import glaux.interfaces.api.persistence.{AgentSettingsPersistence, SessionPersistence, PersistenceImpl}
+import glaux.reinforcementlearning.{AdvancedQAgent, QAgent, SimpleQAgent}
 import reactivemongo.bson.BSONDocument
 
 import scala.concurrent.Future

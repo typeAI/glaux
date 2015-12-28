@@ -1,7 +1,7 @@
 package glaux.neuralnetwork.layers
 
 import glaux.linearalgebra.Dimension.ThreeD
-import glaux.linearalgebra.{ Vol, Tensor4 }
+import glaux.linearalgebra.{Vol, Tensor4}
 import glaux.neuralnetwork._
 
 trait MovingFilter {

@@ -1,18 +1,18 @@
 package glaux.interfaces.akka.service
 
 import akka.actor._
-import akka.testkit.{ ImplicitSender, TestKit }
-import Protocols.Agency.{ CreateAgentSettings, AgentRef, GetAgentForUser }
-import Protocols.{ Rejected, Confirmed }
-import glaux.interfaces.api.persistence.{ SessionPersistence, PersistenceImpl, AgentSettingsPersistence, Persistence }
+import akka.testkit.{ImplicitSender, TestKit}
+import Protocols.Agency.{CreateAgentSettings, AgentRef, GetAgentForUser}
+import Protocols.{Rejected, Confirmed}
+import glaux.interfaces.api.persistence.{SessionPersistence, PersistenceImpl, AgentSettingsPersistence, Persistence}
 import glaux.neuralnetwork.trainers.SGD.SGDSettings
 import glaux.reinforcementlearning.DeepMindQLearner.ConvolutionBased
-import glaux.reinforcementlearning.{ AdvancedQAgent, SimpleQAgent }
+import glaux.reinforcementlearning.{AdvancedQAgent, SimpleQAgent}
 import org.specs2.mutable.Specification
-import org.specs2.specification.{ AfterEach, Scope, AfterAll }
-import glaux.interfaces.api.domain.{ AdvancedAgentSettings, AgentName, AgentSettings, SessionId }
+import org.specs2.specification.{AfterEach, Scope, AfterAll}
+import glaux.interfaces.api.domain.{AdvancedAgentSettings, AgentName, AgentSettings, SessionId}
 
-import scala.concurrent.{ Future, Await }
+import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 
 class AgencySpec extends Specification with AfterAll {
